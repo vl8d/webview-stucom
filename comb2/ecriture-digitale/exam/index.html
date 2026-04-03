@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sluit je aan - Jeugdhuis Tongeluk</title>
+    <link rel="icon" type="image/jpeg" href="./Contact - Jeugdhuis Tongeluk_files/logo-bomb.jpeg">
+    <style>
+        /* Base Styles - Street / Underground / Brutalist Vibe */
+        :root {
+            --bg-color: #050505;
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --accent-color: #facc15; 
+            --accent-hover: #eab308;
+            --border-color: #333333;
+            --card-bg: #111111;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            text-transform: none;
+        }
+
+        /* Typography */
+        h1, h2, h3 {
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 900;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px 80px 20px;
+        }
+
+        header {
+            padding: 30px 0;
+            display: flex;
+            justify-content: center;
+            border-bottom: 3px solid var(--border-color);
+            margin-bottom: 50px;
+        }
+        
+        .logo-full {
+            max-width: 200px;
+            height: auto;
+            filter: drop-shadow(4px 4px 0px rgba(250, 204, 21, 0.2));
+        }
+
+        /* Hero / Header text */
+        .hero-contact {
+            text-align: center;
+            position: relative;
+            margin-bottom: 60px;
+        }
+
+        .hero-bomb-bg {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.1;
+            max-width: 350px;
+            z-index: -1;
+            mix-blend-mode: screen;
+            filter: contrast(150%) grayscale(100%);
+        }
+
+        .hero-contact h1 {
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 0px #000;
+        }
+
+        .hero-contact p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Activities Section */
+        .activities-section {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border: 2px dashed var(--accent-color);
+            margin-bottom: 50px;
+        }
+
+        .activities-section h2 {
+            color: var(--accent-color);
+            margin-top: 0;
+            text-align: center;
+            font-size: 2rem;
+        }
+
+        .activities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .activity-item {
+            padding: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .activity-item h4 {
+            margin: 0 0 10px 0;
+            color: #fff;
+        }
+
+        /* Contact Layout */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        /* Brutalist Cards */
+        .contact-form, .info-card {
+            background-color: var(--card-bg);
+            padding: 40px;
+            border: 2px solid var(--border-color);
+            box-shadow: 8px 8px 0px var(--accent-color);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .contact-form:hover, .info-card:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 10px 10px 0px var(--accent-color);
+        }
+
+        .contact-form h2 {
+            margin-top: 0;
+            margin-bottom: 30px;
+            font-size: 1.8rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        /* Form Styling */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input, 
+        .form-group textarea, 
+        .form-group select {
+            width: 100%;
+            padding: 15px;
+            background-color: transparent;
+            border: 2px solid var(--border-color);
+            color: var(--text-main);
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus, 
+        .form-group textarea:focus, 
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background-color: rgba(250, 204, 21, 0.05);
+        }
+
+        button {
+            width: 100%;
+            background-color: var(--accent-color);
+            color: #000;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 18px;
+            border: 2px solid var(--accent-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #000;
+            color: var(--accent-color);
+        }
+
+        /* Info Section Styling */
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        .info-card h3 {
+            color: var(--accent-color);
+            margin-top: 0;
+            font-size: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .insta-btn {
+            display: inline-block;
+            margin-top: 15px;
+            background-color: transparent;
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: bold;
+            text-transform: uppercase;
+            padding: 12px 20px;
+            border: 2px solid var(--text-main);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .insta-btn:hover {
+            background-color: var(--text-main);
+            color: #000;
+        }
+
+        /* Parents specific box */
+        .parents-box {
+            box-shadow: 8px 8px 0px #ffffff;
+            border-color: #555;
+        }
+
+        .parents-box:hover {
+            box-shadow: 10px 10px 0px #ffffff;
+        }
+        
+        .parents-box h3 {
+            color: #ffffff; 
+            border-bottom-color: #555;
+        }
+
+        .parents-box strong {
+            color: #ccc;
+        }
+
+        @media (max-width: 850px) {
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+            .hero-contact h1 {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <img src="./Contact - Jeugdhuis Tongeluk_files/logo-full.png" alt="Jeugdhuis Tongeluk Logo" class="logo-full">
+    </header>
+
+    <main class="container">
+        
+        <section class="hero-contact">
+            <img src="./Contact - Jeugdhuis Tongeluk_files/logo-bomb.jpeg" alt="" class="hero-bomb-bg">
+            <h1>Word deel van de Tongeluk Crew</h1>
+            <p>Ontdek onze ateliers, chill in het bos en leer nieuwe mensen kennen. Geen voorkennis of hoog niveau nodig, iedereen is welkom. Sluit je aan bij de community!</p>
+        </section>
+
+        <section class="activities-section">
+            <h2>Wat kan je hier doen?</h2>
+            <div class="activities-grid">
+                <div class="activity-item">
+                    <h4>🛠️ Repair Atelier</h4>
+                    <p>Fix je stuff om de twee donderdagen. Leer klussen in een relaxte sfeer.</p>
+                </div>
+                <div class="activity-item">
+                    <h4>💬 Babbel Ensemble</h4>
+                    <p>No stress Vlaams leren! Elke woensdag chillen en praten zonder schoolse druk.</p>
+                </div>
+                <div class="activity-item">
+                    <h4>⚜️ Scouts Ghansoren</h4>
+                    <p>Elke zondag actie en avontuur in het bos. Bouw mee aan de groep.</p>
+                </div>
+                <div class="activity-item">
+                    <h4>🪩 Knalfeestjes</h4>
+                    <p>Van DUB tot ACIDRAIN, we organiseren de hardste underground feestjes.</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="contact-grid">
+            
+            <div class="contact-form">
+                <h2>Schrijf je in / Join Us</h2>
+                <form action="#" method="POST">
+                    <div class="form-group">
+                        <label for="naam">Hoe heet je? (Naam)</label>
+                        <input type="text" id="naam" name="naam" placeholder="Jouw naam" required="">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">E-mailadres of Instagram @</label>
+                        <input type="text" id="email" name="email" placeholder="Hoe kunnen we je bereiken?" required="">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reden">Waar wil je aan meedoen?</label>
+                        <select id="reden" name="reden">
+                            <option value="algemeen">Ik wil gewoon lid worden (Algemeen)</option>
+                            <option value="babbel">Babbel Ensemble (Vlaams oefenen)</option>
+                            <option value="repair">Repair Atelier</option>
+                            <option value="scouts">Scouts Ghansoren</option>
+                            <option value="feesten">Meehelpen met de feestjes</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bericht">Vertel iets over jezelf (optioneel)</label>
+                        <textarea id="bericht" name="bericht" rows="5" placeholder="Wat zijn je skills of wat wil je graag leren?"></textarea>
+                    </div>
+
+                    <button type="submit">Ik schrijf me in!</button>
+                </form>
+            </div>
+
+            <div class="contact-info">
+                
+                <div class="info-card">
+                    <h3>Waar zijn we?</h3>
+                    <p><strong>Adres:</strong> Bosstraat 10, Ganshoren.</p>
+                    <p>We zitten midden in het groen. Vanaf de dichtstbijzijnde halte is het ongeveer 15 minuutjes stappen door het bos. Perfect om je hoofd leeg te maken.</p>
+                    <p><em>Geen zin om alleen te stappen? Stuur ons een berichtje, we spreken vaak af met een groepje aan de halte.</em></p>
+                </div>
+
+                <div class="info-card parents-box">
+                    <h3>Info voor ouders / Parents</h3>
+                    <p>Heeft u vragen over de veiligheid, de Nederlandstalige omkadering of de wandeling vanaf de halte? Ons team beantwoordt uw vragen graag persoonlijk.</p>
+                    <p><strong>Bel ons:</strong> 02 / 123 45 67<br>
+                    <strong>E-mail:</strong> info@tongeluk.be</p>
+                    <p><em>Tip: Wij organiseren 's avonds en in de winter begeleid groepstransport terug naar de halte voor alle jongeren.</em></p>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+</body>
+</html>
