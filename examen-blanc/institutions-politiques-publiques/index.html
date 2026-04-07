@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examen Blanc - Modern Bold Style</title>
+    <link rel="icon" href="" />
+    <style>
+        /* Importation de polices modernes et grasses (bold) depuis Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Roboto:wght@400;700&display=swap');
+
+        :root {
+            --bg-color: #121212; /* Fond très sombre, moderne */
+            --container-bg: #1e1e1e; /* Fond des blocs légèrement plus clair */
+            --text-color: #ffffff;
+            --accent-color-1: #3366FF; /* Bleu électrique moderne */
+            --accent-color-2: #FFD700; /* Jaune or/néon pour le contraste */
+            --correct-color: #00E676; /* Vert vif pour correct */
+            --wrong-color: #FF1744; /* Rouge vif pour faux */
+            --title-font: 'Montserrat', sans-serif;
+            --main-font: 'Roboto', sans-serif;
+        }
+
+        body {
+            font-family: var(--main-font);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--container-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* En-tête style moderne et impactant */
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 30px;
+        }
+
+        h1 {
+            font-family: var(--title-font);
+            font-weight: 900; /* Ultra bold */
+            font-size: 3.5rem;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            color: var(--text-color);
+            line-height: 1;
+        }
+
+        h1 span {
+            color: var(--accent-color-1);
+        }
+
+        h2 {
+            font-family: var(--title-font);
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin: 10px 0 0 0;
+            color: #aaaaaa;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        /* Style des questions */
+        .question-block {
+            margin-bottom: 30px;
+            padding: 25px;
+            background-color: #252525;
+            border-radius: 8px;
+            border-left: 5px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .question-block:hover {
+            background-color: #2a2a2a;
+        }
+
+        .question-text {
+            font-family: var(--title-font);
+            font-weight: 700;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--text-color);
+            line-height: 1.4;
+        }
+
+        .options label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 15px;
+            background-color: #1a1a1a;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+            border: 1px solid #333;
+        }
+
+        .options label:hover {
+            background-color: #222;
+            border-color: #444;
+        }
+
+        input[type="radio"] {
+            margin-right: 15px;
+            appearance: none; /* Cache le style par défaut */
+            width: 20px;
+            height: 20px;
+            border: 2px solid #555;
+            border-radius: 50%;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s, background-color 0.2s;
+            position: relative;
+        }
+
+        input[type="radio"]:checked {
+            border-color: var(--accent-color-1);
+            background-color: var(--accent-color-1);
+        }
+
+        input[type="radio"]:checked::after {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            width: 6px;
+            height: 6px;
+            background-color: #fff;
+            border-radius: 50%;
+        }
+
+        /* Bouton de validation style moderne bold */
+        .btn-submit {
+            display: block;
+            width: 100%;
+            padding: 20px;
+            background-color: var(--accent-color-1);
+            color: #ffffff;
+            font-family: var(--title-font);
+            font-weight: 900;
+            font-size: 1.3rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 40px;
+        }
+
+        .btn-submit:hover {
+            background-color: #2255EE;
+            transform: translateY(-2px);
+        }
+
+        .btn-submit:active {
+            transform: translateY(1px);
+        }
+
+        /* Style des retours (Correct/Faux) nets */
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            font-weight: bold;
+            font-size: 1rem;
+            display: none;
+            border-radius: 4px;
+        }
+
+        .correct {
+            border-left-color: var(--correct-color);
+        }
+
+        .correct .feedback {
+            display: block;
+            background-color: rgba(0, 230, 118, 0.1);
+            color: var(--correct-color);
+        }
+
+        .wrong {
+            border-left-color: var(--wrong-color);
+        }
+
+        .wrong .feedback {
+            display: block;
+            background-color: rgba(255, 23, 68, 0.1);
+            color: var(--wrong-color);
+        }
+
+        /* Section Historique épurée */
+        .history-section {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid #333;
+        }
+
+        .history-section h3 {
+            font-family: var(--title-font);
+            font-weight: 700;
+            font-size: 1.8rem;
+            text-align: center;
+            color: var(--accent-color-2);
+            text-transform: uppercase;
+            margin-bottom: 25px;
+        }
+
+        #historyList {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #historyList li {
+            background-color: #1a1a1a;
+            margin-bottom: 10px;
+            padding: 15px 20px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+            border: 1px solid #252525;
+        }
+
+        #historyList li span:first-child {
+            color: #aaa;
+        }
+
+        #historyList li strong {
+            font-family: var(--title-font);
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--accent-color-1);
+        }
+
+        #finalScore {
+            text-align: center;
+            font-family: var(--title-font);
+            font-weight: 900;
+            font-size: 2.5rem;
+            margin: 30px 0;
+            padding: 20px;
+            background-color: var(--accent-color-2);
+            color: #000;
+            border-radius: 8px;
+            display: none;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Examen <span>Blanc</span></h1>
+        <h2>Sociologie & Institutions Belges</h2>
+    </header>
+
+    <form id="quizForm">
+        <div id="quiz-container">
+            </div>
+
+        <button type="submit" class="btn-submit">Soumettre mes réponses</button>
+    </form>
+
+    <div id="finalScore"></div>
+
+    <div class="history-section">
+        <h3>Historique des scores</h3>
+        <ul id="historyList">
+            </ul>
+    </div>
+</div>
+
+<script>
+    // Base de données des questions (extraites des photos, identiques au précédent)
+    const quizData = [
+        {
+            type: 'truefalse',
+            question: "En sociologie, on parle de socialisation primaire pour qualifier le premier processus de socialisation que connaît un enfant.",
+            correctAnswer: "Vrai"
+        },
+        {
+            type: 'multiple',
+            question: "L'engagement de ne pas gouverner avec des partis racistes et/ou rejetant la démocratie est nommé :",
+            options: ["Cordon de sécurité", "Cordon sanitaire", "Levier démocratique", "Mesures d'exclusion"],
+            correctAnswer: "Cordon sanitaire"
+        },
+        {
+            type: 'multiple',
+            question: "C'est l'instance de l'UE qui représente les citoyens de l'UE et qui est élue directement par eux tous les cinq ans :",
+            options: ["Conseil européen", "Commission européenne", "Parlement européen", "Conseil de l'UE"],
+            correctAnswer: "Parlement européen"
+        },
+        {
+            type: 'truefalse',
+            question: "La sociologie se veut être une science neutre par rapport aux jugements de valeur.",
+            correctAnswer: "Vrai"
+        },
+        {
+            type: 'multiple',
+            question: "\"Chaque individu est doté de quatre forces (capital économique, capital social, capital culturel, capital symbolique). À qui attribuer cette théorie ?\"",
+            options: ["Guy Rocher", "Claude Javeau", "Émile Durkheim", "Pierre Bourdieu"],
+            correctAnswer: "Pierre Bourdieu"
+        },
+        {
+            type: 'multiple',
+            question: "Parmi ces objectifs, lequel ne fait PAS partie des objectifs de la Fédération Wallonie-Bruxelles en matière de 'Culture' ?",
+            options: ["Assurer l'égalité d'accès à la culture", "Préserver et valoriser le patrimoine culturel", "Promouvoir l'émergence des jeunes talents", "Rendre la culture élitiste et difficilement accessible"],
+            correctAnswer: "Rendre la culture élitiste et difficilement accessible"
+        },
+        {
+            type: 'multiple',
+            question: "\"'Donner les clés de compréhension de la société aux citoyens... Renforcer l'esprit critique...' C'est la définition de :\"",
+            options: ["La culture d'élite", "L'éducation permanente", "Le folklore", "La culture populaire"],
+            correctAnswer: "L'éducation permanente"
+        },
+        {
+            type: 'multiple',
+            question: "Quelle coalition gouverne en Flandre actuellement ?",
+            options: ["N-VA + CD&V + Vooruit", "N-VA + Open VLD + CD&V", "N-VA + CD&V + Groen", "N-VA + Open VLD + Groen"],
+            correctAnswer: "N-VA + CD&V + Vooruit"
+        },
+        {
+            type: 'multiple',
+            question: "\"Le Collège d'une commune bruxelloise est composé de :\"",
+            options: ["Bourgmestre + Échevins + Président du CPAS", "Bourgmestre + Échevins", "Bourgmestre + Échevins + Conseillers communaux", "Bourgmestre + Conseillers communaux"],
+            correctAnswer: "Bourgmestre + Échevins + Président du CPAS"
+        },
+        {
+            type: 'multiple',
+            question: "\"Art de conduire le peuple, de savoir lui parler et le charmer ; attitude politique visant à dominer le peuple en s'assurant ses faveurs...'. Il s'agit de :\"",
+            options: ["Popisme", "Démagogie", "Propagande", "Charisme"],
+            correctAnswer: "Démagogie"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+
+    // Fonction pour générer le HTML du quiz
+    function buildQuiz() {
+        quizData.forEach((q, index) => {
+            const questionBlock = document.createElement('div');
+            questionBlock.className = 'question-block';
+            questionBlock.id = `q${index}`;
+
+            let html = `<div class="question-text">${index + 1}. ${q.question}</div><div class="options">`;
+
+            if (q.type === 'truefalse') {
+                html += `
+                    <label><input type="radio" name="q${index}" value="Vrai"> Vrai</label>
+                    <label><input type="radio" name="q${index}" value="Faux"> Faux</label>
+                `;
+            } else if (q.type === 'multiple') {
+                q.options.forEach(option => {
+                    html += `<label><input type="radio" name="q${index}" value="${option}"> ${option}</label>`;
+                });
+            }
+
+            html += `</div><div class="feedback"></div>`;
+            questionBlock.innerHTML = html;
+            quizContainer.appendChild(questionBlock);
+        });
+    }
+
+    // Gestion de la soumission du formulaire
+    document.getElementById('quizForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        let score = 0;
+        const totalQuestions = quizData.length;
+
+        quizData.forEach((q, index) => {
+            const selectedOption = document.querySelector(`input[name="q${index}"]:checked`);
+            const questionBlock = document.getElementById(`q${index}`);
+            const feedbackElement = questionBlock.querySelector('.feedback');
+            
+            questionBlock.classList.remove('correct', 'wrong'); // Reset classes
+
+            if (selectedOption) {
+                if (selectedOption.value === q.correctAnswer) {
+                    score++;
+                    questionBlock.classList.add('correct');
+                    feedbackElement.innerText = "Correct !";
+                } else {
+                    questionBlock.classList.add('wrong');
+                    feedbackElement.innerText = `Faux. La bonne réponse était : ${q.correctAnswer}`;
+                }
+            } else {
+                questionBlock.classList.add('wrong');
+                feedbackElement.innerText = `Pas de réponse. La bonne réponse était : ${q.correctAnswer}`;
+            }
+        });
+
+        // Afficher le score final
+        const scoreDisplay = document.getElementById('finalScore');
+        scoreDisplay.innerText = `SCORE FINAL : ${score} / ${totalQuestions}`;
+        scoreDisplay.style.display = 'block';
+
+        // Désactiver le bouton après soumission
+        document.querySelector('.btn-submit').disabled = true;
+        document.querySelector('.btn-submit').style.opacity = 0.5;
+        document.querySelector('.btn-submit').innerText = "Réponses soumises";
+
+        // Sauvegarder le score dans l'historique
+        saveScore(score, totalQuestions);
+    });
+
+    // --- Gestion de l'historique (LocalStorage) ---
+
+    function saveScore(score, total) {
+        const history = JSON.parse(localStorage.getItem('examHistoryBold')) || [];
+        const date = new Date().toLocaleString('fr-FR');
+        history.push({ score, total, date });
+        localStorage.setItem('examHistoryBold', JSON.stringify(history));
+        displayHistory();
+    }
+
+    function displayHistory() {
+        const historyList = document.getElementById('historyList');
+        const history = JSON.parse(localStorage.getItem('examHistoryBold')) || [];
+        
+        historyList.innerHTML = ''; // Clear current list
+
+        if (history.length === 0) {
+            historyList.innerHTML = '<li>Aucun score enregistré.</li>';
+        } else {
+            // Afficher les scores du plus récent au plus ancien
+            history.reverse().forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${item.date}</span> <strong>${item.score} / ${item.total}</strong>`;
+                historyList.appendChild(li);
+            });
+        }
+    }
+
+    // Initialisation
+    buildQuiz();
+    displayHistory();
+
+</script>
+
+</body>
+</html>
