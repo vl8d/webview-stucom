@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examen Blanc - Institutions & Politiques Publiques</title>
+    <link rel="icon" href="data:," />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Roboto:wght@400;700&display=swap');
+
+        :root {
+            --bg-color: #0a0a0a;
+            --container-bg: #151515;
+            --text-color: #ffffff;
+            --accent-color-1: #00E5FF; /* Cyan électrique */
+            --accent-color-2: #FFEA00; /* Jaune néon */
+            --correct-color: #00E676;
+            --wrong-color: #FF1744;
+            --title-font: 'Montserrat', sans-serif;
+            --main-font: 'Roboto', sans-serif;
+            
+            /* 5 Couleurs de difficulté */
+            --diff-1: #00E676; /* Novice - Vert */
+            --diff-2: #FFEA00; /* Intermédiaire - Jaune */
+            --diff-3: #FF9100; /* Avancé - Orange */
+            --diff-4: #FF1744; /* Expert - Rouge */
+            --diff-5: #D500F9; /* Maître - Violet Néon */
+        }
+
+        body {
+            font-family: var(--main-font);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background-color: var(--container-bg);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+            border: 1px solid #333;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 30px;
+        }
+
+        h1 {
+            font-family: var(--title-font);
+            font-weight: 900;
+            font-size: 3.5rem;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            color: var(--text-color);
+            line-height: 1.1;
+        }
+
+        h1 span { color: var(--accent-color-1); }
+
+        h2 {
+            font-family: var(--title-font);
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin: 15px 0 0 0;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+
+        /* --- FILTRES DE DIFFICULTÉ --- */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        .filter-btn {
+            background-color: #1a1a1a;
+            color: #888;
+            border: 2px solid #333;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-family: var(--title-font);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .filter-btn:hover { background-color: #2a2a2a; color: #fff; border-color: #555; }
+        
+        .filter-btn.active {
+            background-color: var(--accent-color-1);
+            color: #000;
+            border-color: var(--accent-color-1);
+        }
+
+        /* --- QUESTIONS --- */
+        .question-block {
+            margin-bottom: 35px;
+            padding: 30px;
+            background-color: #1e1e1e;
+            border-radius: 12px;
+            border-top: 4px solid transparent;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .badge {
+            position: absolute;
+            top: -14px;
+            left: 30px;
+            padding: 6px 15px;
+            border-radius: 6px;
+            font-family: var(--title-font);
+            font-weight: 900;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: #000;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+
+        .diff-1 .badge { background-color: var(--diff-1); }
+        .diff-2 .badge { background-color: var(--diff-2); }
+        .diff-3 .badge { background-color: var(--diff-3); }
+        .diff-4 .badge { background-color: var(--diff-4); color: #fff; }
+        .diff-5 .badge { background-color: var(--diff-5); color: #fff; }
+
+        .diff-1 { border-top-color: var(--diff-1); }
+        .diff-2 { border-top-color: var(--diff-2); }
+        .diff-3 { border-top-color: var(--diff-3); }
+        .diff-4 { border-top-color: var(--diff-4); }
+        .diff-5 { border-top-color: var(--diff-5); }
+
+        .question-text {
+            font-family: var(--title-font);
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin-top: 10px;
+            margin-bottom: 25px;
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+
+        .options label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 16px;
+            background-color: #151515;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid #333;
+            transition: all 0.2s;
+            font-size: 1.05rem;
+        }
+
+        .options label:hover { background-color: #222; border-color: var(--accent-color-1); }
+
+        input[type="radio"] {
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border: 2px solid #666;
+            border-radius: 50%;
+            margin-right: 15px;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        input[type="radio"]:checked {
+            border-color: var(--accent-color-1);
+            background-color: var(--accent-color-1);
+        }
+
+        input[type="radio"]:checked::after {
+            content: '';
+            position: absolute;
+            top: 5px; left: 5px;
+            width: 8px; height: 8px;
+            background-color: #000;
+            border-radius: 50%;
+        }
+
+        /* --- BOUTON ET FEEDBACK --- */
+        .btn-submit {
+            width: 100%;
+            padding: 22px;
+            background-color: var(--accent-color-1);
+            color: #000;
+            font-family: var(--title-font);
+            font-weight: 900;
+            font-size: 1.4rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            margin-top: 40px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(0, 229, 255, 0.2);
+        }
+
+        .btn-submit:hover { background-color: #00B8D4; transform: translateY(-3px); box-shadow: 0 15px 25px rgba(0, 229, 255, 0.3); }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; background-color: #333; color: #888;}
+
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            font-weight: bold;
+            display: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+        }
+        .is-correct .feedback { display: block; background-color: rgba(0, 230, 118, 0.1); color: var(--correct-color); border: 1px solid var(--correct-color); }
+        .is-wrong .feedback { display: block; background-color: rgba(255, 23, 68, 0.1); color: var(--wrong-color); border: 1px solid var(--wrong-color); }
+
+        /* --- SCORE ET HISTORIQUE --- */
+        #finalScore {
+            text-align: center;
+            font-family: var(--title-font);
+            font-weight: 900;
+            font-size: 2.2rem;
+            margin: 40px 0;
+            padding: 25px;
+            background-color: var(--accent-color-2);
+            color: #000;
+            border-radius: 12px;
+            display: none;
+            text-transform: uppercase;
+            box-shadow: 0 10px 30px rgba(255, 234, 0, 0.2);
+        }
+
+        .history-section { margin-top: 60px; padding-top: 40px; border-top: 1px solid #333; }
+        .history-section h3 {
+            font-family: var(--title-font);
+            font-weight: 900;
+            font-size: 1.8rem;
+            text-align: left;
+            color: #fff;
+            text-transform: uppercase;
+            margin-bottom: 25px;
+        }
+        #historyList { list-style: none; padding: 0; }
+        #historyList li {
+            background-color: #1a1a1a;
+            margin-bottom: 15px;
+            padding: 20px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #2a2a2a;
+        }
+        .hist-date { color: #888; font-size: 0.95rem; display: block; margin-bottom: 5px;}
+        .hist-mode { background: #333; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; color: #fff; text-transform: uppercase; font-family: var(--title-font); font-weight: 700;}
+        .hist-score { font-family: var(--title-font); font-weight: 900; color: var(--accent-color-1); font-size: 1.5rem; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Examen <span>Master</span></h1>
+        <h2>Institutions, Clivages & Actualité Politique</h2>
+    </header>
+
+    <div class="filters" id="filters">
+        <button class="filter-btn active" data-level="all">Examen Complet (50Q)</button>
+        <button class="filter-btn" data-level="1">Lvl 1 : Novice</button>
+        <button class="filter-btn" data-level="2">Lvl 2 : Intermédiaire</button>
+        <button class="filter-btn" data-level="3">Lvl 3 : Avancé</button>
+        <button class="filter-btn" data-level="4">Lvl 4 : Expert</button>
+        <button class="filter-btn" data-level="5">Lvl 5 : Maître</button>
+    </div>
+
+    <form id="quizForm">
+        <div id="quiz-container">
+            </div>
+        <button type="submit" class="btn-submit" id="submitBtn">Corriger mes réponses</button>
+    </form>
+
+    <div id="finalScore"></div>
+
+    <div class="history-section">
+        <h3>Dashboard des Scores</h3>
+        <ul id="historyList"></ul>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        // --- NIVEAU 1 : NOVICE (10 Questions) ---
+        { level: 1, type: 'multiple', question: "La Belgique est-elle officiellement un pays laïc selon sa Constitution ?", options: ["Vrai, c'est l'article 1", "Faux, c'est un pays neutre"], correctAnswer: "Faux, c'est un pays neutre" },
+        { level: 1, type: 'multiple', question: "Dans quelle ville siège le Parlement de la Région wallonne ?", options: ["Bruxelles", "Liège", "Namur"], correctAnswer: "Namur" },
+        { level: 1, type: 'multiple', question: "Courant de pensée né à la Renaissance qui place l'Homme au centre de ses préoccupations :", options: ["Le Marxisme", "L'Humanisme", "Le Structuralisme"], correctAnswer: "L'Humanisme" },
+        { level: 1, type: 'multiple', question: "L'art de flatter le peuple et de jouer sur ses émotions pour s'assurer ses faveurs s'appelle :", options: ["La diplomatie", "La démagogie", "La technocratie"], correctAnswer: "La démagogie" },
+        { level: 1, type: 'multiple', question: "En sociologie, la socialisation primaire a lieu principalement pendant :", options: ["L'enfance (via famille/école)", "La vie active au travail", "La retraite"], correctAnswer: "L'enfance (via famille/école)" },
+        { level: 1, type: 'multiple', question: "En Belgique, le système électoral est caractérisé par :", options: ["Le vote facultatif", "Le vote obligatoire", "Le suffrage capacitaire"], correctAnswer: "Le vote obligatoire" },
+        { level: 1, type: 'multiple', question: "Combien de Régions institutionnelles compte la Belgique ?", options: ["2", "3", "4"], correctAnswer: "3" },
+        { level: 1, type: 'multiple', question: "Laquelle de ces institutions n'est PAS une Communauté en Belgique ?", options: ["La Communauté germanophone", "La Communauté flamande", "La Communauté bruxelloise"], correctAnswer: "La Communauté bruxelloise" },
+        { level: 1, type: 'multiple', question: "L'institution européenne qui regroupe les 27 chefs d'États et de gouvernement est :", options: ["Le Conseil européen", "Le Conseil de l'Europe", "Le Parlement européen"], correctAnswer: "Le Conseil européen" },
+        { level: 1, type: 'multiple', question: "Que signifie le sigle CRISP ?", options: ["Centre de Recherche et d'Information Socio-Politique", "Comité Régional Indépendant des Sciences Politiques", "Centre de Réflexion Interne sur la Politique"], correctAnswer: "Centre de Recherche et d'Information Socio-Politique" },
+
+        // --- NIVEAU 2 : INTERMÉDIAIRE (10 Questions) ---
+        { level: 2, type: 'multiple', question: "L'engagement des partis à ne pas faire alliance avec l'extrême droite s'appelle :", options: ["Le pacte de sécurité", "Le cordon sanitaire", "La coalition d'exclusion"], correctAnswer: "Le cordon sanitaire" },
+        { level: 2, type: 'multiple', question: "« Donner les clés de compréhension de la société aux citoyens... Renforcer l'esprit critique. » C'est la définition de :", options: ["La culture d'élite", "La propagande", "L'éducation permanente"], correctAnswer: "L'éducation permanente" },
+        { level: 2, type: 'multiple', question: "Comment appelle-t-on, au sein de l'UE, les textes de loi directement obligatoires dès leur entrée en vigueur ?", options: ["Les directives", "Les règlements", "Les résolutions"], correctAnswer: "Les règlements" },
+        { level: 2, type: 'multiple', question: "La théorie des 4 forces (capital économique, social, culturel, symbolique) est attribuée à :", options: ["Guy Rocher", "Claude Javeau", "Pierre Bourdieu"], correctAnswer: "Pierre Bourdieu" },
+        { level: 2, type: 'multiple', question: "Quelle coalition (qualifiée d'atypique) s'est formée en Flandre en 2024 ?", options: ["N-VA + CD&V + Open VLD", "N-VA + CD&V + Vooruit", "N-VA + Vlaams Belang"], correctAnswer: "N-VA + CD&V + Vooruit" },
+        { level: 2, type: 'multiple', question: "Dans quelle ville siège le Parlement Fédéral ?", options: ["Namur", "Anvers", "Bruxelles"], correctAnswer: "Bruxelles" },
+        { level: 2, type: 'multiple', question: "En Belgique, qui nomme les juges à vie pour garantir leur indépendance ?", options: ["Le Premier Ministre", "Le Roi", "Le Parlement"], correctAnswer: "Le Roi" },
+        { level: 2, type: 'multiple', question: "Les provinces belges sont-elles des entités fédérées autonomes ?", options: ["Vrai", "Faux, elles sont soumises à tutelle"], correctAnswer: "Faux, elles sont soumises à tutelle" },
+        { level: 2, type: 'multiple', question: "Dans la théorie des clivages, le clivage 'socio-économique' oppose :", options: ["L'Église et l'État", "Le prolétariat et la bourgeoisie", "Le centre et la périphérie"], correctAnswer: "Le prolétariat et la bourgeoisie" },
+        { level: 2, type: 'multiple', question: "Qui a défini la culture comme un « ensemble complexe qui englobe les connaissances, croyances, arts, lois... » ?", options: ["Jean-Jacques Rousseau", "Edward Tylor", "Claude Javeau"], correctAnswer: "Edward Tylor" },
+
+        // --- NIVEAU 3 : AVANCÉ (10 Questions) ---
+        { level: 3, type: 'multiple', question: "La réforme institutionnelle de 1980 a accompli quoi ?", options: ["La création de la Région Bruxelles-Capitale", "La création de la Région Wallonne et Flamande", "La scission de l'arrondissement BHV"], correctAnswer: "La création de la Région Wallonne et Flamande" },
+        { level: 3, type: 'multiple', question: "Selon Adorno et Horkheimer, à quoi sert principalement la culture de masse ?", options: ["Élever l'esprit critique", "Façonner des comportements de consommation", "Promouvoir l'artisanat local"], correctAnswer: "Façonner des comportements de consommation" },
+        { level: 3, type: 'multiple', question: "Quel phénomène caractérise la Wallonie après la Seconde Guerre mondiale ?", options: ["Un essor économique continu", "Le déclin économique accéléré et la fermeture d'entreprises", "Une hausse massive de sa démographie"], correctAnswer: "Le déclin économique accéléré et la fermeture d'entreprises" },
+        { level: 3, type: 'multiple', question: "Selon Claude Javeau, la culture générale sert essentiellement à :", options: ["Se distinguer des autres classes sociales", "Unifier la population", "Favoriser l'insertion professionnelle"], correctAnswer: "Se distinguer des autres classes sociales" },
+        { level: 3, type: 'multiple', question: "Le pouvoir exécutif fédéral en Belgique comprend :", options: ["La Chambre et le Sénat", "Le Roi et le Gouvernement", "Les Cours et Tribunaux"], correctAnswer: "Le Roi et le Gouvernement" },
+        { level: 3, type: 'multiple', question: "Au sein du Conseil des Ministres fédéral (hors Premier Ministre), la Constitution exige :", options: ["La parité hommes/femmes", "La parité linguistique (francophones/néerlandophones)", "Un nombre proportionnel aux résultats électoraux"], correctAnswer: "La parité linguistique (francophones/néerlandophones)" },
+        { level: 3, type: 'multiple', question: "Le fonctionnement du pouvoir judiciaire a-t-il été copié au niveau des Régions/Communautés ?", options: ["Vrai, chaque entité a sa justice", "Faux, il n'y a pas de pouvoir judiciaire fédéré"], correctAnswer: "Faux, il n'y a pas de pouvoir judiciaire fédéré" },
+        { level: 3, type: 'multiple', question: "Quels éléments ont permis l'émergence de la culture mainstream ?", options: ["Le travail artisanal exclusif", "La société de consommation, médias de masse et société des loisirs", "Uniquement le développement d'internet en 2000"], correctAnswer: "La société de consommation, médias de masse et société des loisirs" },
+        { level: 3, type: 'multiple', question: "Lequel est VRAI concernant l'Espace Schengen ?", options: ["Il ne concerne que les membres de la zone Euro", "Il inclut des États non membres de l'UE comme la Suisse ou la Norvège", "Il a été signé en 2005"], correctAnswer: "Il inclut des États non membres de l'UE comme la Suisse ou la Norvège" },
+        { level: 3, type: 'multiple', question: "Quelle affirmation est vraie concernant les politiques culturelles ?", options: ["La démocratie culturelle a remplacé la démocratisation culturelle avec succès", "La démocratisation et la démocratie culturelles sont deux approches qui se complètent", "La culture élitiste a totalement disparu dans les années 70"], correctAnswer: "La démocratisation et la démocratie culturelles sont deux approches qui se complètent" },
+
+        // --- NIVEAU 4 : EXPERT (10 Questions) ---
+        { level: 4, type: 'multiple', question: "Lors des élections de juin 2024, quel parti francophone a eu la plus forte progression ?", options: ["Le MR", "Le PTB", "Les Engagés"], correctAnswer: "Les Engagés" },
+        { level: 4, type: 'multiple', question: "« Le pouvoir corrompt, le pouvoir absolu corrompt absolument. » Quel principe limite cela ?", options: ["Le principe de proportionnalité", "Le principe d'alternance", "Le suffrage censitaire"], correctAnswer: "Le principe d'alternance" },
+        { level: 4, type: 'multiple', question: "L'idée principale derrière la 'démocratisation de la culture' est :", options: ["Que la culture populaire doit dominer", "Que la culture doit venir à la rencontre des citoyens à un prix raisonnable", "Que tout individu est un artiste"], correctAnswer: "Que la culture doit venir à la rencontre des citoyens à un prix raisonnable" },
+        { level: 4, type: 'multiple', question: "Quel a été l'un des constats d'échec de la démocratisation culturelle stricte ?", options: ["Les classes populaires ont montré une résistance face à la culture perçue comme 'élitiste'", "Les prix des musées sont devenus trop élevés", "Il y avait trop d'offres culturelles disponibles"], correctAnswer: "Les classes populaires ont montré une résistance face à la culture perçue comme 'élitiste'" },
+        { level: 4, type: 'multiple', question: "En Belgique, le pouvoir législatif au niveau fédéral est exercé par :", options: ["Le Roi, la Chambre et le Sénat", "Uniquement la Chambre des Représentants", "Le Gouvernement et le Roi"], correctAnswer: "Le Roi, la Chambre et le Sénat" },
+        { level: 4, type: 'multiple', question: "Laquelle de ces réformes de l'État a installé la Région de Bruxelles-Capitale ?", options: ["La réforme de 1970", "La réforme de 1980", "La réforme de 1988-1989"], correctAnswer: "La réforme de 1988-1989" },
+        { level: 4, type: 'multiple', question: "Quelle est la différence fondamentale entre le Conseil de l'Europe et le Conseil européen ?", options: ["Le premier est basé à Strasbourg (droits de l'homme, 46 pays), le second est l'institution de l'UE (27 pays)", "Le premier gère l'Euro, le second gère les frontières", "Il n'y en a aucune, ce sont des synonymes"], correctAnswer: "Le premier est basé à Strasbourg (droits de l'homme, 46 pays), le second est l'institution de l'UE (27 pays)" },
+        { level: 4, type: 'multiple', question: "La Constitution limite le nombre de ministres du gouvernement fédéral à :", options: ["10 maximum", "15 maximum", "Il n'y a pas de limite légale"], correctAnswer: "15 maximum" },
+        { level: 4, type: 'multiple', question: "Le Collège d'une commune bruxelloise est obligatoirement composé de :", options: ["Bourgmestre + Échevins", "Bourgmestre + Échevins + Président du CPAS", "Bourgmestre + Conseillers communaux"], correctAnswer: "Bourgmestre + Échevins + Président du CPAS" },
+        { level: 4, type: 'multiple', question: "Comment est principalement assuré le financement des partis politiques belges aujourd'hui ?", options: ["Par les dons d'entreprises privées exclusivement", "Majoritairement par des dotations publiques liées à leurs résultats électoraux", "Par les cotisations des membres uniquement"], correctAnswer: "Majoritairement par des dotations publiques liées à leurs résultats électoraux" },
+
+        // --- NIVEAU 5 : MAÎTRE (Podcasts 'Les Clés' & Actualité Récente - 10 Questions) ---
+        { level: 5, type: 'multiple', question: "Dans la formation de l'Arizona (2024), le MR a été décrit comme 'seul contre tous' principalement à cause de son blocage sur :", options: ["L'augmentation de la TVA", "La taxation des plus-values (impôt sur la fortune)", "La limitation des allocations de chômage"], correctAnswer: "La taxation des plus-values (impôt sur la fortune)" },
+        { level: 5, type: 'multiple', question: "Dans le podcast 'Le PTB est-il un parti démocratique ?', le principal argument des détracteurs pour maintenir le PTB hors du pouvoir est :", options: ["Qu'il n'a pas de programme socio-économique", "Des doutes persistants sur son adhésion totale aux principes de la démocratie libérale", "Son manque d'élus locaux"], correctAnswer: "Des doutes persistants sur son adhésion totale aux principes de la démocratie libérale" },
+        { level: 5, type: 'multiple', question: "Quel parti francophone a réussi le pari de la refondation en 2024 pour sortir du 'dilemme du centre' ?", options: ["DéFI", "Les Engagés", "Le Parti Populaire"], correctAnswer: "Les Engagés" },
+        { level: 5, type: 'multiple', question: "Suite aux élections de 2024 (cf. Podcast Ecolo), le parti vert francophone fait face à :", options: ["Une crise durable et une perte de ses repères sociologiques", "Une scission interne entre les ailes gauche et droite", "Un refus net de participer à toute coalition locale"], correctAnswer: "Une crise durable et une perte de ses repères sociologiques" },
+        { level: 5, type: 'multiple', question: "À gauche en 2024 (cf. Podcast 'À gauche, c'est quoi le projet ?'), la dynamique est compliquée par :", options: ["La fusion annoncée du PS et d'Ecolo", "La concurrence féroce entre le PS et le PTB qui empêche un rassemblement", "L'interdiction légale des cartels pré-électoraux"], correctAnswer: "La concurrence féroce entre le PS et le PTB qui empêche un rassemblement" },
+        { level: 5, type: 'multiple', question: "Pourquoi la coalition fédérale en négociation en 2024 a-t-elle été surnommée 'Arizona' ?", options: ["En référence au traité signé dans l'État de l'Arizona", "Parce que les couleurs des 5 partis correspondent à celles du drapeau de l'État de l'Arizona", "C'est le nom de code donné par Bart De Wever en hommage à un film"], correctAnswer: "Parce que les couleurs des 5 partis correspondent à celles du drapeau de l'État de l'Arizona" },
+        { level: 5, type: 'multiple', question: "Quel parti représente la 'famille socialiste' dans les négociations de la coalition Arizona ?", options: ["Le PS", "Vooruit", "Groen"], correctAnswer: "Vooruit" },
+        { level: 5, type: 'multiple', question: "En août 2024, quel document soumis par le formateur Bart De Wever a provoqué un premier blocage majeur ?", options: ["La Note institutionnelle (réforme de l'État)", "La 'Supernota' (socio-économique, marché du travail et fiscalité)", "Le Pacte migratoire"], correctAnswer: "La 'Supernota' (socio-économique, marché du travail et fiscalité)" },
+        { level: 5, type: 'multiple', question: "Le 'cordon sanitaire' médiatique en Belgique francophone s'applique légalement ou déontologiquement :", options: ["À l'extrême droite uniquement (accès interdit au direct)", "À l'extrême droite et à l'extrême gauche (PTB compris)", "À tous les partis n'ayant pas d'élus au Parlement"], correctAnswer: "À l'extrême droite uniquement (accès interdit au direct)" },
+        { level: 5, type: 'multiple', question: "Au lendemain des élections de juin 2024, quel parti a immédiatement annoncé choisir la cure d'opposition, compliquant l'équation fédérale ?", options: ["Le MR", "Le PS", "Le CD&V"], correctAnswer: "Le PS" }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const submitBtn = document.getElementById('submitBtn');
+    const finalScore = document.getElementById('finalScore');
+    let currentFilter = 'all';
+    let currentQuestions = [];
+
+    const levelNames = {
+        1: "Novice", 2: "Intermédiaire", 3: "Avancé", 4: "Expert", 5: "Maître", 'all': "Examen Complet"
+    };
+
+    function buildQuiz(filter) {
+        quizContainer.innerHTML = '';
+        finalScore.style.display = 'none';
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Corriger mes réponses";
+        submitBtn.style.backgroundColor = 'var(--accent-color-1)';
+        submitBtn.style.color = '#000';
+        
+        currentQuestions = filter === 'all' ? [...quizData] : quizData.filter(q => q.level == filter);
+
+        currentQuestions.forEach((q, index) => {
+            const block = document.createElement('div');
+            block.className = `question-block diff-${q.level}`;
+            block.id = `q${index}`;
+
+            let html = `
+                <div class="badge">Niveau ${q.level}</div>
+                <div class="question-text">${index + 1}. ${q.question}</div>
+                <div class="options">
+            `;
+
+            q.options.forEach(option => {
+                html += `<label><input type="radio" name="q${index}" value="${option}"> ${option}</label>`;
+            });
+
+            html += `</div><div class="feedback"></div>`;
+            block.innerHTML = html;
+            quizContainer.appendChild(block);
+        });
+    }
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            currentFilter = e.target.getAttribute('data-level');
+            buildQuiz(currentFilter);
+        });
+    });
+
+    document.getElementById('quizForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        let score = 0;
+
+        currentQuestions.forEach((q, index) => {
+            const selectedOption = document.querySelector(`input[name="q${index}"]:checked`);
+            const questionBlock = document.getElementById(`q${index}`);
+            const feedbackElement = questionBlock.querySelector('.feedback');
+            
+            questionBlock.classList.remove('is-correct', 'is-wrong');
+
+            if (selectedOption) {
+                if (selectedOption.value === q.correctAnswer) {
+                    score++;
+                    questionBlock.classList.add('is-correct');
+                    feedbackElement.innerText = "✓ BIEN JOUÉ";
+                } else {
+                    questionBlock.classList.add('is-wrong');
+                    feedbackElement.innerHTML = `✗ ERREUR<br><span style="font-weight:normal; font-size:0.9em; margin-top:5px; display:block;">Réponse attendue : <i>${q.correctAnswer}</i></span>`;
+                }
+            } else {
+                questionBlock.classList.add('is-wrong');
+                feedbackElement.innerHTML = `✗ SANS RÉPONSE<br><span style="font-weight:normal; font-size:0.9em; margin-top:5px; display:block;">Réponse attendue : <i>${q.correctAnswer}</i></span>`;
+            }
+
+            questionBlock.querySelectorAll('input').forEach(input => input.disabled = true);
+        });
+
+        finalScore.innerHTML = `SCORE : <span>${score}</span> / ${currentQuestions.length}`;
+        finalScore.style.display = 'block';
+
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Correction Terminée";
+
+        window.scrollTo({ top: finalScore.offsetTop - 100, behavior: 'smooth' });
+
+        saveScore(score, currentQuestions.length, currentFilter);
+    });
+
+    function saveScore(score, total, level) {
+        const history = JSON.parse(localStorage.getItem('examMasterHistory')) || [];
+        const date = new Date().toLocaleString('fr-FR', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit'});
+        
+        history.push({ score, total, date, mode: levelNames[level] });
+        if(history.length > 8) history.shift();
+        
+        localStorage.setItem('examMasterHistory', JSON.stringify(history));
+        displayHistory();
+    }
+
+    function displayHistory() {
+        const historyList = document.getElementById('historyList');
+        const history = JSON.parse(localStorage.getItem('examMasterHistory')) || [];
+        
+        historyList.innerHTML = '';
+
+        if (history.length === 0) {
+            historyList.innerHTML = '<li><span class="hist-date">Commence un test pour voir tes résultats ici.</span></li>';
+        } else {
+            [...history].reverse().forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div>
+                        <span class="hist-date">${item.date}</span>
+                        <span class="hist-mode">${item.mode}</span>
+                    </div>
+                    <span class="hist-score">${item.score} / ${item.total}</span>
+                `;
+                historyList.appendChild(li);
+            });
+        }
+    }
+
+    // Init
+    buildQuiz('all');
+    displayHistory();
+</script>
+
+</body>
+</html>
