@@ -6,12 +6,11 @@
     <title>Sluit je aan - Jeugdhuis Tongeluk</title>
     <link rel="icon" type="image/jpeg" href="https://content.stucom.tech/isfsc/comb2/ecriture-digitale/tongeluk/logo-bomb.jpeg">
     <style>
-        /* Base Styles - Street / Underground / Brutalist Vibe */
         :root {
             --bg-color: #050505;
             --text-main: #ffffff;
             --text-muted: #a1a1aa;
-            --accent-color: #facc15; 
+            --accent-color: #facc15;
             --accent-hover: #eab308;
             --border-color: #333333;
             --card-bg: #111111;
@@ -24,10 +23,8 @@
             line-height: 1.6;
             margin: 0;
             padding: 0;
-            text-transform: none;
         }
 
-        /* Typography */
         h1, h2, h3 {
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -47,14 +44,13 @@
             border-bottom: 3px solid var(--border-color);
             margin-bottom: 50px;
         }
-        
+
         .logo-full {
             max-width: 200px;
             height: auto;
             filter: drop-shadow(4px 4px 0px rgba(250, 204, 21, 0.2));
         }
 
-        /* Hero / Header text */
         .hero-contact {
             text-align: center;
             position: relative;
@@ -87,7 +83,6 @@
             margin: 0 auto;
         }
 
-        /* Activities Section */
         .activities-section {
             background-color: var(--card-bg);
             padding: 30px;
@@ -119,14 +114,12 @@
             color: #fff;
         }
 
-        /* Contact Layout */
         .contact-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 40px;
         }
 
-        /* Brutalist Cards */
         .contact-form, .info-card {
             background-color: var(--card-bg);
             padding: 40px;
@@ -148,7 +141,6 @@
             padding-bottom: 10px;
         }
 
-        /* Form Styling */
         .form-group {
             margin-bottom: 25px;
         }
@@ -162,8 +154,8 @@
             letter-spacing: 0.5px;
         }
 
-        .form-group input, 
-        .form-group textarea, 
+        .form-group input,
+        .form-group textarea,
         .form-group select {
             width: 100%;
             padding: 15px;
@@ -175,8 +167,13 @@
             font-size: 1rem;
         }
 
-        .form-group input:focus, 
-        .form-group textarea:focus, 
+        .form-group select option {
+            background-color: #1a1a1a;
+            color: var(--text-main);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
         .form-group select:focus {
             outline: none;
             border-color: var(--accent-color);
@@ -202,7 +199,6 @@
             color: var(--accent-color);
         }
 
-        /* Info Section Styling */
         .contact-info {
             display: flex;
             flex-direction: column;
@@ -236,7 +232,6 @@
             color: #000;
         }
 
-        /* Parents specific box */
         .parents-box {
             box-shadow: 8px 8px 0px #ffffff;
             border-color: #555;
@@ -245,9 +240,9 @@
         .parents-box:hover {
             box-shadow: 10px 10px 0px #ffffff;
         }
-        
+
         .parents-box h3 {
-            color: #ffffff; 
+            color: #ffffff;
             border-bottom-color: #555;
         }
 
@@ -272,100 +267,100 @@
     </header>
 
     <main class="container">
-        
+
         <section class="hero-contact">
             <img src="https://content.stucom.tech/isfsc/comb2/ecriture-digitale/tongeluk/logo-bomb.jpeg" alt="" class="hero-bomb-bg">
-            <h1>Word deel van de Tongeluk Crew</h1>
-            <p>Ontdek onze ateliers, chill in het bos en leer nieuwe mensen kennen. Geen voorkennis of hoog niveau nodig, iedereen is welkom. Sluit je aan bij de community!</p>
+            <h1>Kom erbij, de deur staat open</h1>
+            <p>Of je nu wil leren, chillen of gewoon eens wil langskomen — hier ben je welkom. Geen audities, geen lidkaart nodig. Gewoon komen.</p>
         </section>
 
         <section class="activities-section">
-            <h2>Wat kan je hier doen?</h2>
+            <h2>Wat gebeurt er hier zoal?</h2>
             <div class="activities-grid">
                 <div class="activity-item">
                     <h4>🛠️ Repair Atelier</h4>
-                    <p>Fix je stuff om de twee donderdagen. Leer klussen in een relaxte sfeer.</p>
+                    <p>Iets stuk? Breng het mee. Om de twee donderdagen helpen we elkaar klussen — niemand vraagt naar je niveau.</p>
                 </div>
                 <div class="activity-item">
                     <h4>💬 Babbel Ensemble</h4>
-                    <p>No stress Vlaams leren! Elke woensdag chillen en praten zonder schoolse druk.</p>
+                    <p>Nederlands leren zonder schoolse druk. Elke woensdag gewoon praten, lachen en je ding doen.</p>
                 </div>
                 <div class="activity-item">
                     <h4>⚜️ Scouts Ghansoren</h4>
-                    <p>Elke zondag actie en avontuur in het bos. Bouw mee aan de groep.</p>
+                    <p>Elke zondag het bos in. Actie, kampvuur, vrienden. Je hoeft niks te weten, je leert het al doende.</p>
                 </div>
                 <div class="activity-item">
-                    <h4>🪩 Knalfeestjes</h4>
-                    <p>Van DUB tot drum & bass, we organiseren de hardste underground feestjes.</p>
+                    <h4>🪩 Feestjes</h4>
+                    <p>Van DUB tot drum & bass — we organiseren de vetste underground feesten van de buurt.</p>
                 </div>
                 <div class="activity-item">
                     <h4>🔊 Acid / Tekno Raves</h4>
-                    <p>Harde kicks en donkere vibes. Onze residents en guests brengen de beste underground tekno en acid om de bunker te laten beven.</p>
+                    <p>Harde kicks, donkere vibes en een bunker die beeft. Residents en guests die je nergens anders vindt.</p>
                 </div>
                 <div class="activity-item">
                     <h4>🎨 Street Art & DJ Lab</h4>
-                    <p>Leer draaien op onze decks of spuit je eigen piece op de wall. Ontwikkel je skills met pro's uit de scene.</p>
+                    <p>Wil je leren draaien of je eerste piece spuiten? Kom gewoon langs. Onze mensen begeleiden je.</p>
                 </div>
             </div>
         </section>
 
         <div class="contact-grid">
-            
+
             <div class="contact-form">
-                <h2>Schrijf je in / Join Us</h2>
+                <h2>Laat iets van je horen</h2>
                 <form action="#" method="POST">
                     <div class="form-group">
-                        <label for="naam">Hoe heet je? (Naam)</label>
-                        <input type="text" id="naam" name="naam" placeholder="Jouw naam" required="">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="email">E-mailadres of Instagram @</label>
-                        <input type="text" id="email" name="email" placeholder="Hoe kunnen we je bereiken?" required="">
+                        <label for="naam">Je naam</label>
+                        <input type="text" id="naam" name="naam" placeholder="Hoe noemen ze jou?" required="">
                     </div>
 
                     <div class="form-group">
-                        <label for="reden">Waar wil je aan meedoen?</label>
+                        <label for="email">Hoe bereiken we je?</label>
+                        <input type="text" id="email" name="email" placeholder="E-mail of Instagram @" required="">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reden">Waarvoor kom je langs?</label>
                         <select id="reden" name="reden">
-                            <option value="algemeen">Ik wil gewoon lid worden (Algemeen)</option>
-                            <option value="babbel">Babbel Ensemble (Vlaams oefenen)</option>
+                            <option value="algemeen">Gewoon lid worden, ik kijk wel wat er is</option>
+                            <option value="babbel">Babbel Ensemble — Vlaams oefenen</option>
                             <option value="repair">Repair Atelier</option>
                             <option value="scouts">Scouts Ghansoren</option>
-                            <option value="feesten">Meehelpen met de feestjes & raves</option>
+                            <option value="feesten">Helpen met de feestjes & raves</option>
                             <option value="djlab">Street Art & DJ Lab</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label for="bericht">Vertel iets over jezelf (optioneel)</label>
-                        <textarea id="bericht" name="bericht" rows="5" placeholder="Wat zijn je skills of wat wil je graag leren?"></textarea>
+                        <label for="bericht">Zeg iets over jezelf <span style="font-weight:normal;text-transform:none;font-size:0.85rem;color:var(--text-muted)">(niet verplicht)</span></label>
+                        <textarea id="bericht" name="bericht" rows="5" placeholder="Wat kan je, wat wil je leren, of gewoon wat je op je hart hebt."></textarea>
                     </div>
 
-                    <button type="submit">Ik schrijf me in!</button>
+                    <button type="submit">Stuur het op</button>
                 </form>
             </div>
 
             <div class="contact-info">
-                
+
                 <div class="info-card">
-                    <h3>Waar zijn we?</h3>
-                    <p><strong>Adres:</strong> Bosstraat 10, Ganshoren.</p>
-                    <p>We zitten midden in het groen. Vanaf de dichtstbijzijnde halte is het ongeveer 15 minuutjes stappen door het bos. Perfect om je hoofd leeg te maken.</p>
-                    <p><em>Geen zin om alleen te stappen? Stuur ons een berichtje, we spreken vaak af met een groepje aan de halte.</em></p>
+                    <h3>Waar vinden we elkaar?</h3>
+                    <p><strong>Bosstraat 10, Ganshoren.</strong></p>
+                    <p>We zitten midden in het groen, een kleine 15 minuten stappen door het bos vanaf de dichtstbijzijnde halte. Die wandeling maakt al deel uit van de avond.</p>
+                    <p><em>Wil je niet alleen stappen? Stuur een berichtje — er is bijna altijd iemand die afspreekt aan de halte.</em></p>
                 </div>
 
                 <div class="info-card">
-                    <h3>Check de planning</h3>
-                    <p>Wil je weten wat er deze week op de planning staat of wanneer we open zijn? Check onze Instagram voor de laatste updates, uren en ateliers.</p>
+                    <h3>Wanneer zijn we open?</h3>
+                    <p>De planning verandert regelmatig. Wat er deze week staat, wanneer we open zijn, wie er draait — het staat allemaal op onze Instagram.</p>
                     <a href="https://www.instagram.com/jhtongeluk/" target="_blank" class="insta-btn">Volg ons op Instagram</a>
                 </div>
 
                 <div class="info-card parents-box">
-                    <h3>Info voor ouders / Parents</h3>
-                    <p>Heeft u vragen over de veiligheid, de Nederlandstalige omkadering of de wandeling vanaf de halte? Ons team beantwoordt uw vragen graag persoonlijk.</p>
+                    <h3>Voor ouders</h3>
+                    <p>Vragen over de omkadering, de wandeling of de veiligheid 's avonds? We beantwoorden ze graag, gewoon persoonlijk.</p>
                     <p><strong>Bel ons:</strong> 02 / 123 45 67<br>
-                    <strong>E-mail:</strong> info@tongeluk.be</p>
-                    <p><em>Tip: Wij organiseren 's avonds en in de winter begeleid groepstransport terug naar de halte voor alle jongeren.</em></p>
+                    <strong>Mail:</strong> info@tongeluk.be</p>
+                    <p><em>'s Avonds en in de winter voorzien we begeleide terugkeer naar de halte voor alle jongeren.</em></p>
                 </div>
 
             </div>
