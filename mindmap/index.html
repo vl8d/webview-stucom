@@ -1186,11 +1186,22 @@ function openAuthModal() {
 document.getElementById('btn-account').onclick  = openAuthModal;
 document.getElementById('btn-close-auth').onclick = () => document.getElementById('auth-modal').classList.add('hidden');
 
+function parseFirebaseConfig(raw) {
+  // Extract the first {...} block (handles full Firebase snippet paste)
+  const m = raw.match(/\{[\s\S]*\}/);
+  if (!m) throw new Error("Aucun objet { } trouvé");
+  const obj = m[0];
+  // Try strict JSON first, then JS eval for unquoted keys
+  try { return JSON.parse(obj); } catch(e) {}
+  try { return Function('"use strict";return(' + obj + ')')(); } catch(e) {}
+  throw new Error("Format non reconnu");
+}
+
 document.getElementById('btn-save-config').onclick = () => {
   const raw = document.getElementById('auth-config-input').value.trim();
   const errEl = document.getElementById('auth-error-setup');
   try {
-    const config = JSON.parse(raw);
+    const config = parseFirebaseConfig(raw);
     if (!config.apiKey || !config.projectId) throw new Error('Champs apiKey/projectId manquants');
     localStorage.setItem(FB_CONFIG_KEY, JSON.stringify(config));
     if (!initFirebase(config)) { errEl.textContent = 'Échec init Firebase, vérifiez la config.'; return; }
@@ -1198,7 +1209,7 @@ document.getElementById('btn-save-config').onclick = () => {
     document.getElementById('auth-login-view').classList.remove('hidden');
     errEl.textContent = '';
   } catch(e) {
-    errEl.textContent = 'JSON invalide : ' + e.message;
+    errEl.textContent = 'Erreur : ' + e.message;
   }
 };
 
