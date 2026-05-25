@@ -421,25 +421,9 @@
   <div id="auth-box">
     <div class="auth-box-title">Compte</div>
 
-    <!-- Step 1: no Firebase config yet -->
-    <div id="auth-setup-view">
-      <div class="auth-box-body">
-        <div class="auth-steps">
-          <div class="auth-step"><span>1</span><div>Créez un projet sur <strong>console.firebase.google.com</strong></div></div>
-          <div class="auth-step"><span>2</span><div>Activez <strong>Authentication</strong> (Email/Password) et <strong>Firestore Database</strong></div></div>
-          <div class="auth-step"><span>3</span><div>Dans Paramètres → Config app web, copiez l'objet <code>firebaseConfig</code></div></div>
-          <div class="auth-step"><span>4</span><div>Collez-le ci-dessous :</div></div>
-        </div>
-        <div class="auth-field" style="margin-top:.4rem">
-          <label>Config Firebase (JSON)</label>
-          <textarea id="auth-config-input" class="auth-config-ta" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...",...}'></textarea>
-        </div>
-        <div id="auth-error-setup" class="auth-note" style="color:#f87171;min-height:.9rem"></div>
-        <button class="tb-btn primary auth-submit" id="btn-save-config">Enregistrer</button>
-      </div>
-    </div>
+    <div id="auth-setup-view" class="hidden"></div>
 
-    <!-- Step 2: login / register -->
+    <!-- login / register -->
     <div id="auth-login-view" class="hidden">
       <div class="auth-tabs">
         <button class="auth-tab active" id="tab-login">Connexion</button>
@@ -456,17 +440,15 @@
         </div>
         <div id="auth-error-login" class="auth-note" style="color:#f87171;min-height:.9rem"></div>
         <button class="tb-btn primary auth-submit" id="btn-auth-submit">Se connecter</button>
-        <button class="tb-btn auth-submit" id="btn-reset-config" style="font-size:.52rem;margin-top:.2rem">Changer config Firebase</button>
       </div>
     </div>
 
-    <!-- Step 3: logged in -->
+    <!-- logged in -->
     <div id="auth-account-view" class="hidden">
       <div class="auth-box-body">
         <div id="auth-account-email" class="auth-note" style="color:var(--white)"></div>
         <div id="auth-sync-status" class="auth-note" style="margin-top:.1rem"></div>
         <button class="tb-btn auth-submit" id="btn-logout" style="margin-top:.4rem">Déconnexion</button>
-        <button class="tb-btn auth-submit" id="btn-reset-config2" style="font-size:.52rem;margin-top:.2rem">Changer config Firebase</button>
       </div>
     </div>
 
@@ -1069,7 +1051,14 @@ document.getElementById('btn-export-pdf').addEventListener('click', async () => 
 });
 
 // ─── Firebase / Cloud Sync ────────────────────────────────────────────────────
-const FB_CONFIG_KEY = 'mindmap_fb_config';
+const FB_CONFIG = {
+  apiKey: "AIzaSyDsg8x8VM0fQ9BluC4je7c_bVG9K9EopGs",
+  authDomain: "stucom-mindmap.firebaseapp.com",
+  projectId: "stucom-mindmap",
+  storageBucket: "stucom-mindmap.firebasestorage.app",
+  messagingSenderId: "840241128239",
+  appId: "1:840241128239:web:861d96fa341ac12fe0b7da"
+};
 let fbApp = null, fbAuth = null, fbDb = null;
 let currentUser = null;
 let syncTimer = null;
@@ -1162,20 +1151,15 @@ function initFirebase(config) {
 }
 
 function tryLoadFirebase() {
-  const raw = localStorage.getItem(FB_CONFIG_KEY);
-  if (!raw) return false;
-  try { return initFirebase(JSON.parse(raw)); } catch(e) { return false; }
+  try { return initFirebase(FB_CONFIG); } catch(e) { return false; }
 }
 
 // ─── Auth modal ────────────────────────────────────────────────────────────────
 function openAuthModal() {
-  const authModal = document.getElementById('auth-modal');
-  authModal.classList.remove('hidden');
-  const hasConfig = !!localStorage.getItem(FB_CONFIG_KEY);
-  document.getElementById('auth-setup-view').classList.toggle('hidden', hasConfig);
-  document.getElementById('auth-login-view').classList.toggle('hidden', !hasConfig || !!currentUser);
+  document.getElementById('auth-modal').classList.remove('hidden');
+  document.getElementById('auth-setup-view').classList.add('hidden');
+  document.getElementById('auth-login-view').classList.toggle('hidden', !!currentUser);
   document.getElementById('auth-account-view').classList.toggle('hidden', !currentUser);
-  document.getElementById('auth-error-setup').textContent = '';
   document.getElementById('auth-error-login').textContent = '';
   if (currentUser) {
     const el = document.getElementById('auth-account-email');
@@ -1186,32 +1170,6 @@ function openAuthModal() {
 document.getElementById('btn-account').onclick  = openAuthModal;
 document.getElementById('btn-close-auth').onclick = () => document.getElementById('auth-modal').classList.add('hidden');
 
-function parseFirebaseConfig(raw) {
-  // Extract the first {...} block (handles full Firebase snippet paste)
-  const m = raw.match(/\{[\s\S]*\}/);
-  if (!m) throw new Error("Aucun objet { } trouvé");
-  const obj = m[0];
-  // Try strict JSON first, then JS eval for unquoted keys
-  try { return JSON.parse(obj); } catch(e) {}
-  try { return Function('"use strict";return(' + obj + ')')(); } catch(e) {}
-  throw new Error("Format non reconnu");
-}
-
-document.getElementById('btn-save-config').onclick = () => {
-  const raw = document.getElementById('auth-config-input').value.trim();
-  const errEl = document.getElementById('auth-error-setup');
-  try {
-    const config = parseFirebaseConfig(raw);
-    if (!config.apiKey || !config.projectId) throw new Error('Champs apiKey/projectId manquants');
-    localStorage.setItem(FB_CONFIG_KEY, JSON.stringify(config));
-    if (!initFirebase(config)) { errEl.textContent = 'Échec init Firebase, vérifiez la config.'; return; }
-    document.getElementById('auth-setup-view').classList.add('hidden');
-    document.getElementById('auth-login-view').classList.remove('hidden');
-    errEl.textContent = '';
-  } catch(e) {
-    errEl.textContent = 'Erreur : ' + e.message;
-  }
-};
 
 let authMode = 'login';
 document.getElementById('tab-login').onclick = () => {
@@ -1260,19 +1218,6 @@ document.getElementById('btn-auth-submit').onclick = async () => {
   btn.disabled = false;
   btn.textContent = authMode === 'register' ? "S'inscrire" : 'Se connecter';
 };
-
-function resetFirebaseConfig() {
-  localStorage.removeItem(FB_CONFIG_KEY);
-  if (fbApp) { try { fbApp.delete(); } catch(e) {} }
-  fbApp = null; fbAuth = null; fbDb = null; currentUser = null;
-  setAccountUI(null);
-  document.getElementById('auth-setup-view').classList.remove('hidden');
-  document.getElementById('auth-login-view').classList.add('hidden');
-  document.getElementById('auth-account-view').classList.add('hidden');
-  document.getElementById('auth-config-input').value = '';
-}
-document.getElementById('btn-reset-config').onclick  = resetFirebaseConfig;
-document.getElementById('btn-reset-config2').onclick = resetFirebaseConfig;
 
 document.getElementById('btn-logout').onclick = async () => {
   if (fbAuth) await fbAuth.signOut();
