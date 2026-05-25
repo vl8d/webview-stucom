@@ -76,6 +76,23 @@
   .tb-btn:active { background: #333; }
   .tb-btn.primary { background: var(--white); color: var(--black); border-color: var(--white); }
   .tb-btn.primary:hover { background: #ddd; border-color: #ddd; }
+
+  /* Export mode toggle */
+  .export-mode {
+    display: flex; border: 1px solid var(--line); border-radius: 2px;
+    overflow: hidden; flex-shrink: 0;
+  }
+  .mode-tab {
+    background: var(--black); border: none;
+    border-right: 1px solid var(--line);
+    color: var(--grey);
+    font-family: 'DM Mono', monospace; font-size: .58rem;
+    letter-spacing: .08em; text-transform: uppercase;
+    padding: 4px 9px; cursor: pointer;
+    transition: background .1s, color .1s; white-space: nowrap;
+  }
+  .mode-tab:last-child { border-right: none; }
+  .mode-tab.active { background: var(--white); color: var(--black); }
   #zoom-label {
     font-size: .6rem; color: var(--grey);
     min-width: 34px; text-align: center;
@@ -249,6 +266,10 @@
   <div class="tb-sep"></div>
   <button class="tb-btn" id="btn-export-png">↓ PNG</button>
   <button class="tb-btn primary" id="btn-export-pdf">↓ PDF</button>
+  <div class="export-mode">
+    <button class="mode-tab active" id="mode-dark">● Foncé</button>
+    <button class="mode-tab" id="mode-light">○ Clair</button>
+  </div>
   <div class="tb-sep"></div>
   <button class="tb-btn" id="btn-undo">↩ Undo</button>
   <div class="tb-hints">
@@ -274,6 +295,7 @@
   <div class="ap-header">Node</div>
   <button class="ap-btn" id="ap-add-child">+ Enfant <span class="ap-kbd">Tab</span></button>
   <button class="ap-btn" id="ap-add-sibling">↘ Frère <span class="ap-kbd">Enter</span></button>
+  <button class="ap-btn" id="ap-center-children" style="display:none">⊙ Centrer sur enfants</button>
   <button class="ap-btn ap-danger" id="ap-delete">✕ Supprimer <span class="ap-kbd">Del</span></button>
   <div class="ap-section">Image</div>
   <button class="ap-btn" id="ap-set-image">▣ Définir image</button>
@@ -353,6 +375,7 @@ let vx = 0, vy = 0, vz = 1;
 let panning = false, px0, py0, pvx, pvy;
 let dragging = null, dox, doy;
 let undoStack = [];
+let exportMode = 'dark';
 
 // ─── DOM ──────────────────────────────────────────────────────────────────────
 const wrap    = document.getElementById('canvas-wrap');
@@ -559,7 +582,8 @@ function deselect() {
 }
 
 // ─── Action panel ─────────────────────────────────────────────────────────────
-const apRemove = document.getElementById('ap-remove-image');
+const apRemove  = document.getElementById('ap-remove-image');
+const apCenterC = document.getElementById('ap-center-children');
 function updatePanel() {
   if (!selectedId || !nodes[selectedId]) { panel.classList.add('hidden'); return; }
   const n = nodes[selectedId];
@@ -568,10 +592,11 @@ function updatePanel() {
   const px = sc.x + (w * vz) / 2 + 10;
   const py = sc.y - (h * vz) / 2;
   const clampX = Math.min(px, innerWidth - 186);
-  const clampY = Math.max(54, Math.min(py, innerHeight - 320));
+  const clampY = Math.max(54, Math.min(py, innerHeight - 340));
   panel.style.left = clampX + 'px'; panel.style.top = clampY + 'px';
   panel.classList.remove('hidden');
-  apRemove.style.display = n.imageData ? '' : 'none';
+  apRemove.style.display  = n.imageData ? '' : 'none';
+  apCenterC.style.display = (n.children && n.children.length > 0) ? '' : 'none';
 }
 
 // ─── Color grid ───────────────────────────────────────────────────────────────
@@ -605,6 +630,16 @@ function addSibling(id) {
   const n = nodes[id];
   return n.parentId ? addChild(n.parentId) : addChild(id);
 }
+function centerOnChildren(id) {
+  if (!id || !nodes[id]) return;
+  const children = nodes[id].children.map(c => nodes[c]).filter(Boolean);
+  if (!children.length) return;
+  push();
+  nodes[id].x = children.reduce((s, c) => s + c.x, 0) / children.length;
+  nodes[id].y = children.reduce((s, c) => s + c.y, 0) / children.length;
+  save(); renderAll(); updatePanel(); toast('Nœud recentré');
+}
+
 function deleteNode(id) {
   if (!id || !nodes[id]) return;
   if (nodes[id].isRoot) return toast('Impossible de supprimer le nœud racine');
@@ -715,6 +750,14 @@ document.addEventListener('keydown', e => {
 // ─── Toolbar ──────────────────────────────────────────────────────────────────
 document.getElementById('btn-zoom-in').onclick  = () => zoom(vz+STEP_Z);
 document.getElementById('btn-zoom-out').onclick = () => zoom(vz-STEP_Z);
+
+function setExportMode(m) {
+  exportMode = m;
+  document.getElementById('mode-dark').classList.toggle('active',  m === 'dark');
+  document.getElementById('mode-light').classList.toggle('active', m === 'light');
+}
+document.getElementById('mode-dark').onclick  = () => setExportMode('dark');
+document.getElementById('mode-light').onclick = () => setExportMode('light');
 document.getElementById('btn-center').onclick   = center;
 document.getElementById('btn-undo').onclick     = undo;
 document.getElementById('btn-new').onclick      = () => modal.classList.remove('hidden');
@@ -725,9 +768,10 @@ document.getElementById('modal-confirm').onclick = () => {
 };
 
 // ─── Panel buttons ────────────────────────────────────────────────────────────
-document.getElementById('ap-add-child').onclick   = () => selectedId && addChild(selectedId);
-document.getElementById('ap-add-sibling').onclick = () => selectedId && addSibling(selectedId);
-document.getElementById('ap-delete').onclick      = () => selectedId && deleteNode(selectedId);
+document.getElementById('ap-add-child').onclick      = () => selectedId && addChild(selectedId);
+document.getElementById('ap-add-sibling').onclick    = () => selectedId && addSibling(selectedId);
+document.getElementById('ap-center-children').onclick = () => selectedId && centerOnChildren(selectedId);
+document.getElementById('ap-delete').onclick         = () => selectedId && deleteNode(selectedId);
 document.getElementById('ap-set-image').onclick   = () => selectedId && document.getElementById('img-file-input').click();
 document.getElementById('ap-remove-image').onclick = () => {
   if (!selectedId || !nodes[selectedId]) return;
@@ -790,10 +834,16 @@ async function buildCanvas() {
   const ctx = cv.getContext('2d');
   const tx = wx => (wx-x1)*S, ty = wy => (wy-y1)*S, ts = s => s*S;
 
-  ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0,0,W,H);
+  const isLight = exportMode === 'light';
+  const BG        = isLight ? '#f5f5f0' : '#0a0a0a';
+  const EDGE_CLR  = isLight ? '#c0c0b8' : '#303030';
+  const TXT_LIGHT = isLight ? '#f5f5f0' : '#f5f5f0'; // light text on dark nodes
+  const TXT_DARK  = '#0a0a0a';                         // dark text on light nodes
+
+  ctx.fillStyle = BG; ctx.fillRect(0,0,W,H);
 
   // Edges
-  ctx.strokeStyle = '#303030'; ctx.lineWidth = ts(1.5);
+  ctx.strokeStyle = EDGE_CLR; ctx.lineWidth = ts(1.5);
   all.forEach(n => {
     if (!n.parentId) return;
     const p = nodes[n.parentId]; if (!p) return;
@@ -810,18 +860,21 @@ async function buildCanvas() {
 
     ctx.fillStyle = col.fill; rrect(ctx, nx, ny, nw, nh, rx); ctx.fill();
 
+    // Root node on light bg: add border so it doesn't vanish
+    if (n.isRoot && isLight) {
+      ctx.strokeStyle = '#555'; ctx.lineWidth = ts(1.5);
+      rrect(ctx, nx, ny, nw, nh, rx); ctx.stroke();
+    }
+
     if (n.imageData && imgCache[n.id]) {
-      // image area clipped
       ctx.save(); rrect(ctx, nx, ny, nw, ts(IMG_AREA), rx); ctx.clip();
       ctx.drawImage(imgCache[n.id], nx, ny, nw, ts(IMG_AREA)); ctx.restore();
-      // label strip
       ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(nx, ny+ts(IMG_AREA), nw, ts(LBL_H));
-      // text
       ctx.fillStyle = '#f5f5f0'; ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.font = `${ts(12)}px "DM Mono", monospace`;
       ctx.fillText(n.label, tx(n.x), ny+ts(IMG_AREA)+ts(LBL_H)/2, nw-ts(8));
     } else {
-      ctx.fillStyle = col.label ? '#0a0a0a' : '#f5f5f0';
+      ctx.fillStyle = col.label ? TXT_DARK : TXT_LIGHT;
       ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.font = `${ts(12)}px "DM Mono", monospace`;
       ctx.fillText(n.label, tx(n.x), ty(n.y), nw-ts(8));
@@ -851,7 +904,8 @@ document.getElementById('btn-export-pdf').addEventListener('click', async () => 
   const ratio = Math.min(mmW/cv.width, mmH/cv.height);
   const iw=cv.width*ratio, ih=cv.height*ratio;
   const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
-  doc.setFillColor(10,10,10); doc.rect(0,0,mmW,mmH,'F');
+  const [pr,pg,pb] = exportMode === 'light' ? [245,245,240] : [10,10,10];
+  doc.setFillColor(pr,pg,pb); doc.rect(0,0,mmW,mmH,'F');
   doc.addImage(data,'PNG',(mmW-iw)/2,(mmH-ih)/2,iw,ih);
   doc.save('mindmap.pdf'); toast('PDF téléchargé');
 });
