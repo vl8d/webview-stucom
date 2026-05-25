@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MindMap</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
@@ -249,6 +252,95 @@
   ::-webkit-scrollbar { width: 3px; }
   ::-webkit-scrollbar-track { background: var(--black); }
   ::-webkit-scrollbar-thumb { background: var(--mid); }
+
+  /* ── Toolbar account ────────────────────────────────────────── */
+  #tb-account { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+  .sync-dot { font-size: .9rem; line-height: 1; flex-shrink: 0; cursor: default; }
+  .account-email {
+    font-size: .58rem; color: var(--grey); letter-spacing: .05em;
+    max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* ── Auth modal ─────────────────────────────────────────────── */
+  #auth-modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.82);
+    z-index: 450; display: flex;
+    align-items: center; justify-content: center;
+  }
+  #auth-modal.hidden { display: none; }
+  #auth-box {
+    background: var(--black); border: 1px solid var(--white);
+    max-width: 310px; width: 90%;
+    box-shadow: 5px 5px 0 rgba(255,255,255,.05);
+  }
+  .auth-box-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: .9rem; letter-spacing: .18em; color: var(--grey);
+    padding: .5rem 1.1rem .3rem; border-bottom: 1px solid var(--line);
+    text-transform: uppercase;
+  }
+  .auth-tabs {
+    display: flex; border-bottom: 1px solid var(--line);
+  }
+  .auth-tab {
+    flex: 1; background: var(--black); border: none;
+    border-right: 1px solid var(--line);
+    color: var(--grey); font-family: 'DM Mono', monospace;
+    font-size: .6rem; letter-spacing: .08em; text-transform: uppercase;
+    padding: .4rem; cursor: pointer; transition: background .1s, color .1s;
+  }
+  .auth-tab:last-child { border-right: none; }
+  .auth-tab.active { background: var(--white); color: var(--black); }
+  .auth-box-body {
+    padding: .9rem 1.1rem; display: flex; flex-direction: column; gap: .6rem;
+  }
+  .auth-field { display: flex; flex-direction: column; gap: .22rem; }
+  .auth-field label {
+    font-size: .55rem; letter-spacing: .1em; text-transform: uppercase; color: var(--grey);
+  }
+  .auth-field input {
+    background: var(--mid); color: var(--white);
+    border: 1px solid var(--line); border-radius: 0;
+    padding: .42rem .7rem; font-family: 'DM Mono', monospace; font-size: .65rem;
+    outline: none; transition: border-color .1s; width: 100%;
+  }
+  .auth-field input:focus { border-color: var(--white); }
+  #auth-error { font-size: .58rem; color: #f87171; min-height: .9rem; letter-spacing: .04em; }
+  .auth-submit { width: 100%; text-align: center; padding: .5rem; }
+  .auth-note { font-size: .6rem; color: var(--grey); letter-spacing: .04em; line-height: 1.65; }
+  .auth-steps { display: flex; flex-direction: column; gap: .5rem; }
+  .auth-step {
+    display: flex; gap: .55rem; align-items: flex-start;
+    font-size: .6rem; color: var(--grey); letter-spacing: .04em; line-height: 1.55;
+  }
+  .auth-step span {
+    flex-shrink: 0; width: 16px; height: 16px; border: 1px solid var(--grey);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .52rem; color: var(--white); margin-top: .05rem;
+  }
+  .auth-step strong { color: var(--white); }
+  .auth-step code { color: var(--white); font-family: 'DM Mono', monospace; font-size: .58rem; }
+  .auth-code {
+    background: var(--mid); border: 1px solid var(--line);
+    padding: .5rem .7rem; font-family: 'DM Mono', monospace;
+    font-size: .56rem; color: #a78bfa; line-height: 1.7;
+    letter-spacing: .02em; overflow-x: auto; white-space: pre;
+  }
+  .auth-config-ta {
+    background: var(--mid); color: var(--white);
+    border: 1px solid var(--line); border-radius: 0;
+    padding: .42rem .7rem; font-family: 'DM Mono', monospace; font-size: .55rem;
+    outline: none; transition: border-color .1s; width: 100%;
+    min-height: 72px; resize: vertical; line-height: 1.5;
+    letter-spacing: .02em;
+  }
+  .auth-config-ta:focus { border-color: var(--white); }
+  .auth-submit { width: 100%; text-align: center; padding: .5rem; }
+  .auth-close-bar {
+    border-top: 1px solid var(--line); display: flex; padding: 6px;
+  }
+  .auth-close-bar .tb-btn { flex: 1; text-align: center; }
 </style>
 </head>
 <body>
@@ -272,6 +364,12 @@
   </div>
   <div class="tb-sep"></div>
   <button class="tb-btn" id="btn-undo">↩ Undo</button>
+  <div class="tb-sep"></div>
+  <div id="tb-account">
+    <span class="sync-dot" id="sync-dot" title=""></span>
+    <span class="account-email" id="account-email"></span>
+    <button class="tb-btn" id="btn-account">Compte</button>
+  </div>
   <div class="tb-hints">
     <span class="tb-hint"><kbd>Tab</kbd> enfant</span>
     <span class="tb-hint"><kbd>Enter</kbd> frère</span>
@@ -315,6 +413,65 @@
     <div class="modal-btns">
       <button class="tb-btn" id="modal-cancel">Annuler</button>
       <button class="tb-btn primary" id="modal-confirm">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<div id="auth-modal" class="hidden">
+  <div id="auth-box">
+    <div class="auth-box-title">Compte</div>
+
+    <!-- Step 1: no Firebase config yet -->
+    <div id="auth-setup-view">
+      <div class="auth-box-body">
+        <div class="auth-steps">
+          <div class="auth-step"><span>1</span><div>Créez un projet sur <strong>console.firebase.google.com</strong></div></div>
+          <div class="auth-step"><span>2</span><div>Activez <strong>Authentication</strong> (Email/Password) et <strong>Firestore Database</strong></div></div>
+          <div class="auth-step"><span>3</span><div>Dans Paramètres → Config app web, copiez l'objet <code>firebaseConfig</code></div></div>
+          <div class="auth-step"><span>4</span><div>Collez-le ci-dessous :</div></div>
+        </div>
+        <div class="auth-field" style="margin-top:.4rem">
+          <label>Config Firebase (JSON)</label>
+          <textarea id="auth-config-input" class="auth-config-ta" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...",...}'></textarea>
+        </div>
+        <div id="auth-error-setup" class="auth-note" style="color:#f87171;min-height:.9rem"></div>
+        <button class="tb-btn primary auth-submit" id="btn-save-config">Enregistrer</button>
+      </div>
+    </div>
+
+    <!-- Step 2: login / register -->
+    <div id="auth-login-view" class="hidden">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login">Connexion</button>
+        <button class="auth-tab" id="tab-register">Inscription</button>
+      </div>
+      <div class="auth-box-body">
+        <div class="auth-field">
+          <label>Email</label>
+          <input type="email" id="auth-email" autocomplete="email" placeholder="vous@exemple.com">
+        </div>
+        <div class="auth-field">
+          <label>Mot de passe</label>
+          <input type="password" id="auth-password" autocomplete="current-password" placeholder="••••••••">
+        </div>
+        <div id="auth-error-login" class="auth-note" style="color:#f87171;min-height:.9rem"></div>
+        <button class="tb-btn primary auth-submit" id="btn-auth-submit">Se connecter</button>
+        <button class="tb-btn auth-submit" id="btn-reset-config" style="font-size:.52rem;margin-top:.2rem">Changer config Firebase</button>
+      </div>
+    </div>
+
+    <!-- Step 3: logged in -->
+    <div id="auth-account-view" class="hidden">
+      <div class="auth-box-body">
+        <div id="auth-account-email" class="auth-note" style="color:var(--white)"></div>
+        <div id="auth-sync-status" class="auth-note" style="margin-top:.1rem"></div>
+        <button class="tb-btn auth-submit" id="btn-logout" style="margin-top:.4rem">Déconnexion</button>
+        <button class="tb-btn auth-submit" id="btn-reset-config2" style="font-size:.52rem;margin-top:.2rem">Changer config Firebase</button>
+      </div>
+    </div>
+
+    <div class="auth-close-bar">
+      <button class="tb-btn" id="btn-close-auth">✕ Fermer</button>
     </div>
   </div>
 </div>
@@ -423,6 +580,7 @@ function undo() {
 // ─── Persistence ──────────────────────────────────────────────────────────────
 function save() {
   try { localStorage.setItem(LS_KEY, JSON.stringify({ nodes, rootId, vx, vy, vz })); } catch(e) {}
+  scheduleSave();
 }
 function load() {
   try {
@@ -909,6 +1067,211 @@ document.getElementById('btn-export-pdf').addEventListener('click', async () => 
   doc.addImage(data,'PNG',(mmW-iw)/2,(mmH-ih)/2,iw,ih);
   doc.save('mindmap.pdf'); toast('PDF téléchargé');
 });
+
+// ─── Firebase / Cloud Sync ────────────────────────────────────────────────────
+const FB_CONFIG_KEY = 'mindmap_fb_config';
+let fbApp = null, fbAuth = null, fbDb = null;
+let currentUser = null;
+let syncTimer = null;
+
+function setSyncState(s) {
+  const dot = document.getElementById('sync-dot');
+  const labels = { idle: '', syncing: '🔄', ok: '☁', err: '⚠' };
+  const titles = { idle: '', syncing: 'Sync…', ok: 'Synchronisé', err: 'Erreur sync' };
+  if (dot) { dot.textContent = labels[s] || ''; dot.title = titles[s] || ''; }
+  const st = document.getElementById('auth-sync-status');
+  if (st) st.textContent = titles[s] || '';
+}
+
+function scheduleSave() {
+  if (!currentUser || !fbDb) return;
+  setSyncState('syncing');
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(cloudSave, 1500);
+}
+
+async function cloudSave() {
+  if (!currentUser || !fbDb) return;
+  try {
+    await fbDb.collection('maps').doc(currentUser.uid).set({
+      data: JSON.stringify({ nodes, rootId, vx, vy, vz }),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    setSyncState('ok');
+  } catch(e) {
+    console.error('cloudSave:', e);
+    setSyncState('err');
+    toast('Erreur sync cloud');
+  }
+}
+
+async function cloudLoad() {
+  if (!currentUser || !fbDb) return false;
+  try {
+    const doc = await fbDb.collection('maps').doc(currentUser.uid).get();
+    if (!doc.exists) return false;
+    const d = JSON.parse(doc.data().data);
+    if (!d || !d.nodes) return false;
+    nodes = d.nodes; rootId = d.rootId;
+    vx = d.vx || 0; vy = d.vy || 0; vz = d.vz || 1;
+    return true;
+  } catch(e) {
+    console.error('cloudLoad:', e);
+    return false;
+  }
+}
+
+function setAccountUI(user) {
+  const btn = document.getElementById('btn-account');
+  const emailEl = document.getElementById('account-email');
+  if (user) {
+    btn.textContent = 'Compte ☁';
+    if (emailEl) emailEl.textContent = user.email;
+  } else {
+    btn.textContent = 'Compte';
+    if (emailEl) emailEl.textContent = '';
+    setSyncState('idle');
+  }
+}
+
+function handleAuthChange(user) {
+  currentUser = user;
+  setAccountUI(user);
+  if (user) {
+    const emailEl = document.getElementById('auth-account-email');
+    if (emailEl) emailEl.textContent = 'Connecté : ' + user.email;
+    cloudLoad().then(loaded => {
+      if (loaded) { renderAll(); center(); toast('Carte chargée depuis le cloud'); }
+      else setSyncState('ok');
+    });
+  }
+}
+
+function initFirebase(config) {
+  try {
+    if (fbApp) { try { fbApp.delete(); } catch(e) {} fbApp = null; fbAuth = null; fbDb = null; }
+    fbApp = firebase.initializeApp(config, 'mindmap-' + Date.now());
+    fbAuth = fbApp.auth();
+    fbDb   = fbApp.firestore();
+    fbAuth.onAuthStateChanged(handleAuthChange);
+    return true;
+  } catch(e) {
+    console.error('initFirebase:', e);
+    return false;
+  }
+}
+
+function tryLoadFirebase() {
+  const raw = localStorage.getItem(FB_CONFIG_KEY);
+  if (!raw) return false;
+  try { return initFirebase(JSON.parse(raw)); } catch(e) { return false; }
+}
+
+// ─── Auth modal ────────────────────────────────────────────────────────────────
+function openAuthModal() {
+  const authModal = document.getElementById('auth-modal');
+  authModal.classList.remove('hidden');
+  const hasConfig = !!localStorage.getItem(FB_CONFIG_KEY);
+  document.getElementById('auth-setup-view').classList.toggle('hidden', hasConfig);
+  document.getElementById('auth-login-view').classList.toggle('hidden', !hasConfig || !!currentUser);
+  document.getElementById('auth-account-view').classList.toggle('hidden', !currentUser);
+  document.getElementById('auth-error-setup').textContent = '';
+  document.getElementById('auth-error-login').textContent = '';
+  if (currentUser) {
+    const el = document.getElementById('auth-account-email');
+    if (el) el.textContent = 'Connecté : ' + currentUser.email;
+  }
+}
+
+document.getElementById('btn-account').onclick  = openAuthModal;
+document.getElementById('btn-close-auth').onclick = () => document.getElementById('auth-modal').classList.add('hidden');
+
+document.getElementById('btn-save-config').onclick = () => {
+  const raw = document.getElementById('auth-config-input').value.trim();
+  const errEl = document.getElementById('auth-error-setup');
+  try {
+    const config = JSON.parse(raw);
+    if (!config.apiKey || !config.projectId) throw new Error('Champs apiKey/projectId manquants');
+    localStorage.setItem(FB_CONFIG_KEY, JSON.stringify(config));
+    if (!initFirebase(config)) { errEl.textContent = 'Échec init Firebase, vérifiez la config.'; return; }
+    document.getElementById('auth-setup-view').classList.add('hidden');
+    document.getElementById('auth-login-view').classList.remove('hidden');
+    errEl.textContent = '';
+  } catch(e) {
+    errEl.textContent = 'JSON invalide : ' + e.message;
+  }
+};
+
+let authMode = 'login';
+document.getElementById('tab-login').onclick = () => {
+  authMode = 'login';
+  document.getElementById('tab-login').classList.add('active');
+  document.getElementById('tab-register').classList.remove('active');
+  document.getElementById('btn-auth-submit').textContent = 'Se connecter';
+  document.getElementById('auth-error-login').textContent = '';
+};
+document.getElementById('tab-register').onclick = () => {
+  authMode = 'register';
+  document.getElementById('tab-register').classList.add('active');
+  document.getElementById('tab-login').classList.remove('active');
+  document.getElementById('btn-auth-submit').textContent = "S'inscrire";
+  document.getElementById('auth-error-login').textContent = '';
+};
+
+document.getElementById('btn-auth-submit').onclick = async () => {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass  = document.getElementById('auth-password').value;
+  const errEl = document.getElementById('auth-error-login');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Email et mot de passe requis.'; return; }
+  if (!fbAuth) { errEl.textContent = 'Firebase non initialisé.'; return; }
+  const btn = document.getElementById('btn-auth-submit');
+  btn.disabled = true; btn.textContent = '…';
+  try {
+    if (authMode === 'register') {
+      await fbAuth.createUserWithEmailAndPassword(email, pass);
+    } else {
+      await fbAuth.signInWithEmailAndPassword(email, pass);
+    }
+    document.getElementById('auth-modal').classList.add('hidden');
+    toast(authMode === 'register' ? 'Compte créé !' : 'Connecté !');
+  } catch(e) {
+    const msgs = {
+      'auth/email-already-in-use': 'Email déjà utilisé.',
+      'auth/invalid-email': 'Email invalide.',
+      'auth/weak-password': 'Mot de passe trop faible (6 car. min).',
+      'auth/user-not-found': 'Aucun compte avec cet email.',
+      'auth/wrong-password': 'Mot de passe incorrect.',
+      'auth/invalid-credential': 'Identifiants invalides.',
+    };
+    errEl.textContent = msgs[e.code] || e.message;
+  }
+  btn.disabled = false;
+  btn.textContent = authMode === 'register' ? "S'inscrire" : 'Se connecter';
+};
+
+function resetFirebaseConfig() {
+  localStorage.removeItem(FB_CONFIG_KEY);
+  if (fbApp) { try { fbApp.delete(); } catch(e) {} }
+  fbApp = null; fbAuth = null; fbDb = null; currentUser = null;
+  setAccountUI(null);
+  document.getElementById('auth-setup-view').classList.remove('hidden');
+  document.getElementById('auth-login-view').classList.add('hidden');
+  document.getElementById('auth-account-view').classList.add('hidden');
+  document.getElementById('auth-config-input').value = '';
+}
+document.getElementById('btn-reset-config').onclick  = resetFirebaseConfig;
+document.getElementById('btn-reset-config2').onclick = resetFirebaseConfig;
+
+document.getElementById('btn-logout').onclick = async () => {
+  if (fbAuth) await fbAuth.signOut();
+  document.getElementById('auth-modal').classList.add('hidden');
+  document.getElementById('auth-account-view').classList.add('hidden');
+  document.getElementById('auth-login-view').classList.remove('hidden');
+  toast('Déconnecté');
+};
+
+tryLoadFirebase();
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 buildColorGrid();
