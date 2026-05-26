@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mentions légales — MindMap ISFSC</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --black: #0a0a0a;
+    --white: #f5f5f0;
+    --grey:  #888;
+    --mid:   #1a1a1a;
+    --line:  #252525;
+    --accent: #a78bfa;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--black);
+    color: var(--white);
+    line-height: 1.75;
+    font-size: .85rem;
+    letter-spacing: .02em;
+  }
+
+  /* ── Nav ── */
+  #top-bar {
+    position: sticky; top: 0;
+    background: var(--black);
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem; height: 44px;
+    z-index: 100;
+  }
+  #top-bar .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem; letter-spacing: .12em; color: var(--white);
+    text-decoration: none;
+  }
+  #top-bar .back {
+    font-size: .6rem; color: var(--grey); letter-spacing: .1em;
+    text-decoration: none; text-transform: uppercase;
+    transition: color .15s;
+  }
+  #top-bar .back:hover { color: var(--white); }
+
+  /* ── Layout ── */
+  .page-wrap {
+    max-width: 780px; margin: 0 auto;
+    padding: 3.5rem 2rem 6rem;
+  }
+  .page-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.2rem; letter-spacing: .18em;
+    color: var(--white); margin-bottom: .4rem;
+  }
+  .page-meta {
+    font-size: .58rem; color: var(--grey);
+    letter-spacing: .1em; text-transform: uppercase;
+    margin-bottom: 2.5rem;
+  }
+
+  /* ── Quick nav ── */
+  .toc {
+    border: 1px solid var(--line);
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 3.5rem;
+    display: flex; flex-direction: column; gap: .45rem;
+  }
+  .toc-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: .8rem; letter-spacing: .15em; color: var(--grey);
+    text-transform: uppercase; margin-bottom: .3rem;
+  }
+  .toc a {
+    font-size: .62rem; color: var(--accent);
+    text-decoration: none; letter-spacing: .06em;
+    transition: color .12s;
+  }
+  .toc a:hover { color: var(--white); }
+
+  /* ── Sections ── */
+  .doc-section {
+    margin-bottom: 4rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+  }
+  .doc-section:first-of-type { border-top: none; }
+
+  .section-label {
+    font-size: .58rem; color: var(--grey);
+    letter-spacing: .15em; text-transform: uppercase;
+    margin-bottom: .35rem;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem; letter-spacing: .14em;
+    color: var(--white); margin-bottom: 1.6rem;
+  }
+
+  h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: .95rem; letter-spacing: .14em; color: var(--grey);
+    text-transform: uppercase; margin: 1.8rem 0 .6rem;
+  }
+  p { margin-bottom: .9rem; color: var(--white); }
+  p:last-child { margin-bottom: 0; }
+
+  ul, ol {
+    padding-left: 1.4rem;
+    margin-bottom: .9rem;
+    display: flex; flex-direction: column; gap: .35rem;
+  }
+  li { color: var(--white); }
+  li::marker { color: var(--grey); }
+
+  .highlight-box {
+    background: var(--mid); border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    padding: .9rem 1.2rem;
+    margin: 1.2rem 0;
+    font-size: .8rem;
+  }
+  .highlight-box strong { color: var(--accent); }
+
+  .data-table {
+    width: 100%; border-collapse: collapse;
+    margin: 1rem 0 1.4rem; font-size: .75rem;
+  }
+  .data-table th {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: .72rem; letter-spacing: .12em;
+    color: var(--grey); text-align: left;
+    padding: .5rem .8rem; border-bottom: 1px solid var(--line);
+    text-transform: uppercase;
+  }
+  .data-table td {
+    padding: .55rem .8rem;
+    border-bottom: 1px solid var(--line);
+    color: var(--white); vertical-align: top;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table td:first-child { color: var(--accent); }
+
+  .badge {
+    display: inline-block;
+    background: var(--mid); border: 1px solid var(--line);
+    border-radius: 2px; padding: 1px 7px;
+    font-size: .55rem; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--grey); margin-right: 4px;
+  }
+  .badge.green { border-color: #166534; color: #4ade80; background: #052e16; }
+  .badge.red   { border-color: #7f1d1d; color: #f87171; background: #140808; }
+
+  a { color: var(--accent); }
+  a:hover { color: var(--white); }
+
+  hr { border: none; border-top: 1px solid var(--line); margin: 2rem 0; }
+
+  .contact-block {
+    background: var(--mid); border: 1px solid var(--line);
+    padding: 1rem 1.3rem; margin: 1.2rem 0;
+    font-size: .78rem; line-height: 1.6;
+  }
+  .contact-block .label {
+    font-size: .55rem; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--grey); display: block; margin-bottom: .25rem;
+  }
+</style>
+</head>
+<body>
+
+<div id="top-bar">
+  <a class="logo" href="index.html">MindMap</a>
+  <a class="back" href="index.html">← Retour à l'application</a>
+</div>
+
+<div class="page-wrap">
+
+  <h1 class="page-title">Mentions légales</h1>
+  <p class="page-meta">Dernière mise à jour : 27 mai 2026 &nbsp;·&nbsp; Langue : Français &nbsp;·&nbsp; Juridiction : Belgique</p>
+
+  <nav class="toc">
+    <div class="toc-title">Sommaire</div>
+    <a href="#confidentialite">1. Politique de confidentialité</a>
+    <a href="#conditions">2. Conditions d'utilisation</a>
+    <a href="#rgpd">3. Conformité RGPD</a>
+    <a href="#cookies">4. Cookies et stockage local</a>
+  </nav>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- 1. POLITIQUE DE CONFIDENTIALITÉ                                -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <section class="doc-section" id="confidentialite">
+    <div class="section-label">Document 1/4</div>
+    <h2 class="section-title">Politique de confidentialité</h2>
+
+    <h3>1.1 Responsable de traitement</h3>
+    <p>Le responsable du traitement des données personnelles collectées via cette application est :</p>
+    <div class="contact-block">
+      <span class="label">Identité</span>
+      Vladimir Lorent — personne physique<br>
+      Belgique<br>
+      <span class="label" style="margin-top:.5rem">Contact</span>
+      <a href="mailto:mindmap@stucom.tech">mindmap@stucom.tech</a>
+    </div>
+    <p>Cette application est mise à disposition des étudiant·es de l'ISFSC (Institut Supérieur de Formation Sociale et de Communication) dans le cadre de leurs activités de formation.</p>
+
+    <h3>1.2 Données collectées</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Donnée</th>
+          <th>Source</th>
+          <th>Obligatoire ?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Adresse e-mail</td>
+          <td>Saisie lors de l'inscription, ou transmise via OAuth</td>
+          <td>Oui — identification du compte</td>
+        </tr>
+        <tr>
+          <td>Nom d'affichage</td>
+          <td>Google ou Microsoft OAuth (si connexion via ces services)</td>
+          <td>Non — affichage uniquement</td>
+        </tr>
+        <tr>
+          <td>Photo de profil</td>
+          <td>URL transmise par Google ou Microsoft OAuth</td>
+          <td>Non — affichage uniquement</td>
+        </tr>
+        <tr>
+          <td>Contenu des cartes mentales</td>
+          <td>Créé par l'utilisateur·ice dans l'application</td>
+          <td>Non — fonctionnalité optionnelle (sync cloud)</td>
+        </tr>
+        <tr>
+          <td>Images intégrées aux cartes</td>
+          <td>Téléchargées par l'utilisateur·ice</td>
+          <td>Non — fonctionnalité optionnelle</td>
+        </tr>
+        <tr>
+          <td>Adresse IP</td>
+          <td>Collectée automatiquement par les services tiers (Firebase, GitHub, Google)</td>
+          <td>Automatique — inhérente à la navigation web</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="highlight-box">
+      <strong>Note :</strong> L'application fonctionne sans compte. La synchronisation cloud est une fonctionnalité optionnelle. Sans connexion, aucune donnée personnelle n'est transmise à des serveurs distants.
+    </div>
+
+    <h3>1.3 Finalités et bases légales</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Finalité</th>
+          <th>Base légale (RGPD art. 6)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Création et gestion du compte utilisateur</td>
+          <td>Exécution d'un contrat — art. 6.1.b</td>
+        </tr>
+        <tr>
+          <td>Synchronisation des cartes mentales</td>
+          <td>Exécution d'un contrat — art. 6.1.b</td>
+        </tr>
+        <tr>
+          <td>Affichage du profil (nom, photo)</td>
+          <td>Consentement (accordé lors de l'autorisation OAuth) — art. 6.1.a</td>
+        </tr>
+        <tr>
+          <td>Sécurité, prévention des abus</td>
+          <td>Intérêts légitimes — art. 6.1.f</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>1.4 Sous-traitants et transferts hors UE</h3>
+    <p>Certains services tiers sont utilisés pour le fonctionnement de l'application. Ces services peuvent traiter vos données en dehors de l'Union européenne.</p>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Service</th>
+          <th>Rôle</th>
+          <th>Siège</th>
+          <th>Garanties</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Google Firebase (Auth)</td>
+          <td>Authentification des comptes</td>
+          <td>États-Unis</td>
+          <td>Clauses Contractuelles Types (CCT)</td>
+        </tr>
+        <tr>
+          <td>Google Firebase (Firestore)</td>
+          <td>Stockage cloud des cartes</td>
+          <td>États-Unis</td>
+          <td>Clauses Contractuelles Types (CCT)</td>
+        </tr>
+        <tr>
+          <td>Google Fonts</td>
+          <td>Polices d'écriture (DM Mono, Bebas Neue)</td>
+          <td>États-Unis</td>
+          <td>Clauses Contractuelles Types (CCT)</td>
+        </tr>
+        <tr>
+          <td>GitHub Pages (Microsoft)</td>
+          <td>Hébergement de l'application</td>
+          <td>États-Unis</td>
+          <td>Data Processing Agreement Microsoft</td>
+        </tr>
+        <tr>
+          <td>Cloudflare (cdnjs)</td>
+          <td>Bibliothèque d'export PDF (jsPDF)</td>
+          <td>États-Unis</td>
+          <td>Clauses Contractuelles Types (CCT)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Les Clauses Contractuelles Types (CCT) adoptées par la Commission européenne constituent une garantie appropriée au sens de l'art. 46 RGPD pour les transferts vers des pays tiers.</p>
+
+    <h3>1.5 Durée de conservation</h3>
+    <ul>
+      <li><strong>Compte et données de cartes :</strong> conservés tant que le compte est actif. En l'absence d'activité pendant 24 mois, les données peuvent être supprimées.</li>
+      <li><strong>Données locales (localStorage) :</strong> conservées sur votre appareil jusqu'à ce que vous vidiez le cache de votre navigateur ou supprimiez manuellement les données.</li>
+      <li><strong>Données de session Firebase :</strong> gérées par Firebase — voir la <a href="https://firebase.google.com/support/privacy" target="_blank">politique de confidentialité Firebase</a>.</li>
+    </ul>
+
+    <h3>1.6 Vos droits</h3>
+    <p>Conformément au RGPD (articles 15 à 22) et à la loi belge du 30 juillet 2018, vous disposez des droits suivants :</p>
+    <ul>
+      <li><strong>Accès :</strong> obtenir une copie de vos données personnelles</li>
+      <li><strong>Rectification :</strong> corriger des données inexactes</li>
+      <li><strong>Effacement :</strong> demander la suppression de vos données (« droit à l'oubli »)</li>
+      <li><strong>Portabilité :</strong> recevoir vos données dans un format structuré et lisible par machine</li>
+      <li><strong>Opposition :</strong> vous opposer à certains traitements</li>
+      <li><strong>Limitation :</strong> demander la suspension temporaire d'un traitement</li>
+      <li><strong>Retrait du consentement :</strong> à tout moment, sans effet rétroactif</li>
+    </ul>
+    <p>Pour exercer ces droits, contactez : <a href="mailto:mindmap@stucom.tech">mindmap@stucom.tech</a><br>
+    Délai de réponse : 1 mois maximum (délai extensible de 2 mois en cas de demande complexe, avec notification préalable).</p>
+
+    <h3>1.7 Réclamation auprès de l'autorité de contrôle</h3>
+    <p>Si vous estimez que le traitement de vos données ne respecte pas le RGPD, vous avez le droit d'introduire une réclamation auprès de :</p>
+    <div class="contact-block">
+      <span class="label">Autorité de Protection des Données (APD) — Belgique</span>
+      Rue de la Presse 35, 1000 Bruxelles<br>
+      <a href="mailto:contact@apd-gba.be">contact@apd-gba.be</a> &nbsp;·&nbsp;
+      <a href="https://www.autoriteprotectiondonnees.be" target="_blank">autoriteprotectiondonnees.be</a>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- 2. CONDITIONS D'UTILISATION                                     -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <section class="doc-section" id="conditions">
+    <div class="section-label">Document 2/4</div>
+    <h2 class="section-title">Conditions d'utilisation</h2>
+
+    <h3>2.1 Objet</h3>
+    <p>MindMap est un outil de création de cartes mentales (mind mapping) mis à disposition des étudiant·es de l'ISFSC. Il permet de créer, éditer et exporter des cartes mentales, avec synchronisation optionnelle dans le cloud.</p>
+    <p>L'accès et l'utilisation de l'application impliquent l'acceptation pleine et entière des présentes conditions.</p>
+
+    <h3>2.2 Accès et comptes</h3>
+    <ul>
+      <li>L'application est accessible sans inscription pour un usage local (données stockées sur l'appareil uniquement).</li>
+      <li>La création d'un compte est nécessaire uniquement pour bénéficier de la synchronisation cloud et de la sauvegarde multi-appareils.</li>
+      <li>Chaque utilisateur·ice est responsable de la confidentialité de ses identifiants de connexion.</li>
+      <li>L'utilisation de comptes tiers (Google, Microsoft) est soumise aux conditions de ces services respectifs.</li>
+    </ul>
+
+    <h3>2.3 Utilisation acceptable</h3>
+    <p>L'application est réservée à un usage pédagogique et personnel. Il est interdit de :</p>
+    <ul>
+      <li>Utiliser l'application à des fins commerciales ou lucratives</li>
+      <li>Stocker des contenus illégaux, diffamatoires, discriminatoires ou portant atteinte aux droits de tiers</li>
+      <li>Tenter de contourner les mécanismes de sécurité de l'application</li>
+      <li>Accéder aux données d'autres utilisateur·ices</li>
+      <li>Utiliser l'application de manière à surcharger les services Firebase ou GitHub Pages</li>
+    </ul>
+
+    <h3>2.4 Propriété des contenus</h3>
+    <p>Les cartes mentales créées par les utilisateur·ices leur appartiennent. L'opérateur ne revendique aucun droit de propriété sur le contenu généré.</p>
+    <p>En utilisant la fonctionnalité de synchronisation cloud, vous accordez une licence technique limitée permettant le stockage et la transmission de vos données via Firebase, uniquement dans le but de vous fournir le service.</p>
+
+    <h3>2.5 Disponibilité du service</h3>
+    <p>L'application est fournie <em>en l'état</em> (<em>as is</em>), sans garantie de disponibilité continue. Des interruptions peuvent survenir en raison de maintenances, de mises à jour ou de défaillances des services tiers (Firebase, GitHub Pages).</p>
+    <p>L'opérateur ne peut être tenu responsable de la perte de données en cas de défaillance technique. Il est recommandé d'exporter régulièrement vos cartes en PNG ou PDF.</p>
+
+    <h3>2.6 Limitation de responsabilité</h3>
+    <p>Dans les limites permises par le droit belge, l'opérateur ne saurait être tenu responsable :</p>
+    <ul>
+      <li>Des dommages indirects résultant de l'utilisation ou de l'impossibilité d'utiliser l'application</li>
+      <li>De la perte de données due à une défaillance technique ou à une mauvaise utilisation</li>
+      <li>Des pratiques des services tiers (Google, Microsoft, Cloudflare, GitHub)</li>
+    </ul>
+
+    <h3>2.7 Modifications</h3>
+    <p>Les présentes conditions peuvent être modifiées à tout moment. Les utilisateur·ices seront informé·es des modifications significatives via l'application ou par e-mail. La poursuite de l'utilisation après notification vaut acceptation des nouvelles conditions.</p>
+
+    <h3>2.8 Droit applicable et juridiction</h3>
+    <p>Les présentes conditions sont régies par le droit belge. Tout litige relève de la compétence des juridictions belges.</p>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- 3. CONFORMITÉ RGPD                                              -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <section class="doc-section" id="rgpd">
+    <div class="section-label">Document 3/4</div>
+    <h2 class="section-title">Conformité RGPD</h2>
+
+    <p>Cette section résume les mesures de conformité au Règlement Général sur la Protection des Données (RGPD — Règlement UE 2016/679) et à la loi belge du 30 juillet 2018 relative à la protection des personnes physiques à l'égard des traitements de données à caractère personnel.</p>
+
+    <h3>3.1 Checklist de conformité</h3>
+    <table class="data-table">
+      <thead>
+        <tr><th>Obligation</th><th>Statut</th><th>Note</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Identification du responsable de traitement</td>
+          <td><span class="badge green">✓ Conforme</span></td>
+          <td>Mentionné dans la politique de confidentialité</td>
+        </tr>
+        <tr>
+          <td>Information des personnes concernées</td>
+          <td><span class="badge green">✓ Conforme</span></td>
+          <td>Politique de confidentialité accessible depuis l'application</td>
+        </tr>
+        <tr>
+          <td>Base légale identifiée pour chaque traitement</td>
+          <td><span class="badge green">✓ Conforme</span></td>
+          <td>Voir tableau section 1.3</td>
+        </tr>
+        <tr>
+          <td>Droits des personnes (accès, effacement, etc.)</td>
+          <td><span class="badge green">✓ Conforme</span></td>
+          <td>Contact disponible : mindmap@stucom.tech</td>
+        </tr>
+        <tr>
+          <td>Transferts hors UE encadrés</td>
+          <td><span class="badge green">✓ Conforme</span></td>
+          <td>Via les CCT de Google, Microsoft et Cloudflare</td>
+        </tr>
+        <tr>
+          <td>Durée de conservation définie</td>
+          <td><span class="badge green">✓ Conforme</span></td>
+          <td>Voir section 1.5</td>
+        </tr>
+        <tr>
+          <td>Registre des activités de traitement (art. 30)</td>
+          <td><span class="badge red">À faire</span></td>
+          <td>Document interne — à maintenir par l'opérateur (non publié)</td>
+        </tr>
+        <tr>
+          <td>Délégué à la protection des données (DPO)</td>
+          <td><span class="badge green">✓ Non requis</span></td>
+          <td>Traitement non systématique à grande échelle — DPO facultatif</td>
+        </tr>
+        <tr>
+          <td>Analyse d'impact (AIPD/DPIA)</td>
+          <td><span class="badge green">✓ Non requise</span></td>
+          <td>Pas de traitement à risque élevé identifié</td>
+        </tr>
+        <tr>
+          <td>Sécurité des données (art. 32)</td>
+          <td><span class="badge green">✓ Partiel</span></td>
+          <td>Authentification Firebase, HTTPS, pas de données sensibles</td>
+        </tr>
+        <tr>
+          <td>Procédure de notification de violation (art. 33)</td>
+          <td><span class="badge red">À formaliser</span></td>
+          <td>En cas de violation : notifier l'APD dans les 72h</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>3.2 Données traitées — résumé</h3>
+    <div class="highlight-box">
+      <strong>Catégories de données :</strong> données ordinaires uniquement (e-mail, nom, contenu créé par l'utilisateur). <strong>Aucune donnée sensible</strong> au sens de l'art. 9 RGPD (santé, origine ethnique, opinions politiques, etc.) n'est collectée ni stockée.
+    </div>
+
+    <h3>3.3 Mesures de sécurité techniques</h3>
+    <ul>
+      <li>Transport chiffré HTTPS pour toutes les communications</li>
+      <li>Mots de passe jamais stockés en clair (hachage géré par Firebase Auth)</li>
+      <li>Authentification par jeton (token) stocké dans IndexedDB du navigateur</li>
+      <li>Accès Firestore limité aux données du compte authentifié (règles de sécurité Firebase)</li>
+      <li>Pas d'accès administrateur aux cartes des utilisateur·ices via l'interface de l'application</li>
+    </ul>
+
+    <h3>3.4 Procédure en cas de violation de données</h3>
+    <p>En cas de violation de données personnelles (accès non autorisé, perte, destruction) :</p>
+    <ol>
+      <li>Notification à l'APD belge dans les <strong>72 heures</strong> : <a href="https://www.autoriteprotectiondonnees.be/citoyen/signaler-un-probleme" target="_blank">formulaire APD</a></li>
+      <li>Information des personnes concernées si la violation présente un risque élevé pour leurs droits</li>
+      <li>Documentation de l'incident (nature, données concernées, mesures prises)</li>
+    </ol>
+
+    <h3>3.5 Action recommandée — Registre art. 30</h3>
+    <p>En tant que responsable de traitement, vous devez tenir un registre interne des activités de traitement (art. 30 RGPD). Ce document n'a pas à être publié, mais doit être disponible sur demande de l'APD. Il doit contenir : nom du responsable, finalités, catégories de données, destinataires, transferts hors UE, délais de conservation.</p>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- 4. COOKIES ET STOCKAGE LOCAL                                    -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <section class="doc-section" id="cookies">
+    <div class="section-label">Document 4/4</div>
+    <h2 class="section-title">Cookies et stockage local</h2>
+
+    <div class="highlight-box">
+      <strong>En résumé :</strong> cette application n'utilise <strong>aucun cookie publicitaire, de tracking ou analytique</strong>. Aucun bandeau de consentement cookies n'est requis. Seul un stockage technique strictement nécessaire est utilisé.
+    </div>
+
+    <h3>4.1 Pas de cookies traditionnels</h3>
+    <p>L'application ne dépose <strong>aucun cookie HTTP</strong> sur votre navigateur à des fins publicitaires, de profilage ou d'analyse d'audience.</p>
+
+    <h3>4.2 Stockage technique utilisé</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Technologie</th>
+          <th>Données stockées</th>
+          <th>Où ?</th>
+          <th>Durée</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>localStorage</td>
+          <td>Cartes mentales (contenu, style, viewport), identifiant de la carte active</td>
+          <td>Votre appareil uniquement</td>
+          <td>Jusqu'à vidage du cache ou suppression manuelle</td>
+        </tr>
+        <tr>
+          <td>IndexedDB</td>
+          <td>Jeton d'authentification Firebase (si compte connecté)</td>
+          <td>Votre appareil uniquement</td>
+          <td>Jusqu'à déconnexion ou expiration du jeton</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Ces données <strong>ne quittent jamais votre appareil</strong> sauf lors d'une synchronisation cloud explicitement initiée par vous (bouton "Sauvegarder maintenant" ou sauvegarde automatique si connecté·e).</p>
+
+    <h3>4.3 Pourquoi pas de bandeau de consentement ?</h3>
+    <p>La directive ePrivacy (2002/58/CE, art. 5.3) et les lignes directrices de l'APD exemptent le stockage technique <strong>strictement nécessaire</strong> au fonctionnement du service demandé par l'utilisateur·ice. C'est le cas du localStorage (sauvegarde de votre travail) et de l'IndexedDB (maintien de votre session). Aucun consentement préalable n'est donc requis pour ces éléments.</p>
+
+    <h3>4.4 Services tiers et leur gestion des données</h3>
+    <p>Les services tiers chargés par l'application peuvent utiliser leurs propres mécanismes de stockage, indépendamment de l'application :</p>
+    <ul>
+      <li><strong>Google Firebase :</strong> peut utiliser IndexedDB et/ou cookies pour la gestion de l'authentification — voir la <a href="https://firebase.google.com/support/privacy" target="_blank">politique Firebase</a></li>
+      <li><strong>Google Fonts :</strong> chargement de polices depuis les serveurs Google — votre adresse IP est transmise à Google lors du chargement de la page — voir la <a href="https://policies.google.com/privacy" target="_blank">politique Google</a></li>
+    </ul>
+
+    <h3>4.5 Gérer votre stockage local</h3>
+    <p>Pour supprimer toutes les données locales de l'application :</p>
+    <ul>
+      <li><strong>Chrome/Edge :</strong> F12 → Application → Local Storage → clic droit → Clear</li>
+      <li><strong>Firefox :</strong> F12 → Stockage → Stockage local → clic droit → Supprimer tout</li>
+      <li>Ou : vider le cache et les données du site dans les paramètres de votre navigateur</li>
+    </ul>
+    <p>Pour supprimer vos données cloud, contactez <a href="mailto:mindmap@stucom.tech">mindmap@stucom.tech</a> (droit à l'effacement — RGPD art. 17).</p>
+  </section>
+
+  <hr>
+  <p style="font-size:.58rem;color:var(--grey);text-align:center;letter-spacing:.08em">
+    MindMap ISFSC &nbsp;·&nbsp; Contact : <a href="mailto:mindmap@stucom.tech">mindmap@stucom.tech</a> &nbsp;·&nbsp; Belgique &nbsp;·&nbsp; v1.0 — 27 mai 2026
+  </p>
+
+</div>
+</body>
+</html>
