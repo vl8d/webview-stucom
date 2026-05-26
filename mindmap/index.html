@@ -1280,14 +1280,16 @@ async function buildCanvas() {
     }
 
     if (n.imageData && imgCache[n.id]) {
-      ctx.save(); rrect(ctx, nx, ny, nw, ts(IMG_AREA), rx); ctx.clip();
-      drawCover(ctx, imgCache[n.id], nx, ny, nw, ts(IMG_AREA)); ctx.restore();
+      // Clip once to the full node shape — keeps image + label bar inside rounded corners
+      ctx.save(); rrect(ctx, nx, ny, nw, nh, rx); ctx.clip();
+      drawCover(ctx, imgCache[n.id], nx, ny, nw, ts(IMG_AREA));
       ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(nx, ny+ts(IMG_AREA), nw, ts(LBL_H));
       if (n.label) {
         ctx.fillStyle = '#f5f5f0'; ctx.textAlign='center'; ctx.textBaseline='middle';
         ctx.font = `${ts(12)}px "DM Mono", monospace`;
         ctx.fillText(n.label, tx(n.x), ny+ts(IMG_AREA)+ts(LBL_H)/2, nw-ts(8));
       }
+      ctx.restore();
     } else {
       ctx.fillStyle = col.label ? TXT_DARK : '#f5f5f0';
       ctx.textAlign='center'; ctx.textBaseline='middle';
