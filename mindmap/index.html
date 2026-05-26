@@ -318,7 +318,7 @@
     outline: none; transition: border-color .1s; width: 100%;
   }
   .auth-field input:focus { border-color: var(--white); }
-  #auth-error { font-size: .58rem; color: #f87171; min-height: .9rem; letter-spacing: .04em; }
+  #auth-error-login { font-size: .58rem; color: #f87171; min-height: .9rem; letter-spacing: .04em; }
   .auth-submit { width: 100%; text-align: center; padding: .5rem; }
   .auth-note { font-size: .6rem; color: var(--grey); letter-spacing: .04em; line-height: 1.65; }
   .auth-steps { display: flex; flex-direction: column; gap: .5rem; }
@@ -348,7 +348,6 @@
     letter-spacing: .02em;
   }
   .auth-config-ta:focus { border-color: var(--white); }
-  .auth-submit { width: 100%; text-align: center; padding: .5rem; }
   .auth-close-bar {
     border-top: 1px solid var(--line); display: flex; padding: 6px;
   }
@@ -532,8 +531,6 @@
   <div id="auth-box">
     <div class="auth-box-title" id="auth-modal-title">Connexion</div>
 
-    <div id="auth-setup-view" class="hidden"></div>
-
     <!-- login / register -->
     <div id="auth-login-view" class="hidden">
       <div class="auth-tabs">
@@ -549,7 +546,7 @@
           <label>Mot de passe</label>
           <input type="password" id="auth-password" autocomplete="current-password" placeholder="••••••••">
         </div>
-        <div id="auth-error-login" class="auth-note" style="color:#f87171;min-height:.9rem"></div>
+        <div id="auth-error-login"></div>
         <button class="tb-btn primary auth-submit" id="btn-auth-submit">Se connecter</button>
         <div style="display:flex;align-items:center;gap:.5rem;margin:.3rem 0">
           <div style="flex:1;height:1px;background:var(--line)"></div>
@@ -682,6 +679,23 @@ const editEl  = document.getElementById('edit-input');
 const toastEl = document.getElementById('toast');
 const zoomLbl = document.getElementById('zoom-label');
 const modal   = document.getElementById('modal-overlay');
+// auth + sync (static elements, cached once)
+const syncDot          = document.getElementById('sync-dot');
+const authModal        = document.getElementById('auth-modal');
+const authLoginView    = document.getElementById('auth-login-view');
+const authAccountView  = document.getElementById('auth-account-view');
+const authModalTitle   = document.getElementById('auth-modal-title');
+const authErrorLogin   = document.getElementById('auth-error-login');
+const authAvatarImg    = document.getElementById('auth-avatar-img');
+const authAvatarLetter = document.getElementById('auth-avatar-letter');
+const authDisplayName  = document.getElementById('auth-display-name');
+const authAccountEmail = document.getElementById('auth-account-email');
+const authProvBadge    = document.getElementById('auth-provider-badge');
+const profileSyncIcon  = document.getElementById('auth-profile-sync-icon');
+const profileSyncText  = document.getElementById('auth-profile-sync-text');
+const rxSlider         = document.getElementById('rx-slider');
+const rxValue          = document.getElementById('rx-value');
+const spStyleBtns      = [...document.querySelectorAll('.sp-style-btn')];
 
 // ─── Utils ────────────────────────────────────────────────────────────────────
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -710,14 +724,15 @@ function undo() {
   if (!undoStack.length) return toast('Rien à annuler');
   const s = JSON.parse(undoStack.pop());
   nodes = s.nodes; rootId = s.rootId; selectedId = s.selectedId;
-  save(); renderAll(); updatePanel();
+  cleanOrphans(); save(); renderAll();
 }
 
 // ─── Persistence ──────────────────────────────────────────────────────────────
-function save() {
+function _writeLocal() {
   try { localStorage.setItem(LS_KEY, JSON.stringify({ nodes, rootId, vx, vy, vz, mapStyle, nodeRx })); } catch(e) {}
-  scheduleSave();
 }
+function save()      { _writeLocal(); scheduleSave(); } // structural change → also cloud-sync
+function saveLocal() { _writeLocal(); }                 // viewport-only → no cloud sync flash
 function load() {
   try {
     const d = JSON.parse(localStorage.getItem(LS_KEY));
@@ -769,6 +784,14 @@ function childPos(parent) {
   return { x: parent.x + Math.cos(angle) * CHILD_R, y: parent.y + Math.sin(angle) * CHILD_R };
 }
 
+// ─── Bounds helper ────────────────────────────────────────────────────────────
+function mapBounds() {
+  const all = Object.values(nodes);
+  let x1=Infinity, y1=Infinity, x2=-Infinity, y2=-Infinity;
+  all.forEach(n => { const {w,h}=nodeDim(n); x1=Math.min(x1,n.x-w/2); y1=Math.min(y1,n.y-h/2); x2=Math.max(x2,n.x+w/2); y2=Math.max(y2,n.y+h/2); });
+  return { all, x1, y1, x2, y2 };
+}
+
 // ─── Color helper ─────────────────────────────────────────────────────────────
 function nodeColor(n) {
   if (n.isRoot || n.colorIndex < 0) return ROOT_COLOR;
@@ -776,14 +799,19 @@ function nodeColor(n) {
 }
 
 // ─── Render: transform ────────────────────────────────────────────────────────
+let _lastZoomPct = -1;
 function applyT() {
   world.setAttribute('transform', `translate(${vx},${vy}) scale(${vz})`);
-  zoomLbl.textContent = Math.round(vz * 100) + '%';
+  const pct = Math.round(vz * 100);
+  if (pct !== _lastZoomPct) { zoomLbl.textContent = pct + '%'; _lastZoomPct = pct; }
 }
 
 // ─── Render: background + edges ───────────────────────────────────────────────
+let _lastBgStyle = -1;
 function applyBg() {
+  if (_lastBgStyle === mapStyle) return;
   wrap.style.background = STYLES[mapStyle].bg;
+  _lastBgStyle = mapStyle;
 }
 
 function edgePath(p, n) {
@@ -814,14 +842,15 @@ function renderNode(n) {
   if (!g) {
     g = document.createElementNS(SVG_NS, 'g');
     g.id = 'n-' + n.id; g.classList.add('node-group');
-    g.appendChild(Object.assign(document.createElementNS(SVG_NS,'rect'), {}));
-    g.querySelector('rect').classList.add('node-rect');
-    const txt = document.createElementNS(SVG_NS, 'text');
-    txt.classList.add('node-text'); g.appendChild(txt);
+    const rect0 = document.createElementNS(SVG_NS, 'rect');
+    rect0.classList.add('node-rect'); g.appendChild(rect0); g._r = rect0;
+    const txt0 = document.createElementNS(SVG_NS, 'text');
+    txt0.classList.add('node-text'); g.appendChild(txt0); g._t = txt0;
     nLayer.appendChild(g);
-    g.addEventListener('mousedown', e => onNmd(e, n.id));
-    g.addEventListener('dblclick',  e => { e.stopPropagation(); startEdit(n.id); });
-    g.addEventListener('click',     e => { e.stopPropagation(); select(n.id); });
+    const nid = n.id; // capture id, not live node ref
+    g.addEventListener('mousedown', e => onNmd(e, nid));
+    g.addEventListener('dblclick',  e => { e.stopPropagation(); startEdit(nid); });
+    g.addEventListener('click',     e => { e.stopPropagation(); select(nid); });
   }
 
   const { w, h } = nodeDim(n);
@@ -829,7 +858,7 @@ function renderNode(n) {
   const col = nodeColor(n);
   const rx = n.isRoot ? STYLES[mapStyle].rootRx : nodeRx;
 
-  const rect = g.querySelector('.node-rect');
+  const rect = g._r;
   rect.setAttribute('x', x); rect.setAttribute('y', y);
   rect.setAttribute('width', w); rect.setAttribute('height', h);
   rect.setAttribute('fill', col.fill); rect.setAttribute('rx', rx);
@@ -847,37 +876,34 @@ function renderNode(n) {
     const cr = cp.querySelector('rect');
     cr.setAttribute('x', x); cr.setAttribute('y', y); cr.setAttribute('width', w); cr.setAttribute('height', IMG_AREA);
 
-    let img = g.querySelector('.node-img');
-    if (!img) {
-      img = document.createElementNS(SVG_NS, 'image'); img.classList.add('node-img');
-      img.setAttribute('preserveAspectRatio', 'xMidYMid slice');
-      g.insertBefore(img, g.querySelector('.node-text'));
+    if (!g._i) {
+      g._i = document.createElementNS(SVG_NS, 'image'); g._i.classList.add('node-img');
+      g._i.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+      g.insertBefore(g._i, g._t);
+      g._lb = document.createElementNS(SVG_NS, 'rect'); g._lb.classList.add('node-label-bg');
+      g.insertBefore(g._lb, g._t);
     }
+    const img = g._i, lbg = g._lb;
     img.setAttribute('x', x); img.setAttribute('y', y);
     img.setAttribute('width', w); img.setAttribute('height', IMG_AREA);
-    img.setAttribute('href', n.imageData); img.setAttribute('xlink:href', n.imageData);
+    if (img.getAttribute('href') !== n.imageData) {
+      img.setAttribute('href', n.imageData); img.setAttribute('xlink:href', n.imageData);
+    }
     img.setAttribute('clip-path', `url(#${cid})`); img.removeAttribute('display');
 
-    let lbg = g.querySelector('.node-label-bg');
-    if (!lbg) {
-      lbg = document.createElementNS(SVG_NS, 'rect'); lbg.classList.add('node-label-bg');
-      g.insertBefore(lbg, g.querySelector('.node-text'));
-    }
     lbg.setAttribute('x', x); lbg.setAttribute('y', y + IMG_AREA);
     lbg.setAttribute('width', w); lbg.setAttribute('height', LBL_H);
     lbg.setAttribute('fill', 'rgba(0,0,0,0.6)'); lbg.removeAttribute('display');
 
-    const txt = g.querySelector('.node-text');
-    txt.setAttribute('x', n.x); txt.setAttribute('y', y + IMG_AREA + LBL_H / 2);
-    txt.textContent = n.label; txt.removeAttribute('fill'); txt.classList.remove('dark-label');
-    txt.setAttribute('fill', '#f5f5f0');
+    g._t.setAttribute('x', n.x); g._t.setAttribute('y', y + IMG_AREA + LBL_H / 2);
+    g._t.textContent = n.label; g._t.removeAttribute('fill'); g._t.classList.remove('dark-label');
+    g._t.setAttribute('fill', '#f5f5f0');
   } else {
-    const imgEl = g.querySelector('.node-img');    if (imgEl) imgEl.setAttribute('display','none');
-    const lbg   = g.querySelector('.node-label-bg'); if (lbg) lbg.setAttribute('display','none');
-    const txt = g.querySelector('.node-text');
-    txt.setAttribute('x', n.x); txt.setAttribute('y', n.y);
-    txt.textContent = n.label; txt.removeAttribute('fill');
-    txt.classList.toggle('dark-label', !!col.label);
+    if (g._i)  g._i.setAttribute('display', 'none');
+    if (g._lb) g._lb.setAttribute('display', 'none');
+    g._t.setAttribute('x', n.x); g._t.setAttribute('y', n.y);
+    g._t.textContent = n.label; g._t.removeAttribute('fill');
+    g._t.classList.toggle('dark-label', !!col.label);
   }
 
   g.classList.toggle('selected', selectedId === n.id);
@@ -890,10 +916,10 @@ function cleanOrphans() {
   defs.querySelectorAll('[id^="cp-"]').forEach(el   => { if (!nodes[el.id.slice(3)]) el.remove(); });
 }
 function renderAll() {
-  cleanOrphans();
   applyBg();
   Object.values(nodes).forEach(n => { renderEdge(n); renderNode(n); });
-  applyT(); updatePanel();
+  applyT();
+  if (selectedId) updatePanel();
 }
 
 // ─── Select / deselect ────────────────────────────────────────────────────────
@@ -966,7 +992,7 @@ function centerOnChildren(id) {
   push();
   nodes[id].x = children.reduce((s, c) => s + c.x, 0) / children.length;
   nodes[id].y = children.reduce((s, c) => s + c.y, 0) / children.length;
-  save(); renderAll(); updatePanel(); toast('Nœud recentré');
+  save(); renderAll(); toast('Nœud recentré');
 }
 
 function deleteNode(id) {
@@ -978,7 +1004,7 @@ function deleteNode(id) {
   if (par) par.children = par.children.filter(c => c !== id);
   rm(id);
   if (selectedId === id) selectedId = null;
-  save(); renderAll();
+  cleanOrphans(); save(); renderAll();
 }
 
 // ─── Edit ─────────────────────────────────────────────────────────────────────
@@ -1015,17 +1041,15 @@ function zoom(z, cx, cy) {
   z = Math.max(MIN_Z, Math.min(MAX_Z, z));
   const f = z / vz;
   vx = cx - (cx - vx)*f; vy = cy - (cy - vy)*f; vz = z;
-  applyT(); updatePanel(); save();
+  applyT(); if (selectedId) updatePanel(); saveLocal();
 }
 function center() {
-  const all = Object.values(nodes); if (!all.length) return;
-  let x1=Infinity, y1=Infinity, x2=-Infinity, y2=-Infinity;
-  all.forEach(n => { const {w,h}=nodeDim(n); x1=Math.min(x1,n.x-w/2); y1=Math.min(y1,n.y-h/2); x2=Math.max(x2,n.x+w/2); y2=Math.max(y2,n.y+h/2); });
+  const { x1, y1, x2, y2 } = mapBounds(); if (x1 === Infinity) return;
   const pw=innerWidth, ph=innerHeight-40, pad=90;
   const s = Math.min((pw-pad*2)/(x2-x1), (ph-pad*2)/(y2-y1), 1.5);
   vz = Math.max(MIN_Z, Math.min(MAX_Z, s));
   vx = pw/2 - ((x1+x2)/2)*vz; vy = ph/2+40 - ((y1+y2)/2)*vz;
-  applyT(); updatePanel(); save();
+  applyT(); if (selectedId) updatePanel(); saveLocal();
 }
 
 // ─── Events ───────────────────────────────────────────────────────────────────
@@ -1036,19 +1060,27 @@ wrap.addEventListener('mousedown', e => {
     wrap.classList.add('grabbing'); deselect();
   }
 });
+let _rafPending = false, _latestMx = 0, _latestMy = 0;
 window.addEventListener('mousemove', e => {
-  if (panning) { vx=pvx+e.clientX-px0; vy=pvy+e.clientY-py0; applyT(); }
-  if (dragging) {
-    if (Math.hypot(e.clientX-dragStartX, e.clientY-dragStartY) < 4) return;
-    const pt = s2w(e.clientX, e.clientY);
-    nodes[dragging].x = pt.x+dox; nodes[dragging].y = pt.y+doy;
-    renderNode(nodes[dragging]); renderEdge(nodes[dragging]);
-    nodes[dragging].children.forEach(c => renderEdge(nodes[c]));
-    updatePanel();
-  }
+  _latestMx = e.clientX; _latestMy = e.clientY;
+  if (!panning && !dragging) return;
+  if (_rafPending) return;
+  _rafPending = true;
+  requestAnimationFrame(() => {
+    _rafPending = false;
+    if (panning) { vx = pvx + _latestMx - px0; vy = pvy + _latestMy - py0; applyT(); }
+    if (dragging) {
+      if (Math.hypot(_latestMx-dragStartX, _latestMy-dragStartY) < 4) return;
+      const pt = s2w(_latestMx, _latestMy);
+      nodes[dragging].x = pt.x+dox; nodes[dragging].y = pt.y+doy;
+      renderNode(nodes[dragging]); renderEdge(nodes[dragging]);
+      nodes[dragging].children.forEach(c => renderEdge(nodes[c]));
+      updatePanel();
+    }
+  });
 });
 window.addEventListener('mouseup', () => {
-  if (panning) { panning=false; wrap.classList.remove('grabbing'); save(); }
+  if (panning) { panning=false; wrap.classList.remove('grabbing'); saveLocal(); }
   if (dragging) { save(); dragging=null; }
 });
 wrap.addEventListener('wheel', e => {
@@ -1092,22 +1124,18 @@ document.addEventListener('click', e => {
 });
 
 function applyStyleUI() {
-  document.querySelectorAll('.sp-style-btn').forEach((btn, i) => {
-    btn.classList.toggle('active', i === mapStyle);
-  });
-  document.getElementById('rx-slider').value = nodeRx;
-  document.getElementById('rx-value').textContent = nodeRx;
+  spStyleBtns.forEach((btn, i) => btn.classList.toggle('active', i === mapStyle));
+  rxSlider.value = nodeRx;
+  rxValue.textContent = nodeRx;
 }
 function setMapStyle(idx) {
-  mapStyle = idx; nodeRx = STYLES[idx].rx;
+  mapStyle = idx; nodeRx = STYLES[idx].rx; _lastBgStyle = -1;
   applyStyleUI(); renderAll(); save();
 }
-document.querySelectorAll('.sp-style-btn').forEach((btn, i) => {
-  btn.addEventListener('click', () => setMapStyle(i));
-});
-document.getElementById('rx-slider').addEventListener('input', e => {
-  nodeRx = +e.target.value;
-  document.getElementById('rx-value').textContent = nodeRx;
+spStyleBtns.forEach((btn, i) => btn.addEventListener('click', () => setMapStyle(i)));
+rxSlider.addEventListener('input', () => {
+  nodeRx = +rxSlider.value;
+  rxValue.textContent = nodeRx;
   Object.values(nodes).forEach(n => renderNode(n));
   save();
 });
@@ -1190,10 +1218,9 @@ function drawCover(ctx, img, x, y, w, h) {
 }
 
 async function buildCanvas() {
-  const all = Object.values(nodes);
+  const { all, x1: bx1, y1: by1, x2: bx2, y2: by2 } = mapBounds();
   if (!all.length) return null;
-  let x1=Infinity, y1=Infinity, x2=-Infinity, y2=-Infinity;
-  all.forEach(n => { const {w,h}=nodeDim(n); x1=Math.min(x1,n.x-w/2); y1=Math.min(y1,n.y-h/2); x2=Math.max(x2,n.x+w/2); y2=Math.max(y2,n.y+h/2); });
+  let x1=bx1, y1=by1, x2=bx2, y2=by2;
   const PAD = 64, S = 3;
   x1-=PAD; y1-=PAD; x2+=PAD; y2+=PAD;
   const W = Math.round((x2-x1)*S), H = Math.round((y2-y1)*S);
@@ -1316,10 +1343,9 @@ let currentSyncState = 'idle';
 function setSyncState(s) {
   currentSyncState = s;
   if (s === 'ok') lastSyncTs = Date.now();
-  const dot = document.getElementById('sync-dot');
   const labels = { idle: '', syncing: '🔄', ok: '☁', err: '⚠' };
   const titles = { idle: '', syncing: 'Sync…', ok: 'Synchronisé', err: 'Erreur sync' };
-  if (dot) { dot.textContent = labels[s] || ''; dot.title = titles[s] || ''; }
+  syncDot.textContent = labels[s] || ''; syncDot.title = titles[s] || '';
   updateProfileSyncRow();
 }
 
@@ -1334,9 +1360,7 @@ function fmtSyncTime(ts) {
 }
 
 function updateProfileSyncRow() {
-  const iconEl = document.getElementById('auth-profile-sync-icon');
-  const textEl = document.getElementById('auth-profile-sync-text');
-  if (!iconEl || !textEl) return;
+  if (!profileSyncIcon) return;
   const map = {
     idle:    { icon: '⚪', text: 'Non synchronisé' },
     syncing: { icon: '🔄', text: 'Sauvegarde…' },
@@ -1344,8 +1368,8 @@ function updateProfileSyncRow() {
     err:     { icon: '🔴', text: 'Erreur de synchronisation' },
   };
   const s = map[currentSyncState] || map.idle;
-  iconEl.textContent = s.icon;
-  textEl.textContent = s.text;
+  profileSyncIcon.textContent = s.icon;
+  profileSyncText.textContent = s.text;
 }
 
 function scheduleSave() {
@@ -1387,47 +1411,29 @@ async function cloudLoad() {
   }
 }
 
+const btnAccount = document.getElementById('btn-account');
 function setAccountUI(user, pending) {
-  const btn = document.getElementById('btn-account');
-  const emailEl = document.getElementById('account-email');
-  if (pending) { btn.textContent = '…'; return; }
-  if (user) {
-    btn.textContent = 'Compte ☁';
-    if (emailEl) emailEl.textContent = user.email;
-  } else {
-    btn.textContent = 'Compte';
-    if (emailEl) emailEl.textContent = '';
-    setSyncState('idle');
-  }
+  if (pending) { btnAccount.textContent = '…'; return; }
+  btnAccount.textContent = user ? 'Compte ☁' : 'Compte';
+  if (!user) setSyncState('idle');
 }
 
 function updateProfileView(user) {
   if (!user) return;
-  // Avatar: photo or initial letter
-  const imgEl = document.getElementById('auth-avatar-img');
-  const letEl = document.getElementById('auth-avatar-letter');
   const letter = (user.displayName || user.email || '?')[0].toUpperCase();
-  if (user.photoURL && imgEl) {
-    imgEl.src = user.photoURL;
-    imgEl.style.display = 'block';
-    if (letEl) letEl.style.display = 'none';
+  if (user.photoURL) {
+    authAvatarImg.src = user.photoURL;
+    authAvatarImg.style.display = 'block';
+    authAvatarLetter.style.display = 'none';
   } else {
-    if (imgEl) imgEl.style.display = 'none';
-    if (letEl) { letEl.style.display = ''; letEl.textContent = letter; }
+    authAvatarImg.style.display = 'none';
+    authAvatarLetter.style.display = ''; authAvatarLetter.textContent = letter;
   }
-  // Name + email
-  const nameEl  = document.getElementById('auth-display-name');
-  const emailEl = document.getElementById('auth-account-email');
-  if (nameEl)  nameEl.textContent  = user.displayName || user.email.split('@')[0];
-  if (emailEl) emailEl.textContent = user.email;
-  // Provider badge
-  const badge = document.getElementById('auth-provider-badge');
-  if (badge) {
-    const prov = (user.providerData && user.providerData[0] && user.providerData[0].providerId) || 'password';
-    const provLabels = { 'google.com': '● Google', 'microsoft.com': '⊞ Microsoft', 'password': '✉ Email' };
-    badge.textContent = provLabels[prov] || prov;
-  }
-  // Sync row
+  authDisplayName.textContent  = user.displayName || user.email.split('@')[0];
+  authAccountEmail.textContent = user.email;
+  const prov = (user.providerData && user.providerData[0] && user.providerData[0].providerId) || 'password';
+  const provLabels = { 'google.com': '● Google', 'microsoft.com': '⊞ Microsoft', 'password': '✉ Email' };
+  authProvBadge.textContent = provLabels[prov] || prov;
   updateProfileSyncRow();
 }
 
@@ -1438,7 +1444,7 @@ function handleAuthChange(user) {
     updateProfileView(user);
     cloudLoad().then(loaded => {
       if (loaded) { renderAll(); center(); toast('Carte chargée depuis le cloud'); }
-      else setSyncState('ok');
+      else setSyncState('idle');
     });
   }
 }
@@ -1466,58 +1472,65 @@ function tryLoadFirebase() {
 
 // ─── Auth modal ────────────────────────────────────────────────────────────────
 function openAuthModal() {
-  document.getElementById('auth-modal').classList.remove('hidden');
-  document.getElementById('auth-setup-view').classList.add('hidden');
-  const titleEl = document.getElementById('auth-modal-title');
+  authModal.classList.remove('hidden');
+  authLoginView.classList.toggle('hidden', !!currentUser);
+  authAccountView.classList.toggle('hidden', !currentUser);
   if (currentUser) {
-    document.getElementById('auth-login-view').classList.add('hidden');
-    document.getElementById('auth-account-view').classList.remove('hidden');
-    if (titleEl) titleEl.textContent = 'Mon compte';
+    authModalTitle.textContent = 'Mon compte';
     updateProfileView(currentUser);
   } else {
-    document.getElementById('auth-login-view').classList.remove('hidden');
-    document.getElementById('auth-account-view').classList.add('hidden');
-    if (titleEl) titleEl.textContent = 'Connexion';
-    document.getElementById('auth-error-login').textContent = '';
+    authModalTitle.textContent = 'Connexion';
+    authErrorLogin.textContent = '';
   }
 }
 
-document.getElementById('btn-account').onclick  = openAuthModal;
-document.getElementById('btn-close-auth').onclick = () => document.getElementById('auth-modal').classList.add('hidden');
+btnAccount.onclick = openAuthModal;
+document.getElementById('btn-close-auth').onclick = () => authModal.classList.add('hidden');
 
 
 let authMode = 'login';
-document.getElementById('tab-login').onclick = () => {
-  authMode = 'login';
-  document.getElementById('tab-login').classList.add('active');
-  document.getElementById('tab-register').classList.remove('active');
-  document.getElementById('btn-auth-submit').textContent = 'Se connecter';
-  document.getElementById('auth-error-login').textContent = '';
-};
-document.getElementById('tab-register').onclick = () => {
-  authMode = 'register';
-  document.getElementById('tab-register').classList.add('active');
-  document.getElementById('tab-login').classList.remove('active');
-  document.getElementById('btn-auth-submit').textContent = "S'inscrire";
-  document.getElementById('auth-error-login').textContent = '';
-};
+const tabLogin    = document.getElementById('tab-login');
+const tabRegister = document.getElementById('tab-register');
+const btnAuthSubmit = document.getElementById('btn-auth-submit');
+function setAuthTab(mode) {
+  authMode = mode;
+  tabLogin.classList.toggle('active', mode === 'login');
+  tabRegister.classList.toggle('active', mode === 'register');
+  btnAuthSubmit.textContent = mode === 'login' ? 'Se connecter' : "S'inscrire";
+  authErrorLogin.textContent = '';
+}
+tabLogin.onclick    = () => setAuthTab('login');
+tabRegister.onclick = () => setAuthTab('register');
 
-document.getElementById('btn-auth-submit').onclick = async () => {
+const POPUP_MSGS = {
+  'auth/popup-closed-by-user': 'Fenêtre fermée.',
+  'auth/unauthorized-domain': 'Domaine non autorisé — ajoutez vl8d.github.io dans Firebase Auth → Authorized domains.',
+};
+async function signInWithProvider(btnId, makeProvider, successMsg) {
+  authErrorLogin.textContent = '';
+  const btn = document.getElementById(btnId);
+  btn.disabled = true;
+  try {
+    await fbAuth.signInWithPopup(makeProvider());
+    authModal.classList.add('hidden');
+    toast(successMsg);
+  } catch(e) {
+    authErrorLogin.textContent = POPUP_MSGS[e.code] || e.message;
+  }
+  btn.disabled = false;
+}
+
+btnAuthSubmit.onclick = async () => {
   const email = document.getElementById('auth-email').value.trim();
   const pass  = document.getElementById('auth-password').value;
-  const errEl = document.getElementById('auth-error-login');
-  errEl.textContent = '';
-  if (!email || !pass) { errEl.textContent = 'Email et mot de passe requis.'; return; }
-  if (!fbAuth) { errEl.textContent = 'Firebase non initialisé.'; return; }
-  const btn = document.getElementById('btn-auth-submit');
-  btn.disabled = true; btn.textContent = '…';
+  authErrorLogin.textContent = '';
+  if (!email || !pass) { authErrorLogin.textContent = 'Email et mot de passe requis.'; return; }
+  if (!fbAuth) { authErrorLogin.textContent = 'Firebase non initialisé.'; return; }
+  btnAuthSubmit.disabled = true; btnAuthSubmit.textContent = '…';
   try {
-    if (authMode === 'register') {
-      await fbAuth.createUserWithEmailAndPassword(email, pass);
-    } else {
-      await fbAuth.signInWithEmailAndPassword(email, pass);
-    }
-    document.getElementById('auth-modal').classList.add('hidden');
+    if (authMode === 'register') await fbAuth.createUserWithEmailAndPassword(email, pass);
+    else                         await fbAuth.signInWithEmailAndPassword(email, pass);
+    authModal.classList.add('hidden');
     toast(authMode === 'register' ? 'Compte créé !' : 'Connecté !');
   } catch(e) {
     const msgs = {
@@ -1528,70 +1541,32 @@ document.getElementById('btn-auth-submit').onclick = async () => {
       'auth/wrong-password': 'Mot de passe incorrect.',
       'auth/invalid-credential': 'Identifiants invalides.',
     };
-    errEl.textContent = msgs[e.code] || e.message;
+    authErrorLogin.textContent = msgs[e.code] || e.message;
   }
-  btn.disabled = false;
-  btn.textContent = authMode === 'register' ? "S'inscrire" : 'Se connecter';
+  btnAuthSubmit.disabled = false;
+  btnAuthSubmit.textContent = authMode === 'register' ? "S'inscrire" : 'Se connecter';
 };
 
-document.getElementById('btn-google-signin').onclick = async () => {
-  const errEl = document.getElementById('auth-error-login');
-  errEl.textContent = '';
-  const btn = document.getElementById('btn-google-signin');
-  btn.disabled = true;
-  try {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    await fbAuth.signInWithPopup(provider);
-    document.getElementById('auth-modal').classList.add('hidden');
-    toast('Connecté avec Google !');
-  } catch(e) {
-    const msgs = {
-      'auth/popup-closed-by-user': 'Fenêtre fermée.',
-      'auth/unauthorized-domain': 'Domaine non autorisé — ajoutez vl8d.github.io dans Firebase Auth → Authorized domains.',
-    };
-    errEl.textContent = msgs[e.code] || e.message;
-  }
-  btn.disabled = false;
-};
+document.getElementById('btn-google-signin').onclick = () =>
+  signInWithProvider('btn-google-signin', () => new firebase.auth.GoogleAuthProvider(), 'Connecté avec Google !');
 
-document.getElementById('btn-ms-signin').onclick = async () => {
-  const errEl = document.getElementById('auth-error-login');
-  errEl.textContent = '';
-  const btn = document.getElementById('btn-ms-signin');
-  btn.disabled = true;
-  try {
-    const provider = new firebase.auth.OAuthProvider('microsoft.com');
-    await fbAuth.signInWithPopup(provider);
-    document.getElementById('auth-modal').classList.add('hidden');
-    toast('Connecté avec Microsoft !');
-  } catch(e) {
-    const msgs = {
-      'auth/popup-closed-by-user': 'Fenêtre fermée.',
-      'auth/unauthorized-domain': 'Domaine non autorisé dans Firebase Auth.',
-    };
-    errEl.textContent = msgs[e.code] || e.message;
-  }
-  btn.disabled = false;
-};
+document.getElementById('btn-ms-signin').onclick = () =>
+  signInWithProvider('btn-ms-signin', () => new firebase.auth.OAuthProvider('microsoft.com'), 'Connecté avec Microsoft !');
 
 document.getElementById('btn-sync-now').onclick = async () => {
   const btn = document.getElementById('btn-sync-now');
   if (!currentUser || !fbDb) { toast('Non connecté'); return; }
   btn.disabled = true; btn.textContent = '…';
-  await cloudSave();
-  updateProfileSyncRow();
+  await cloudSave(); // cloudSave → setSyncState → updateProfileSyncRow already called
   btn.disabled = false; btn.textContent = '↑ Sauvegarder maintenant';
 };
 
 document.getElementById('btn-logout').onclick = async () => {
   if (fbAuth) await fbAuth.signOut();
   lastSyncTs = null;
-  const titleEl = document.getElementById('auth-modal-title');
-  if (titleEl) titleEl.textContent = 'Connexion';
-  document.getElementById('auth-account-view').classList.add('hidden');
-  document.getElementById('auth-login-view').classList.remove('hidden');
-  document.getElementById('auth-modal').classList.add('hidden');
+  authModal.classList.add('hidden');
   toast('Déconnecté');
+  // handleAuthChange(null) fires via onAuthStateChanged and updates the toolbar/views
 };
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
