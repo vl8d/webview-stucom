@@ -354,6 +354,47 @@
   }
   .auth-close-bar .tb-btn { flex: 1; text-align: center; }
 
+  /* ── Auth profile view ──────────────────────────────────────── */
+  .auth-profile-head {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .85rem 1.1rem .75rem;
+  }
+  .auth-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: #5b21b6; border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .95rem; font-weight: 700; color: #fff;
+    flex-shrink: 0; overflow: hidden;
+  }
+  .auth-profile-info { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+  .auth-display-name {
+    font-size: .7rem; font-weight: 500; color: var(--white);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .auth-profile-email {
+    font-size: .57rem; color: var(--grey);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .auth-provider-badge {
+    display: inline-flex; align-items: center; gap: .2rem;
+    background: var(--mid); border: 1px solid var(--line);
+    border-radius: 2px; padding: 1px 5px; align-self: flex-start;
+    font-size: .48rem; letter-spacing: .09em; text-transform: uppercase;
+    color: var(--grey); margin-top: .15rem;
+  }
+  .auth-profile-sep { height: 1px; background: var(--line); }
+  .auth-profile-section {
+    padding: .6rem 1.1rem; display: flex; flex-direction: column; gap: .35rem;
+  }
+  .auth-section-label {
+    font-size: .52rem; text-transform: uppercase;
+    letter-spacing: .1em; color: var(--grey); margin-bottom: .05rem;
+  }
+  .auth-sync-row { display: flex; align-items: center; gap: .4rem; }
+  .auth-sync-text { font-size: .6rem; color: var(--grey); }
+  .auth-logout-btn { color: #f87171; border-color: #7f1d1d; }
+  .auth-logout-btn:hover { background: #7f1d1d; color: #fff; border-color: #b91c1c; }
+
   /* ── Style popover ─────────────────────────────────────────── */
   #style-popover {
     position: fixed;
@@ -489,7 +530,7 @@
 
 <div id="auth-modal" class="hidden">
   <div id="auth-box">
-    <div class="auth-box-title">Compte</div>
+    <div class="auth-box-title" id="auth-modal-title">Connexion</div>
 
     <div id="auth-setup-view" class="hidden"></div>
 
@@ -526,12 +567,34 @@
       </div>
     </div>
 
-    <!-- logged in -->
+    <!-- logged in — profile view -->
     <div id="auth-account-view" class="hidden">
-      <div class="auth-box-body">
-        <div id="auth-account-email" class="auth-note" style="color:var(--white)"></div>
-        <div id="auth-sync-status" class="auth-note" style="margin-top:.1rem"></div>
-        <button class="tb-btn auth-submit" id="btn-logout" style="margin-top:.4rem">Déconnexion</button>
+      <!-- avatar + name + email + provider -->
+      <div class="auth-profile-head">
+        <div class="auth-avatar" id="auth-avatar-ring">
+          <img id="auth-avatar-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%">
+          <span id="auth-avatar-letter">?</span>
+        </div>
+        <div class="auth-profile-info">
+          <div class="auth-display-name" id="auth-display-name">—</div>
+          <div class="auth-profile-email" id="auth-account-email">—</div>
+          <div class="auth-provider-badge" id="auth-provider-badge">—</div>
+        </div>
+      </div>
+      <div class="auth-profile-sep"></div>
+      <!-- sync section -->
+      <div class="auth-profile-section">
+        <div class="auth-section-label">☁ Synchronisation</div>
+        <div class="auth-sync-row">
+          <span id="auth-profile-sync-icon" style="font-size:.75rem">⚪</span>
+          <span class="auth-sync-text" id="auth-profile-sync-text">—</span>
+        </div>
+        <button class="tb-btn auth-submit" id="btn-sync-now">↑ Sauvegarder maintenant</button>
+      </div>
+      <div class="auth-profile-sep"></div>
+      <!-- sign out -->
+      <div class="auth-profile-section">
+        <button class="tb-btn auth-submit auth-logout-btn" id="btn-logout">↪ Déconnexion</button>
       </div>
     </div>
 
@@ -1247,14 +1310,42 @@ const FB_CONFIG = {
 let fbApp = null, fbAuth = null, fbDb = null;
 let currentUser = null;
 let syncTimer = null;
+let lastSyncTs = null;
+let currentSyncState = 'idle';
 
 function setSyncState(s) {
+  currentSyncState = s;
+  if (s === 'ok') lastSyncTs = Date.now();
   const dot = document.getElementById('sync-dot');
   const labels = { idle: '', syncing: '🔄', ok: '☁', err: '⚠' };
   const titles = { idle: '', syncing: 'Sync…', ok: 'Synchronisé', err: 'Erreur sync' };
   if (dot) { dot.textContent = labels[s] || ''; dot.title = titles[s] || ''; }
-  const st = document.getElementById('auth-sync-status');
-  if (st) st.textContent = titles[s] || '';
+  updateProfileSyncRow();
+}
+
+function fmtSyncTime(ts) {
+  if (!ts) return '';
+  const secs = Math.round((Date.now() - ts) / 1000);
+  if (secs < 5)  return 'à l\'instant';
+  if (secs < 60) return 'il y a ' + secs + 's';
+  const mins = Math.round(secs / 60);
+  if (mins < 60) return 'il y a ' + mins + ' min';
+  return 'il y a ' + Math.round(mins / 60) + 'h';
+}
+
+function updateProfileSyncRow() {
+  const iconEl = document.getElementById('auth-profile-sync-icon');
+  const textEl = document.getElementById('auth-profile-sync-text');
+  if (!iconEl || !textEl) return;
+  const map = {
+    idle:    { icon: '⚪', text: 'Non synchronisé' },
+    syncing: { icon: '🔄', text: 'Sauvegarde…' },
+    ok:      { icon: '🟢', text: 'Synchronisé' + (lastSyncTs ? ' · ' + fmtSyncTime(lastSyncTs) : '') },
+    err:     { icon: '🔴', text: 'Erreur de synchronisation' },
+  };
+  const s = map[currentSyncState] || map.idle;
+  iconEl.textContent = s.icon;
+  textEl.textContent = s.text;
 }
 
 function scheduleSave() {
@@ -1310,12 +1401,41 @@ function setAccountUI(user, pending) {
   }
 }
 
+function updateProfileView(user) {
+  if (!user) return;
+  // Avatar: photo or initial letter
+  const imgEl = document.getElementById('auth-avatar-img');
+  const letEl = document.getElementById('auth-avatar-letter');
+  const letter = (user.displayName || user.email || '?')[0].toUpperCase();
+  if (user.photoURL && imgEl) {
+    imgEl.src = user.photoURL;
+    imgEl.style.display = 'block';
+    if (letEl) letEl.style.display = 'none';
+  } else {
+    if (imgEl) imgEl.style.display = 'none';
+    if (letEl) { letEl.style.display = ''; letEl.textContent = letter; }
+  }
+  // Name + email
+  const nameEl  = document.getElementById('auth-display-name');
+  const emailEl = document.getElementById('auth-account-email');
+  if (nameEl)  nameEl.textContent  = user.displayName || user.email.split('@')[0];
+  if (emailEl) emailEl.textContent = user.email;
+  // Provider badge
+  const badge = document.getElementById('auth-provider-badge');
+  if (badge) {
+    const prov = (user.providerData && user.providerData[0] && user.providerData[0].providerId) || 'password';
+    const provLabels = { 'google.com': '● Google', 'microsoft.com': '⊞ Microsoft', 'password': '✉ Email' };
+    badge.textContent = provLabels[prov] || prov;
+  }
+  // Sync row
+  updateProfileSyncRow();
+}
+
 function handleAuthChange(user) {
   currentUser = user;
   setAccountUI(user);
   if (user) {
-    const emailEl = document.getElementById('auth-account-email');
-    if (emailEl) emailEl.textContent = 'Connecté : ' + user.email;
+    updateProfileView(user);
     cloudLoad().then(loaded => {
       if (loaded) { renderAll(); center(); toast('Carte chargée depuis le cloud'); }
       else setSyncState('ok');
@@ -1348,12 +1468,17 @@ function tryLoadFirebase() {
 function openAuthModal() {
   document.getElementById('auth-modal').classList.remove('hidden');
   document.getElementById('auth-setup-view').classList.add('hidden');
-  document.getElementById('auth-login-view').classList.toggle('hidden', !!currentUser);
-  document.getElementById('auth-account-view').classList.toggle('hidden', !currentUser);
-  document.getElementById('auth-error-login').textContent = '';
+  const titleEl = document.getElementById('auth-modal-title');
   if (currentUser) {
-    const el = document.getElementById('auth-account-email');
-    if (el) el.textContent = 'Connecté : ' + currentUser.email;
+    document.getElementById('auth-login-view').classList.add('hidden');
+    document.getElementById('auth-account-view').classList.remove('hidden');
+    if (titleEl) titleEl.textContent = 'Mon compte';
+    updateProfileView(currentUser);
+  } else {
+    document.getElementById('auth-login-view').classList.remove('hidden');
+    document.getElementById('auth-account-view').classList.add('hidden');
+    if (titleEl) titleEl.textContent = 'Connexion';
+    document.getElementById('auth-error-login').textContent = '';
   }
 }
 
@@ -1449,11 +1574,23 @@ document.getElementById('btn-ms-signin').onclick = async () => {
   btn.disabled = false;
 };
 
+document.getElementById('btn-sync-now').onclick = async () => {
+  const btn = document.getElementById('btn-sync-now');
+  if (!currentUser || !fbDb) { toast('Non connecté'); return; }
+  btn.disabled = true; btn.textContent = '…';
+  await cloudSave();
+  updateProfileSyncRow();
+  btn.disabled = false; btn.textContent = '↑ Sauvegarder maintenant';
+};
+
 document.getElementById('btn-logout').onclick = async () => {
   if (fbAuth) await fbAuth.signOut();
-  document.getElementById('auth-modal').classList.add('hidden');
+  lastSyncTs = null;
+  const titleEl = document.getElementById('auth-modal-title');
+  if (titleEl) titleEl.textContent = 'Connexion';
   document.getElementById('auth-account-view').classList.add('hidden');
   document.getElementById('auth-login-view').classList.remove('hidden');
+  document.getElementById('auth-modal').classList.add('hidden');
   toast('Déconnecté');
 };
 
