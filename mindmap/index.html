@@ -28,57 +28,86 @@
     user-select: none;
   }
 
-  /* ── Toolbar ────────────────────────────────────────────── */
+  /* ── Top bar ────────────────────────────────────────────── */
   #toolbar {
     position: fixed;
-    top: 0; left: 0; right: 0; height: 46px;
+    top: 0; left: 0; right: 0; height: 40px;
     background: var(--black);
     border-bottom: 1px solid var(--line);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 0 1.1rem;
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
     z-index: 100;
   }
   #app-logo {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.35rem;
-    letter-spacing: .12em;
-    color: var(--white);
-    flex-shrink: 0;
+    font-size: 1.25rem; letter-spacing: .12em;
+    color: var(--white); flex-shrink: 0;
   }
   #app-sub {
-    font-size: .65rem;
-    color: var(--grey);
-    letter-spacing: .05em;
-    margin-left: .4rem;
-    margin-right: .6rem;
-    flex-shrink: 0;
-  }
-  .tb-sep {
-    width: 1px; height: 18px;
-    background: var(--line);
-    margin: 0 3px; flex-shrink: 0;
+    font-size: .6rem; color: var(--grey);
+    letter-spacing: .05em; margin-left: .35rem; flex-shrink: 0;
   }
   .tb-btn {
-    background: var(--mid);
-    color: var(--white);
-    border: 1px solid var(--line);
-    border-radius: 2px;
-    padding: 4px 11px;
-    font-family: 'DM Mono', monospace;
-    font-size: .6rem;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: background .1s, border-color .1s;
-    white-space: nowrap;
-    flex-shrink: 0;
+    background: var(--mid); color: var(--white);
+    border: 1px solid var(--line); border-radius: 2px;
+    padding: 4px 11px; font-family: 'DM Mono', monospace;
+    font-size: .6rem; letter-spacing: .1em; text-transform: uppercase;
+    cursor: pointer; transition: background .1s, border-color .1s;
+    white-space: nowrap; flex-shrink: 0;
   }
   .tb-btn:hover  { background: #2a2a2a; border-color: #444; }
   .tb-btn:active { background: #333; }
-  .tb-btn.primary { background: var(--white); color: var(--black); border-color: var(--white); }
-  .tb-btn.primary:hover { background: #ddd; border-color: #ddd; }
+  #tb-account { display: flex; align-items: center; gap: 6px; }
+  .sync-dot { font-size: .9rem; line-height: 1; cursor: default; }
+
+  /* ── Bottom floating bar ────────────────────────────────── */
+  #bottom-bar {
+    position: fixed;
+    bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--black);
+    border: 1px solid var(--line);
+    border-radius: 28px;
+    display: flex; align-items: center;
+    padding: 5px 8px; gap: 2px;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,.55);
+  }
+  .bb-btn {
+    background: transparent; border: none; border-radius: 20px;
+    color: var(--white); font-family: 'DM Mono', monospace;
+    font-size: .6rem; letter-spacing: .1em; text-transform: uppercase;
+    padding: 6px 13px; cursor: pointer;
+    transition: background .12s; white-space: nowrap;
+  }
+  .bb-btn:hover  { background: var(--mid); }
+  .bb-btn:active { background: #2a2a2a; }
+  .bb-btn.primary { background: var(--white); color: var(--black); }
+  .bb-btn.primary:hover { background: #ddd; }
+  .bb-sep { width: 1px; height: 16px; background: var(--line); margin: 0 3px; flex-shrink: 0; }
+
+  /* ── Zoom bar ───────────────────────────────────────────── */
+  #zoom-bar {
+    position: fixed;
+    bottom: 20px; right: 16px;
+    background: var(--black); border: 1px solid var(--line);
+    border-radius: 4px;
+    display: flex; align-items: center; gap: 1px;
+    padding: 3px 4px; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.4);
+  }
+  .zb-btn {
+    background: transparent; border: none; border-radius: 2px;
+    color: var(--white); font-family: 'DM Mono', monospace;
+    font-size: .72rem; padding: 3px 9px; cursor: pointer;
+    transition: background .1s;
+  }
+  .zb-btn:hover { background: var(--mid); }
+  #zoom-label {
+    font-size: .58rem; color: var(--grey);
+    min-width: 36px; text-align: center;
+    letter-spacing: .06em; pointer-events: none;
+  }
 
   /* Export mode toggle */
   .export-mode {
@@ -88,36 +117,18 @@
   .mode-tab {
     background: var(--black); border: none;
     border-right: 1px solid var(--line);
-    color: var(--grey);
-    font-family: 'DM Mono', monospace; font-size: .58rem;
-    letter-spacing: .08em; text-transform: uppercase;
+    color: var(--grey); font-family: 'DM Mono', monospace;
+    font-size: .58rem; letter-spacing: .08em; text-transform: uppercase;
     padding: 4px 9px; cursor: pointer;
     transition: background .1s, color .1s; white-space: nowrap;
   }
   .mode-tab:last-child { border-right: none; }
   .mode-tab.active { background: var(--white); color: var(--black); }
-  #zoom-label {
-    font-size: .6rem; color: var(--grey);
-    min-width: 34px; text-align: center;
-    letter-spacing: .08em; flex-shrink: 0;
-  }
-  .tb-hints {
-    margin-left: auto;
-    display: flex; gap: 1rem; flex-shrink: 0;
-  }
-  .tb-hint {
-    font-size: .52rem; color: var(--grey);
-    letter-spacing: .06em; text-transform: uppercase;
-  }
-  .tb-hint kbd {
-    font-family: 'DM Mono', monospace;
-    font-size: .52rem; color: var(--white);
-  }
 
   /* ── Canvas ─────────────────────────────────────────────── */
   #canvas-wrap {
     position: fixed;
-    top: 46px; left: 0; right: 0; bottom: 0;
+    top: 40px; left: 0; right: 0; bottom: 0;
     overflow: hidden; cursor: grab;
     background: var(--black);
   }
@@ -346,11 +357,11 @@
   /* ── Style popover ─────────────────────────────────────────── */
   #style-popover {
     position: fixed;
-    top: 50px; right: 56px;
+    bottom: 72px; left: 50%; transform: translateX(-50%);
     background: var(--black); border: 1px solid var(--white);
-    box-shadow: 4px 4px 0 rgba(255,255,255,.05);
+    box-shadow: 0 -4px 20px rgba(0,0,0,.55);
     z-index: 350; display: flex; flex-direction: column;
-    min-width: 180px;
+    min-width: 200px;
   }
   #style-popover.hidden { display: none; }
   .sp-section {
@@ -387,27 +398,32 @@
 <body>
 
 <div id="toolbar">
-  <span id="app-logo">MindMap</span>
-  <span id="app-sub">/ éditeur</span>
-  <div class="tb-sep"></div>
-  <button class="tb-btn" id="btn-new">+ New</button>
-  <div class="tb-sep"></div>
-  <button class="tb-btn" id="btn-zoom-out">−</button>
-  <span id="zoom-label">100%</span>
-  <button class="tb-btn" id="btn-zoom-in">+</button>
-  <button class="tb-btn" id="btn-center">Center</button>
-  <div class="tb-sep"></div>
-  <button class="tb-btn" id="btn-export-png">↓ PNG</button>
-  <button class="tb-btn primary" id="btn-export-pdf">↓ PDF</button>
-  <div class="tb-sep"></div>
-  <button class="tb-btn" id="btn-undo">↩ Undo</button>
-  <div class="tb-sep"></div>
-  <button class="tb-btn" id="btn-style-toggle">Style ▾</button>
-  <div class="tb-sep"></div>
+  <div style="display:flex;align-items:center">
+    <span id="app-logo">MindMap</span>
+    <span id="app-sub">/ éditeur</span>
+  </div>
   <div id="tb-account">
     <span class="sync-dot" id="sync-dot" title=""></span>
     <button class="tb-btn" id="btn-account">Compte</button>
   </div>
+</div>
+
+<div id="bottom-bar">
+  <button class="bb-btn" id="btn-new">+ New</button>
+  <div class="bb-sep"></div>
+  <button class="bb-btn" id="btn-export-png">↓ PNG</button>
+  <button class="bb-btn primary" id="btn-export-pdf">↓ PDF</button>
+  <div class="bb-sep"></div>
+  <button class="bb-btn" id="btn-style-toggle">Style ▾</button>
+  <div class="bb-sep"></div>
+  <button class="bb-btn" id="btn-undo">↩</button>
+</div>
+
+<div id="zoom-bar">
+  <button class="zb-btn" id="btn-zoom-out">−</button>
+  <span id="zoom-label">100%</span>
+  <button class="zb-btn" id="btn-zoom-in">+</button>
+  <button class="zb-btn" id="btn-center" title="Centrer">⊙</button>
 </div>
 
 <div id="style-popover" class="hidden">
@@ -654,7 +670,7 @@ function load() {
 // ─── Default map ──────────────────────────────────────────────────────────────
 function initMap() {
   nodes = {};
-  const cx = innerWidth / 2, cy = (innerHeight - 46) / 2 + 46;
+  const cx = innerWidth / 2, cy = (innerHeight - 40) / 2 + 40;
   const r = { id: uid(), label: 'Idée centrale', x: cx, y: cy, parentId: null, children: [], colorIndex: -1, isRoot: true };
   nodes[r.id] = r; rootId = r.id;
   ['Thème 1','Thème 2','Thème 3'].forEach((lbl, i) => {
@@ -917,7 +933,7 @@ function commitEdit() {
 
 // ─── Pan / zoom ───────────────────────────────────────────────────────────────
 function zoom(z, cx, cy) {
-  cx = cx ?? innerWidth/2; cy = cy ?? (innerHeight + 46)/2;
+  cx = cx ?? innerWidth/2; cy = cy ?? (innerHeight + 40)/2;
   z = Math.max(MIN_Z, Math.min(MAX_Z, z));
   const f = z / vz;
   vx = cx - (cx - vx)*f; vy = cy - (cy - vy)*f; vz = z;
@@ -927,10 +943,10 @@ function center() {
   const all = Object.values(nodes); if (!all.length) return;
   let x1=Infinity, y1=Infinity, x2=-Infinity, y2=-Infinity;
   all.forEach(n => { const {w,h}=nodeDim(n); x1=Math.min(x1,n.x-w/2); y1=Math.min(y1,n.y-h/2); x2=Math.max(x2,n.x+w/2); y2=Math.max(y2,n.y+h/2); });
-  const pw=innerWidth, ph=innerHeight-46, pad=70;
+  const pw=innerWidth, ph=innerHeight-40, pad=90;
   const s = Math.min((pw-pad*2)/(x2-x1), (ph-pad*2)/(y2-y1), 1.5);
   vz = Math.max(MIN_Z, Math.min(MAX_Z, s));
-  vx = pw/2 - ((x1+x2)/2)*vz; vy = ph/2+46 - ((y1+y2)/2)*vz;
+  vx = pw/2 - ((x1+x2)/2)*vz; vy = ph/2+40 - ((y1+y2)/2)*vz;
   applyT(); updatePanel(); save();
 }
 
