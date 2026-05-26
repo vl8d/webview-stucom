@@ -126,7 +126,7 @@
 
   /* ── SVG nodes ──────────────────────────────────────────── */
   .edge {
-    fill: none; stroke: #303030; stroke-width: 1.5;
+    fill: none;
     pointer-events: none;
   }
   .node-group { cursor: pointer; }
@@ -204,12 +204,13 @@
   /* ── Inline edit ────────────────────────────────────────── */
   #edit-input {
     position: fixed;
-    background: var(--black); color: var(--white);
-    border: 1px solid var(--white); border-radius: 0;
-    padding: 3px 8px;
+    background: #fff; color: #0a0a0a;
+    border: 2px solid #0a0a0a; border-radius: 0;
+    padding: 4px 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.45);
     font-family: 'DM Mono', monospace; font-size: 12px;
     letter-spacing: .02em; text-align: center;
-    z-index: 300; outline: none;
+    z-index: 300; outline: none; min-width: 120px;
   }
   #edit-input.hidden { display: none; }
 
@@ -341,6 +342,34 @@
     border-top: 1px solid var(--line); display: flex; padding: 6px;
   }
   .auth-close-bar .tb-btn { flex: 1; text-align: center; }
+
+  /* ── Style picker ───────────────────────────────────────────── */
+  .style-picker {
+    display: flex; border: 1px solid var(--line); border-radius: 2px;
+    overflow: hidden; flex-shrink: 0;
+  }
+  .style-tab {
+    background: var(--black); border: none;
+    border-right: 1px solid var(--line);
+    color: var(--grey);
+    font-family: 'DM Mono', monospace; font-size: .58rem;
+    letter-spacing: .06em; text-transform: uppercase;
+    padding: 4px 8px; cursor: pointer;
+    transition: background .1s, color .1s; white-space: nowrap;
+  }
+  .style-tab:last-child { border-right: none; }
+  .style-tab.active { background: var(--white); color: var(--black); }
+  .rx-control {
+    display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+  }
+  .rx-label {
+    font-size: .58rem; color: var(--grey); letter-spacing: .05em;
+    white-space: nowrap; min-width: 42px;
+  }
+  #rx-slider {
+    width: 52px; cursor: pointer;
+    accent-color: var(--white);
+  }
 </style>
 </head>
 <body>
@@ -364,6 +393,16 @@
   </div>
   <div class="tb-sep"></div>
   <button class="tb-btn" id="btn-undo">↩ Undo</button>
+  <div class="tb-sep"></div>
+  <div class="style-picker">
+    <button class="style-tab active" data-style="0">■ Sombre</button>
+    <button class="style-tab" data-style="1">◉ Organique</button>
+    <button class="style-tab" data-style="2">□ Papier</button>
+  </div>
+  <div class="rx-control">
+    <span class="rx-label">⌐ <span id="rx-value">3</span>px</span>
+    <input type="range" id="rx-slider" min="0" max="26" step="1" value="3">
+  </div>
   <div class="tb-sep"></div>
   <div id="tb-account">
     <span class="sync-dot" id="sync-dot" title=""></span>
@@ -449,6 +488,10 @@
           <svg width="14" height="14" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.58-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
           Continuer avec Google
         </button>
+        <button class="tb-btn auth-submit" id="btn-ms-signin" style="display:flex;align-items:center;justify-content:center;gap:.5rem;margin-top:.2rem">
+          <svg width="14" height="14" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+          Continuer avec Microsoft
+        </button>
       </div>
     </div>
 
@@ -517,11 +560,19 @@ const LS_KEY   = 'mindmap_v2';
 const MAX_UNDO = 20;
 const SVG_NS   = 'http://www.w3.org/2000/svg';
 
+// ─── Map styles ───────────────────────────────────────────────────────────────
+const STYLES = [
+  { id:'sombre',    name:'Sombre',    bg:'#0a0a0a', edgeColor:'#303030', edgeW:1.5, rx:3,  rootRx:18, edgeFn:'horizontal' },
+  { id:'organique', name:'Organique', bg:'#0f172a', edgeColor:'#1e3a5f', edgeW:2,   rx:14, rootRx:24, edgeFn:'vertical'   },
+  { id:'papier',    name:'Papier',    bg:'#fafaf7', edgeColor:'#b8b4aa', edgeW:1.5, rx:0,  rootRx:0,  edgeFn:'straight'   },
+];
+
 // ─── State ────────────────────────────────────────────────────────────────────
 let nodes = {}, rootId = null, selectedId = null, editingId = null;
 let vx = 0, vy = 0, vz = 1;
+let mapStyle = 0, nodeRx = STYLES[0].rx;
 let panning = false, px0, py0, pvx, pvy;
-let dragging = null, dox, doy;
+let dragging = null, dox, doy, dragStartX = 0, dragStartY = 0;
 let undoStack = [];
 let exportMode = 'dark';
 
@@ -570,7 +621,7 @@ function undo() {
 
 // ─── Persistence ──────────────────────────────────────────────────────────────
 function save() {
-  try { localStorage.setItem(LS_KEY, JSON.stringify({ nodes, rootId, vx, vy, vz })); } catch(e) {}
+  try { localStorage.setItem(LS_KEY, JSON.stringify({ nodes, rootId, vx, vy, vz, mapStyle, nodeRx })); } catch(e) {}
   scheduleSave();
 }
 function load() {
@@ -579,6 +630,8 @@ function load() {
     if (!d) return false;
     nodes = d.nodes; rootId = d.rootId;
     vx = d.vx||0; vy = d.vy||0; vz = d.vz||1;
+    if (d.mapStyle != null) mapStyle = d.mapStyle;
+    if (d.nodeRx   != null) nodeRx   = d.nodeRx;
     return true;
   } catch(e) { return false; }
 }
@@ -619,14 +672,31 @@ function applyT() {
   zoomLbl.textContent = Math.round(vz * 100) + '%';
 }
 
-// ─── Render: edge ─────────────────────────────────────────────────────────────
+// ─── Render: background + edges ───────────────────────────────────────────────
+function applyBg() {
+  wrap.style.background = STYLES[mapStyle].bg;
+}
+
+function edgePath(p, n) {
+  const fn = STYLES[mapStyle].edgeFn;
+  if (fn === 'straight') return `M${p.x},${p.y} L${n.x},${n.y}`;
+  if (fn === 'vertical') {
+    const my = (p.y + n.y) / 2;
+    return `M${p.x},${p.y} C${p.x},${my} ${n.x},${my} ${n.x},${n.y}`;
+  }
+  const mx = (p.x + n.x) / 2;
+  return `M${p.x},${p.y} C${mx},${p.y} ${mx},${n.y} ${n.x},${n.y}`;
+}
+
 function renderEdge(n) {
   if (!n.parentId) return;
   const p = nodes[n.parentId]; if (!p) return;
   let el = document.getElementById('e-' + n.id);
   if (!el) { el = document.createElementNS(SVG_NS,'path'); el.id = 'e-'+n.id; el.classList.add('edge'); eLayer.appendChild(el); }
-  const mx = (p.x + n.x) / 2;
-  el.setAttribute('d', `M${p.x},${p.y} C${mx},${p.y} ${mx},${n.y} ${n.x},${n.y}`);
+  const st = STYLES[mapStyle];
+  el.setAttribute('stroke', st.edgeColor);
+  el.setAttribute('stroke-width', st.edgeW);
+  el.setAttribute('d', edgePath(p, n));
 }
 
 // ─── Render: node ─────────────────────────────────────────────────────────────
@@ -648,7 +718,7 @@ function renderNode(n) {
   const { w, h } = nodeDim(n);
   const x = n.x - w/2, y = n.y - h/2;
   const col = nodeColor(n);
-  const rx = n.isRoot ? 18 : 3;
+  const rx = n.isRoot ? STYLES[mapStyle].rootRx : nodeRx;
 
   const rect = g.querySelector('.node-rect');
   rect.setAttribute('x', x); rect.setAttribute('y', y);
@@ -712,6 +782,7 @@ function cleanOrphans() {
 }
 function renderAll() {
   cleanOrphans();
+  applyBg();
   Object.values(nodes).forEach(n => { renderEdge(n); renderNode(n); });
   applyT(); updatePanel();
 }
@@ -809,10 +880,10 @@ function startEdit(id) {
   const n = nodes[id];
   const { w, h } = nodeDim(n);
   const sc = w2s(n.x, n.y);
-  const ew = w * vz;
+  const ew = Math.max(w * vz, 120);
   let eh, et;
-  if (n.imageData) { eh = LBL_H * vz; et = sc.y + (h/2 - LBL_H) * vz; }
-  else             { eh = h * vz;     et = sc.y - h/2 * vz; }
+  if (n.imageData) { eh = Math.max(LBL_H * vz, 22); et = sc.y + (h/2 - LBL_H) * vz; }
+  else             { eh = Math.max(h * vz, 22);      et = sc.y - h/2 * vz; }
   editEl.value = n.label;
   editEl.style.left = (sc.x - ew/2) + 'px'; editEl.style.top = et + 'px';
   editEl.style.width = ew + 'px'; editEl.style.height = eh + 'px';
@@ -824,8 +895,9 @@ function commitEdit() {
   const id = editingId; editingId = null;
   editEl.classList.add('hidden');
   if (!nodes[id]) return;
-  const v = editEl.value.trim() || nodes[id].label;
-  if (v !== nodes[id].label) { push(); nodes[id].label = v; renderNode(nodes[id]); save(); }
+  const n = nodes[id];
+  const v = n.imageData ? editEl.value.trim() : (editEl.value.trim() || n.label);
+  if (v !== n.label) { push(); n.label = v; renderNode(n); save(); }
 }
 
 // ─── Pan / zoom ───────────────────────────────────────────────────────────────
@@ -858,6 +930,7 @@ wrap.addEventListener('mousedown', e => {
 window.addEventListener('mousemove', e => {
   if (panning) { vx=pvx+e.clientX-px0; vy=pvy+e.clientY-py0; applyT(); }
   if (dragging) {
+    if (Math.hypot(e.clientX-dragStartX, e.clientY-dragStartY) < 4) return;
     const pt = s2w(e.clientX, e.clientY);
     nodes[dragging].x = pt.x+dox; nodes[dragging].y = pt.y+doy;
     renderNode(nodes[dragging]); renderEdge(nodes[dragging]);
@@ -877,7 +950,8 @@ wrap.addEventListener('wheel', e => {
 function onNmd(e, id) {
   e.stopPropagation(); if (e.detail===2) return;
   const pt = s2w(e.clientX, e.clientY);
-  dragging=id; dox=nodes[id].x-pt.x; doy=nodes[id].y-pt.y;
+  dragging=id; dragStartX=e.clientX; dragStartY=e.clientY;
+  dox=nodes[id].x-pt.x; doy=nodes[id].y-pt.y;
 }
 
 document.addEventListener('keydown', e => {
@@ -894,6 +968,28 @@ document.addEventListener('keydown', e => {
     case 'Delete': case 'Backspace': e.preventDefault(); deleteNode(selectedId); break;
     case 'Escape':   e.preventDefault(); deselect(); break;
   }
+});
+
+// ─── Style picker ─────────────────────────────────────────────────────────────
+function applyStyleUI() {
+  document.querySelectorAll('.style-tab').forEach((btn, i) => {
+    btn.classList.toggle('active', i === mapStyle);
+  });
+  document.getElementById('rx-slider').value = nodeRx;
+  document.getElementById('rx-value').textContent = nodeRx;
+}
+function setMapStyle(idx) {
+  mapStyle = idx; nodeRx = STYLES[idx].rx;
+  applyStyleUI(); renderAll(); save();
+}
+document.querySelectorAll('.style-tab').forEach((btn, i) => {
+  btn.addEventListener('click', () => setMapStyle(i));
+});
+document.getElementById('rx-slider').addEventListener('input', e => {
+  nodeRx = +e.target.value;
+  document.getElementById('rx-value').textContent = nodeRx;
+  Object.values(nodes).forEach(n => renderNode(n));
+  save();
 });
 
 // ─── Toolbar ──────────────────────────────────────────────────────────────────
@@ -963,12 +1059,22 @@ function rrect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
+// object-fit:cover crop for canvas image drawing
+function drawCover(ctx, img, x, y, w, h) {
+  const srcR = img.naturalWidth / img.naturalHeight;
+  const dstR = w / h;
+  let sx, sy, sw, sh;
+  if (srcR > dstR) { sh = img.naturalHeight; sw = sh * dstR; sx = (img.naturalWidth - sw) / 2; sy = 0; }
+  else             { sw = img.naturalWidth;  sh = sw / dstR; sx = 0; sy = (img.naturalHeight - sh) / 2; }
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
 async function buildCanvas() {
   const all = Object.values(nodes);
   if (!all.length) return null;
   let x1=Infinity, y1=Infinity, x2=-Infinity, y2=-Infinity;
   all.forEach(n => { const {w,h}=nodeDim(n); x1=Math.min(x1,n.x-w/2); y1=Math.min(y1,n.y-h/2); x2=Math.max(x2,n.x+w/2); y2=Math.max(y2,n.y+h/2); });
-  const PAD = 64, S = 2;
+  const PAD = 64, S = 3;
   x1-=PAD; y1-=PAD; x2+=PAD; y2+=PAD;
   const W = Math.round((x2-x1)*S), H = Math.round((y2-y1)*S);
 
@@ -984,20 +1090,31 @@ async function buildCanvas() {
   const tx = wx => (wx-x1)*S, ty = wy => (wy-y1)*S, ts = s => s*S;
 
   const isLight = exportMode === 'light';
-  const BG        = isLight ? '#f5f5f0' : '#0a0a0a';
-  const EDGE_CLR  = isLight ? '#c0c0b8' : '#303030';
-  const TXT_LIGHT = isLight ? '#f5f5f0' : '#f5f5f0'; // light text on dark nodes
-  const TXT_DARK  = '#0a0a0a';                         // dark text on light nodes
+  const st = STYLES[mapStyle];
+  const BG       = isLight ? '#f5f5f0' : st.bg;
+  const EDGE_CLR = isLight ? '#c0c0b8' : st.edgeColor;
+  const EDGE_W   = ts(st.edgeW);
+  const TXT_DARK = '#0a0a0a';
 
   ctx.fillStyle = BG; ctx.fillRect(0,0,W,H);
 
   // Edges
-  ctx.strokeStyle = EDGE_CLR; ctx.lineWidth = ts(1.5);
+  ctx.strokeStyle = EDGE_CLR; ctx.lineWidth = EDGE_W;
   all.forEach(n => {
     if (!n.parentId) return;
     const p = nodes[n.parentId]; if (!p) return;
-    const ex1=tx(p.x), ey1=ty(p.y), ex2=tx(n.x), ey2=ty(n.y), mx=(ex1+ex2)/2;
-    ctx.beginPath(); ctx.moveTo(ex1,ey1); ctx.bezierCurveTo(mx,ey1, mx,ey2, ex2,ey2); ctx.stroke();
+    const ex1=tx(p.x), ey1=ty(p.y), ex2=tx(n.x), ey2=ty(n.y);
+    ctx.beginPath(); ctx.moveTo(ex1, ey1);
+    if (st.edgeFn === 'straight') {
+      ctx.lineTo(ex2, ey2);
+    } else if (st.edgeFn === 'vertical') {
+      const my = (ey1+ey2)/2;
+      ctx.bezierCurveTo(ex1,my, ex2,my, ex2,ey2);
+    } else {
+      const mx = (ex1+ex2)/2;
+      ctx.bezierCurveTo(mx,ey1, mx,ey2, ex2,ey2);
+    }
+    ctx.stroke();
   });
 
   // Nodes
@@ -1005,25 +1122,27 @@ async function buildCanvas() {
     const {w,h} = nodeDim(n);
     const col = nodeColor(n);
     const nx=tx(n.x-w/2), ny=ty(n.y-h/2), nw=ts(w), nh=ts(h);
-    const rx = ts(n.isRoot ? 18 : 3);
+    const rx = ts(n.isRoot ? st.rootRx : nodeRx);
 
     ctx.fillStyle = col.fill; rrect(ctx, nx, ny, nw, nh, rx); ctx.fill();
 
-    // Root node on light bg: add border so it doesn't vanish
-    if (n.isRoot && isLight) {
-      ctx.strokeStyle = '#555'; ctx.lineWidth = ts(1.5);
+    // Root or Papier style: add border so light nodes don't vanish
+    if (n.isRoot && (isLight || st.id === 'papier')) {
+      ctx.strokeStyle = '#888'; ctx.lineWidth = ts(1.5);
       rrect(ctx, nx, ny, nw, nh, rx); ctx.stroke();
     }
 
     if (n.imageData && imgCache[n.id]) {
       ctx.save(); rrect(ctx, nx, ny, nw, ts(IMG_AREA), rx); ctx.clip();
-      ctx.drawImage(imgCache[n.id], nx, ny, nw, ts(IMG_AREA)); ctx.restore();
+      drawCover(ctx, imgCache[n.id], nx, ny, nw, ts(IMG_AREA)); ctx.restore();
       ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(nx, ny+ts(IMG_AREA), nw, ts(LBL_H));
-      ctx.fillStyle = '#f5f5f0'; ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.font = `${ts(12)}px "DM Mono", monospace`;
-      ctx.fillText(n.label, tx(n.x), ny+ts(IMG_AREA)+ts(LBL_H)/2, nw-ts(8));
+      if (n.label) {
+        ctx.fillStyle = '#f5f5f0'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.font = `${ts(12)}px "DM Mono", monospace`;
+        ctx.fillText(n.label, tx(n.x), ny+ts(IMG_AREA)+ts(LBL_H)/2, nw-ts(8));
+      }
     } else {
-      ctx.fillStyle = col.label ? TXT_DARK : TXT_LIGHT;
+      ctx.fillStyle = col.label ? TXT_DARK : '#f5f5f0';
       ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.font = `${ts(12)}px "DM Mono", monospace`;
       ctx.fillText(n.label, tx(n.x), ty(n.y), nw-ts(8));
@@ -1092,7 +1211,7 @@ async function cloudSave() {
   if (!currentUser || !fbDb) return;
   try {
     await fbDb.collection('maps').doc(currentUser.uid).set({
-      data: JSON.stringify({ nodes, rootId, vx, vy, vz }),
+      data: JSON.stringify({ nodes, rootId, vx, vy, vz, mapStyle, nodeRx }),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     setSyncState('ok');
@@ -1112,6 +1231,7 @@ async function cloudLoad() {
     if (!d || !d.nodes) return false;
     nodes = d.nodes; rootId = d.rootId;
     vx = d.vx || 0; vy = d.vy || 0; vz = d.vz || 1;
+    if (d.mapStyle != null) { mapStyle = d.mapStyle; nodeRx = d.nodeRx ?? STYLES[mapStyle].rx; }
     return true;
   } catch(e) {
     console.error('cloudLoad:', e);
@@ -1119,9 +1239,10 @@ async function cloudLoad() {
   }
 }
 
-function setAccountUI(user) {
+function setAccountUI(user, pending) {
   const btn = document.getElementById('btn-account');
   const emailEl = document.getElementById('account-email');
+  if (pending) { btn.textContent = '…'; return; }
   if (user) {
     btn.textContent = 'Compte ☁';
     if (emailEl) emailEl.textContent = user.email;
@@ -1147,10 +1268,12 @@ function handleAuthChange(user) {
 
 function initFirebase(config) {
   try {
-    if (fbApp) { try { fbApp.delete(); } catch(e) {} fbApp = null; fbAuth = null; fbDb = null; }
-    fbApp = firebase.initializeApp(config, 'mindmap-' + Date.now());
+    // Reuse existing app so IndexedDB auth token survives page reloads
+    try { fbApp = firebase.app('mindmap'); }
+    catch(e) { fbApp = firebase.initializeApp(config, 'mindmap'); }
     fbAuth = fbApp.auth();
     fbDb   = fbApp.firestore();
+    fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
     fbAuth.onAuthStateChanged(handleAuthChange);
     return true;
   } catch(e) {
@@ -1160,7 +1283,8 @@ function initFirebase(config) {
 }
 
 function tryLoadFirebase() {
-  try { return initFirebase(FB_CONFIG); } catch(e) { return false; }
+  setAccountUI(null, true); // show pending state
+  try { return initFirebase(FB_CONFIG); } catch(e) { setAccountUI(null); return false; }
 }
 
 // ─── Auth modal ────────────────────────────────────────────────────────────────
@@ -1248,6 +1372,26 @@ document.getElementById('btn-google-signin').onclick = async () => {
   btn.disabled = false;
 };
 
+document.getElementById('btn-ms-signin').onclick = async () => {
+  const errEl = document.getElementById('auth-error-login');
+  errEl.textContent = '';
+  const btn = document.getElementById('btn-ms-signin');
+  btn.disabled = true;
+  try {
+    const provider = new firebase.auth.OAuthProvider('microsoft.com');
+    await fbAuth.signInWithPopup(provider);
+    document.getElementById('auth-modal').classList.add('hidden');
+    toast('Connecté avec Microsoft !');
+  } catch(e) {
+    const msgs = {
+      'auth/popup-closed-by-user': 'Fenêtre fermée.',
+      'auth/unauthorized-domain': 'Domaine non autorisé dans Firebase Auth.',
+    };
+    errEl.textContent = msgs[e.code] || e.message;
+  }
+  btn.disabled = false;
+};
+
 document.getElementById('btn-logout').onclick = async () => {
   if (fbAuth) await fbAuth.signOut();
   document.getElementById('auth-modal').classList.add('hidden');
@@ -1256,11 +1400,11 @@ document.getElementById('btn-logout').onclick = async () => {
   toast('Déconnecté');
 };
 
-tryLoadFirebase();
-
 // ─── Init ─────────────────────────────────────────────────────────────────────
 buildColorGrid();
 if (!load()) { initMap(); save(); }
+applyStyleUI();
+tryLoadFirebase();
 renderAll();
 center();
 
