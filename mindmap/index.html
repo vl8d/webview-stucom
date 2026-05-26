@@ -343,31 +343,43 @@
   }
   .auth-close-bar .tb-btn { flex: 1; text-align: center; }
 
-  /* ── Style picker ───────────────────────────────────────────── */
-  .style-picker {
-    display: flex; border: 1px solid var(--line); border-radius: 2px;
-    overflow: hidden; flex-shrink: 0;
+  /* ── Style popover ─────────────────────────────────────────── */
+  #style-popover {
+    position: fixed;
+    top: 50px; right: 56px;
+    background: var(--black); border: 1px solid var(--white);
+    box-shadow: 4px 4px 0 rgba(255,255,255,.05);
+    z-index: 350; display: flex; flex-direction: column;
+    min-width: 180px;
   }
-  .style-tab {
-    background: var(--black); border: none;
-    border-right: 1px solid var(--line);
-    color: var(--grey);
-    font-family: 'DM Mono', monospace; font-size: .58rem;
-    letter-spacing: .06em; text-transform: uppercase;
-    padding: 4px 8px; cursor: pointer;
-    transition: background .1s, color .1s; white-space: nowrap;
+  #style-popover.hidden { display: none; }
+  .sp-section {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: .72rem; letter-spacing: .18em; color: var(--grey);
+    padding: .35rem .9rem .2rem;
+    border-bottom: 1px solid var(--line);
+    text-transform: uppercase;
   }
-  .style-tab:last-child { border-right: none; }
-  .style-tab.active { background: var(--white); color: var(--black); }
+  .sp-row { padding: .5rem .9rem; border-bottom: 1px solid var(--line); }
+  .sp-style-btns { display: flex; flex-direction: column; gap: 3px; }
+  .sp-style-btn {
+    background: var(--black); border: 1px solid var(--line);
+    color: var(--grey); font-family: 'DM Mono', monospace;
+    font-size: .6rem; letter-spacing: .08em; text-transform: uppercase;
+    padding: .4rem .7rem; cursor: pointer; text-align: left;
+    transition: background .1s, color .1s, border-color .1s;
+  }
+  .sp-style-btn:hover { background: var(--mid); color: var(--white); border-color: #444; }
+  .sp-style-btn.active { background: var(--white); color: var(--black); border-color: var(--white); }
   .rx-control {
-    display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+    display: flex; align-items: center; gap: 8px;
   }
   .rx-label {
     font-size: .58rem; color: var(--grey); letter-spacing: .05em;
-    white-space: nowrap; min-width: 42px;
+    white-space: nowrap; min-width: 46px;
   }
   #rx-slider {
-    width: 52px; cursor: pointer;
+    flex: 1; cursor: pointer;
     accent-color: var(--white);
   }
 </style>
@@ -387,34 +399,37 @@
   <div class="tb-sep"></div>
   <button class="tb-btn" id="btn-export-png">↓ PNG</button>
   <button class="tb-btn primary" id="btn-export-pdf">↓ PDF</button>
-  <div class="export-mode">
-    <button class="mode-tab active" id="mode-dark">● Foncé</button>
-    <button class="mode-tab" id="mode-light">○ Clair</button>
-  </div>
   <div class="tb-sep"></div>
   <button class="tb-btn" id="btn-undo">↩ Undo</button>
   <div class="tb-sep"></div>
-  <div class="style-picker">
-    <button class="style-tab active" data-style="0">■ Sombre</button>
-    <button class="style-tab" data-style="1">◉ Organique</button>
-    <button class="style-tab" data-style="2">□ Papier</button>
-  </div>
-  <div class="rx-control">
-    <span class="rx-label">⌐ <span id="rx-value">3</span>px</span>
-    <input type="range" id="rx-slider" min="0" max="26" step="1" value="3">
-  </div>
+  <button class="tb-btn" id="btn-style-toggle">Style ▾</button>
   <div class="tb-sep"></div>
   <div id="tb-account">
     <span class="sync-dot" id="sync-dot" title=""></span>
-    <span class="account-email" id="account-email"></span>
     <button class="tb-btn" id="btn-account">Compte</button>
   </div>
-  <div class="tb-hints">
-    <span class="tb-hint"><kbd>Tab</kbd> enfant</span>
-    <span class="tb-hint"><kbd>Enter</kbd> frère</span>
-    <span class="tb-hint"><kbd>Del</kbd> suppr</span>
-    <span class="tb-hint"><kbd>Ctrl+Z</kbd> annuler</span>
-    <span class="tb-hint"><kbd>Esc</kbd> désélect</span>
+</div>
+
+<div id="style-popover" class="hidden">
+  <div class="sp-section">Style</div>
+  <div class="sp-row sp-style-btns">
+    <button class="sp-style-btn active" data-style="0">■ Sombre</button>
+    <button class="sp-style-btn" data-style="1">◉ Organique</button>
+    <button class="sp-style-btn" data-style="2">□ Papier</button>
+  </div>
+  <div class="sp-section">Coins</div>
+  <div class="sp-row">
+    <div class="rx-control">
+      <span class="rx-label">⌐ <span id="rx-value">3</span>px</span>
+      <input type="range" id="rx-slider" min="0" max="26" step="1" value="3">
+    </div>
+  </div>
+  <div class="sp-section">Export</div>
+  <div class="sp-row">
+    <div class="export-mode" style="width:100%">
+      <button class="mode-tab active" id="mode-dark" style="flex:1">● Foncé</button>
+      <button class="mode-tab" id="mode-light" style="flex:1">○ Clair</button>
+    </div>
   </div>
 </div>
 
@@ -970,9 +985,18 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// ─── Style picker ─────────────────────────────────────────────────────────────
+// ─── Style popover ────────────────────────────────────────────────────────────
+const stylePopover = document.getElementById('style-popover');
+document.getElementById('btn-style-toggle').onclick = e => {
+  e.stopPropagation();
+  stylePopover.classList.toggle('hidden');
+};
+document.addEventListener('click', e => {
+  if (!stylePopover.contains(e.target)) stylePopover.classList.add('hidden');
+});
+
 function applyStyleUI() {
-  document.querySelectorAll('.style-tab').forEach((btn, i) => {
+  document.querySelectorAll('.sp-style-btn').forEach((btn, i) => {
     btn.classList.toggle('active', i === mapStyle);
   });
   document.getElementById('rx-slider').value = nodeRx;
@@ -982,7 +1006,7 @@ function setMapStyle(idx) {
   mapStyle = idx; nodeRx = STYLES[idx].rx;
   applyStyleUI(); renderAll(); save();
 }
-document.querySelectorAll('.style-tab').forEach((btn, i) => {
+document.querySelectorAll('.sp-style-btn').forEach((btn, i) => {
   btn.addEventListener('click', () => setMapStyle(i));
 });
 document.getElementById('rx-slider').addEventListener('input', e => {
