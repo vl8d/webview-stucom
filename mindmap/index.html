@@ -797,9 +797,14 @@ function toast(msg) {
 const s2w = (sx, sy) => ({ x: (sx - vx) / vz, y: (sy - vy) / vz });
 const w2s = (wx, wy) => ({ x: wx * vz + vx, y: wy * vz + vy });
 
+// Image area height based on stored aspect ratio (adaptive sizing)
+function imageAreaH(n) {
+  if (!n.imageAspect) return IMG_AREA;
+  return Math.max(50, Math.min(160, Math.round(IMG_W / n.imageAspect)));
+}
 function nodeDim(n) {
   if (n.isRoot)    return { w: 160, h: 46 };
-  if (n.imageData) return { w: IMG_W, h: IMG_H };
+  if (n.imageData) { const ia = imageAreaH(n); return { w: IMG_W, h: ia + (n.label ? LBL_H : 0) }; }
   return { w: NODE_W, h: NODE_H };
 }
 
@@ -973,7 +978,7 @@ function renderNode(n) {
     const nid = n.id; // capture id, not live node ref
     g.addEventListener('mousedown', e => onNmd(e, nid));
     g.addEventListener('dblclick',  e => { e.stopPropagation(); startEdit(nid); });
-    g.addEventListener('click',     e => { e.stopPropagation(); select(nid); });
+    g.addEventListener('click',     e => e.stopPropagation());
   }
 
   const { w, h } = nodeDim(n);
@@ -998,7 +1003,8 @@ function renderNode(n) {
     }
     const cr = cp.querySelector('rect');
     const hasLabel = !!n.label;
-    const imgH = hasLabel ? IMG_AREA : h;
+    const ia = imageAreaH(n);
+    const imgH = hasLabel ? ia : h;
     cr.setAttribute('x', x); cr.setAttribute('y', y); cr.setAttribute('width', w); cr.setAttribute('height', imgH);
 
     if (!g._i) {
@@ -1017,10 +1023,10 @@ function renderNode(n) {
     img.setAttribute('clip-path', `url(#${cid})`); img.removeAttribute('display');
 
     if (hasLabel) {
-      lbg.setAttribute('x', x); lbg.setAttribute('y', y + IMG_AREA);
+      lbg.setAttribute('x', x); lbg.setAttribute('y', y + ia);
       lbg.setAttribute('width', w); lbg.setAttribute('height', LBL_H);
       lbg.setAttribute('fill', 'rgba(0,0,0,0.6)'); lbg.removeAttribute('display');
-      g._t.setAttribute('x', n.x); g._t.setAttribute('y', y + IMG_AREA + LBL_H / 2);
+      g._t.setAttribute('x', n.x); g._t.setAttribute('y', y + ia + LBL_H / 2);
       g._t.textContent = n.label; g._t.removeAttribute('fill'); g._t.classList.remove('dark-label');
       g._t.setAttribute('fill', '#f5f5f0');
     } else {
@@ -1354,6 +1360,8 @@ wrap.addEventListener('wheel', e => {
 
 function onNmd(e, id) {
   e.stopPropagation(); if (e.detail===2) return;
+  if (!nodes[id]) return;
+  select(id);
   const pt = s2w(e.clientX, e.clientY);
   dragging=id; dragStartX=e.clientX; dragStartY=e.clientY;
   dox=nodes[id].x-pt.x; doy=nodes[id].y-pt.y;
@@ -1445,7 +1453,7 @@ document.getElementById('ap-delete').onclick         = () => selectedId && delet
 document.getElementById('ap-set-image').onclick   = () => selectedId && document.getElementById('img-file-input').click();
 document.getElementById('ap-remove-image').onclick = () => {
   if (!selectedId || !nodes[selectedId]) return;
-  push(); delete nodes[selectedId].imageData;
+  push(); delete nodes[selectedId].imageData; delete nodes[selectedId].imageAspect;
   renderNode(nodes[selectedId]); save(); updatePanel();
 };
 
@@ -1462,7 +1470,8 @@ document.getElementById('img-file-input').addEventListener('change', e => {
       if (iw > MAX || ih > MAX) { const r = Math.min(MAX/iw, MAX/ih); iw=Math.round(iw*r); ih=Math.round(ih*r); }
       const cv = document.createElement('canvas'); cv.width=iw; cv.height=ih;
       cv.getContext('2d').drawImage(img, 0, 0, iw, ih);
-      push(); nodes[selectedId].imageData = cv.toDataURL('image/jpeg', 0.85);
+      push(); nodes[selectedId].imageAspect = img.width / img.height;
+      nodes[selectedId].imageData = cv.toDataURL('image/jpeg', 0.85);
       renderNode(nodes[selectedId]); renderEdge(nodes[selectedId]); save(); updatePanel(); toast('Image définie');
     };
     img.src = ev.target.result;
@@ -1560,11 +1569,12 @@ async function buildCanvas() {
       // Clip once to the full node shape — keeps image + label bar inside rounded corners
       ctx.save(); rrect(ctx, nx, ny, nw, nh, rx); ctx.clip();
       if (n.label) {
-        drawCover(ctx, imgCache[n.id], nx, ny, nw, ts(IMG_AREA));
-        ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(nx, ny+ts(IMG_AREA), nw, ts(LBL_H));
+        const nia = imageAreaH(n);
+        drawCover(ctx, imgCache[n.id], nx, ny, nw, ts(nia));
+        ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(nx, ny+ts(nia), nw, ts(LBL_H));
         ctx.fillStyle = '#f5f5f0'; ctx.textAlign='center'; ctx.textBaseline='middle';
         ctx.font = `${ts(12)}px "DM Mono", monospace`;
-        ctx.fillText(n.label, tx(n.x), ny+ts(IMG_AREA)+ts(LBL_H)/2, nw-ts(8));
+        ctx.fillText(n.label, tx(n.x), ny+ts(nia)+ts(LBL_H)/2, nw-ts(8));
       } else {
         drawCover(ctx, imgCache[n.id], nx, ny, nw, nh);
       }
