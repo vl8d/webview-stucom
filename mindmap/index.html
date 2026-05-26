@@ -874,7 +874,9 @@ function renderNode(n) {
       defs.appendChild(cp);
     }
     const cr = cp.querySelector('rect');
-    cr.setAttribute('x', x); cr.setAttribute('y', y); cr.setAttribute('width', w); cr.setAttribute('height', IMG_AREA);
+    const hasLabel = !!n.label;
+    const imgH = hasLabel ? IMG_AREA : h;
+    cr.setAttribute('x', x); cr.setAttribute('y', y); cr.setAttribute('width', w); cr.setAttribute('height', imgH);
 
     if (!g._i) {
       g._i = document.createElementNS(SVG_NS, 'image'); g._i.classList.add('node-img');
@@ -885,19 +887,23 @@ function renderNode(n) {
     }
     const img = g._i, lbg = g._lb;
     img.setAttribute('x', x); img.setAttribute('y', y);
-    img.setAttribute('width', w); img.setAttribute('height', IMG_AREA);
+    img.setAttribute('width', w); img.setAttribute('height', imgH);
     if (img.getAttribute('href') !== n.imageData) {
       img.setAttribute('href', n.imageData); img.setAttribute('xlink:href', n.imageData);
     }
     img.setAttribute('clip-path', `url(#${cid})`); img.removeAttribute('display');
 
-    lbg.setAttribute('x', x); lbg.setAttribute('y', y + IMG_AREA);
-    lbg.setAttribute('width', w); lbg.setAttribute('height', LBL_H);
-    lbg.setAttribute('fill', 'rgba(0,0,0,0.6)'); lbg.removeAttribute('display');
-
-    g._t.setAttribute('x', n.x); g._t.setAttribute('y', y + IMG_AREA + LBL_H / 2);
-    g._t.textContent = n.label; g._t.removeAttribute('fill'); g._t.classList.remove('dark-label');
-    g._t.setAttribute('fill', '#f5f5f0');
+    if (hasLabel) {
+      lbg.setAttribute('x', x); lbg.setAttribute('y', y + IMG_AREA);
+      lbg.setAttribute('width', w); lbg.setAttribute('height', LBL_H);
+      lbg.setAttribute('fill', 'rgba(0,0,0,0.6)'); lbg.removeAttribute('display');
+      g._t.setAttribute('x', n.x); g._t.setAttribute('y', y + IMG_AREA + LBL_H / 2);
+      g._t.textContent = n.label; g._t.removeAttribute('fill'); g._t.classList.remove('dark-label');
+      g._t.setAttribute('fill', '#f5f5f0');
+    } else {
+      lbg.setAttribute('display', 'none');
+      g._t.textContent = '';
+    }
   } else {
     if (g._i)  g._i.setAttribute('display', 'none');
     if (g._lb) g._lb.setAttribute('display', 'none');
@@ -1157,7 +1163,8 @@ document.getElementById('btn-new').onclick      = () => modal.classList.remove('
 document.getElementById('modal-cancel').onclick = () => modal.classList.add('hidden');
 document.getElementById('modal-confirm').onclick = () => {
   modal.classList.add('hidden'); undoStack=[]; selectedId=null; editingId=null;
-  editEl.classList.add('hidden'); initMap(); save(); renderAll(); center(); toast('Nouvelle carte créée');
+  editEl.classList.add('hidden'); _lastBgStyle = -1; initMap();
+  cleanOrphans(); save(); renderAll(); center(); toast('Nouvelle carte créée');
 };
 
 // ─── Panel buttons ────────────────────────────────────────────────────────────
@@ -1282,12 +1289,14 @@ async function buildCanvas() {
     if (n.imageData && imgCache[n.id]) {
       // Clip once to the full node shape — keeps image + label bar inside rounded corners
       ctx.save(); rrect(ctx, nx, ny, nw, nh, rx); ctx.clip();
-      drawCover(ctx, imgCache[n.id], nx, ny, nw, ts(IMG_AREA));
-      ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(nx, ny+ts(IMG_AREA), nw, ts(LBL_H));
       if (n.label) {
+        drawCover(ctx, imgCache[n.id], nx, ny, nw, ts(IMG_AREA));
+        ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(nx, ny+ts(IMG_AREA), nw, ts(LBL_H));
         ctx.fillStyle = '#f5f5f0'; ctx.textAlign='center'; ctx.textBaseline='middle';
         ctx.font = `${ts(12)}px "DM Mono", monospace`;
         ctx.fillText(n.label, tx(n.x), ny+ts(IMG_AREA)+ts(LBL_H)/2, nw-ts(8));
+      } else {
+        drawCover(ctx, imgCache[n.id], nx, ny, nw, nh);
       }
       ctx.restore();
     } else {
@@ -1447,8 +1456,19 @@ function handleAuthChange(user) {
   if (user) {
     updateProfileView(user);
     cloudLoad().then(loaded => {
-      if (loaded) { renderAll(); center(); toast('Carte chargée depuis le cloud'); }
-      else setSyncState('idle');
+      if (loaded) {
+        // Wipe stale DOM and state before rendering the cloud map
+        selectedId = null; editingId = null;
+        editEl.classList.add('hidden');
+        undoStack = [];
+        _lastBgStyle = -1;
+        cleanOrphans();
+        applyStyleUI();
+        renderAll(); center();
+        toast('Carte chargée depuis le cloud');
+      } else {
+        setSyncState('idle');
+      }
     });
   }
 }
@@ -1515,7 +1535,10 @@ async function signInWithProvider(btnId, makeProvider, successMsg) {
   const btn = document.getElementById(btnId);
   btn.disabled = true;
   try {
-    await fbAuth.signInWithPopup(makeProvider());
+    const result = await fbAuth.signInWithPopup(makeProvider());
+    // Firebase fires onAuthStateChanged synchronously before this line in v8,
+    // so currentUser is already set. If not (timing edge case), set it manually.
+    if (result.user && !currentUser) handleAuthChange(result.user);
     authModal.classList.add('hidden');
     toast(successMsg);
   } catch(e) {
@@ -1532,8 +1555,10 @@ btnAuthSubmit.onclick = async () => {
   if (!fbAuth) { authErrorLogin.textContent = 'Firebase non initialisé.'; return; }
   btnAuthSubmit.disabled = true; btnAuthSubmit.textContent = '…';
   try {
-    if (authMode === 'register') await fbAuth.createUserWithEmailAndPassword(email, pass);
-    else                         await fbAuth.signInWithEmailAndPassword(email, pass);
+    let cred;
+    if (authMode === 'register') cred = await fbAuth.createUserWithEmailAndPassword(email, pass);
+    else                         cred = await fbAuth.signInWithEmailAndPassword(email, pass);
+    if (cred.user && !currentUser) handleAuthChange(cred.user);
     authModal.classList.add('hidden');
     toast(authMode === 'register' ? 'Compte créé !' : 'Connecté !');
   } catch(e) {
