@@ -743,7 +743,9 @@ let exportMode = 'dark';
 // Multi-map
 let activeMapId = null;
 let mapList = [];   // [{ id, name, createdAt }]
-let _signingOut = false;
+// _forceSignedOut: set on explicit logout, cleared only on next explicit login attempt.
+// Prevents stale Firebase onAuthStateChanged(user) callbacks from re-logging the user in.
+let _forceSignedOut = false;
 let _pendingConfirm = null;
 
 // ─── DOM ──────────────────────────────────────────────────────────────────────
@@ -1768,7 +1770,11 @@ function updateProfileView(user) {
 }
 
 function handleAuthChange(user) {
-  if (_signingOut) return; // ignore Firebase callbacks during active sign-out
+  if (_forceSignedOut && user) {
+    // Stale auth callback after explicit sign-out — push it back out immediately
+    if (fbAuth) fbAuth.signOut().catch(() => {});
+    return;
+  }
   currentUser = user;
   setAccountUI(user);
   if (!authModal.classList.contains('hidden')) openAuthModal();
@@ -1850,6 +1856,7 @@ const POPUP_MSGS = {
   'auth/unauthorized-domain': 'Domaine non autorisé — ajoutez vl8d.github.io dans Firebase Auth → Authorized domains.',
 };
 async function signInWithProvider(btnId, makeProvider, successMsg) {
+  _forceSignedOut = false;  // user is actively trying to log in
   authErrorLogin.textContent = '';
   const btn = document.getElementById(btnId);
   btn.disabled = true;
@@ -1867,6 +1874,7 @@ async function signInWithProvider(btnId, makeProvider, successMsg) {
 }
 
 btnAuthSubmit.onclick = async () => {
+  _forceSignedOut = false;  // user is actively trying to log in
   const email = document.getElementById('auth-email').value.trim();
   const pass  = document.getElementById('auth-password').value;
   authErrorLogin.textContent = '';
@@ -1910,9 +1918,8 @@ document.getElementById('btn-sync-now').onclick = async () => {
 };
 
 document.getElementById('btn-logout').onclick = async () => {
-  _signingOut = true;
-  lastSyncTs  = null;
-  // Update UI immediately — don't wait for Firebase callback
+  _forceSignedOut = true;   // stays true until next explicit login
+  lastSyncTs = null;
   currentUser = null;
   setAccountUI(null);
   authModal.classList.add('hidden');
@@ -1921,7 +1928,7 @@ document.getElementById('btn-logout').onclick = async () => {
     try { await fbAuth.signOut(); }
     catch(e) { console.warn('signOut error:', e); }
   }
-  _signingOut = false;
+  // _forceSignedOut intentionally NOT reset here — only a new login clears it
 };
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
