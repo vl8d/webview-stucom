@@ -394,6 +394,59 @@
   .auth-logout-btn { color: #f87171; border-color: #7f1d1d; }
   .auth-logout-btn:hover { background: #7f1d1d; color: #fff; border-color: #b91c1c; }
 
+  /* ── Maps modal ────────────────────────────────────────────── */
+  #maps-modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.82);
+    z-index: 450; display: flex;
+    align-items: center; justify-content: center;
+  }
+  #maps-modal.hidden { display: none; }
+  #maps-box {
+    background: var(--black); border: 1px solid var(--white);
+    max-width: 340px; width: 90%;
+    box-shadow: 5px 5px 0 rgba(255,255,255,.05);
+    display: flex; flex-direction: column; max-height: 80vh;
+  }
+  .maps-box-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: .9rem; letter-spacing: .18em; color: var(--grey);
+    padding: .5rem 1.1rem .3rem; border-bottom: 1px solid var(--line);
+    text-transform: uppercase;
+    display: flex; align-items: baseline; justify-content: space-between;
+  }
+  #maps-count { font-family: 'DM Mono',monospace; font-size:.55rem; color:var(--grey); }
+  #maps-list { overflow-y: auto; flex: 1; }
+  .map-item { display: flex; align-items: center; border-bottom: 1px solid var(--line); }
+  .map-item-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--white); margin-left: 1.1rem; flex-shrink: 0; opacity: 0;
+  }
+  .map-item.active .map-item-dot { opacity: 1; }
+  .map-item-name {
+    flex: 1; background: none; border: none;
+    color: var(--white); font-family: 'DM Mono',monospace;
+    font-size: .65rem; letter-spacing: .04em;
+    padding: .58rem .7rem; cursor: pointer; text-align: left;
+    transition: background .1s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .map-item.active .map-item-name { font-weight: 500; }
+  .map-item-name:hover { background: var(--mid); }
+  .map-item-rename, .map-item-del {
+    background: none; border: none; color: var(--grey); cursor: pointer;
+    padding: .58rem .55rem; font-size: .75rem; transition: color .1s; flex-shrink: 0;
+  }
+  .map-item-rename:hover { color: var(--white); }
+  .map-item-del:hover { color: #f87171; }
+  .maps-footer { border-top: 1px solid var(--line); display: flex; gap: 6px; padding: 6px; }
+  #btn-maps-new { flex: 1; text-align: center; }
+  #active-map-name {
+    font-size: .58rem; color: var(--grey); letter-spacing: .05em;
+    max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    cursor: pointer;
+  }
+  #active-map-name:hover { color: var(--white); }
+
   /* ── Style popover ─────────────────────────────────────────── */
   #style-popover {
     position: fixed;
@@ -438,9 +491,13 @@
 <body>
 
 <div id="toolbar">
-  <div style="display:flex;align-items:center">
+  <div style="display:flex;align-items:center;flex-shrink:0">
     <span id="app-logo">MindMap</span>
     <span id="app-sub">/ éditeur</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:6px;flex:1;justify-content:center;padding:0 10px;overflow:hidden">
+    <span id="active-map-name" title="Gérer les cartes">—</span>
+    <button class="tb-btn" id="btn-maps">⊞ Cartes</button>
   </div>
   <div id="tb-account">
     <span class="sync-dot" id="sync-dot" title=""></span>
@@ -523,6 +580,20 @@
     <div class="modal-btns">
       <button class="tb-btn" id="modal-cancel">Annuler</button>
       <button class="tb-btn primary" id="modal-confirm">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<div id="maps-modal" class="hidden">
+  <div id="maps-box">
+    <div class="maps-box-title">
+      Mes Cartes
+      <span id="maps-count">0/10</span>
+    </div>
+    <div id="maps-list"></div>
+    <div class="maps-footer">
+      <button class="tb-btn" id="btn-maps-new">+ Nouvelle carte</button>
+      <button class="tb-btn" id="btn-close-maps">✕ Fermer</button>
     </div>
   </div>
 </div>
@@ -647,9 +718,11 @@ const IMG_H    = 112;
 const IMG_AREA = 80;
 const LBL_H    = 32;
 const MIN_Z = 0.12, MAX_Z = 3, STEP_Z = 0.14;
-const LS_KEY   = 'mindmap_v2';
-const MAX_UNDO = 20;
-const SVG_NS   = 'http://www.w3.org/2000/svg';
+const LS_KEY    = 'mindmap_v3';
+const LS_KEY_V2 = 'mindmap_v2';
+const MAX_UNDO  = 20;
+const MAX_MAPS  = 10;
+const SVG_NS    = 'http://www.w3.org/2000/svg';
 
 // ─── Map styles ───────────────────────────────────────────────────────────────
 const STYLES = [
@@ -666,6 +739,11 @@ let panning = false, px0, py0, pvx, pvy;
 let dragging = null, dox, doy, dragStartX = 0, dragStartY = 0;
 let undoStack = [];
 let exportMode = 'dark';
+// Multi-map
+let activeMapId = null;
+let mapList = [];   // [{ id, name, createdAt }]
+let _signingOut = false;
+let _pendingConfirm = null;
 
 // ─── DOM ──────────────────────────────────────────────────────────────────────
 const wrap    = document.getElementById('canvas-wrap');
@@ -696,6 +774,12 @@ const profileSyncText  = document.getElementById('auth-profile-sync-text');
 const rxSlider         = document.getElementById('rx-slider');
 const rxValue          = document.getElementById('rx-value');
 const spStyleBtns      = [...document.querySelectorAll('.sp-style-btn')];
+// Maps modal
+const mapsModal        = document.getElementById('maps-modal');
+const mapsListEl       = document.getElementById('maps-list');
+const mapsCountEl      = document.getElementById('maps-count');
+const mapsNewBtn       = document.getElementById('btn-maps-new');
+const activeMapNameEl  = document.getElementById('active-map-name');
 
 // ─── Utils ────────────────────────────────────────────────────────────────────
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -729,19 +813,54 @@ function undo() {
 
 // ─── Persistence ──────────────────────────────────────────────────────────────
 function _writeLocal() {
-  try { localStorage.setItem(LS_KEY, JSON.stringify({ nodes, rootId, vx, vy, vz, mapStyle, nodeRx })); } catch(e) {}
+  try {
+    let store;
+    try { store = JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch(e) { store = {}; }
+    if (!store.maps) store.maps = {};
+    store.activeMapId = activeMapId;
+    store.mapList     = mapList;
+    store.maps[activeMapId] = { nodes, rootId, vx, vy, vz, mapStyle, nodeRx };
+    localStorage.setItem(LS_KEY, JSON.stringify(store));
+  } catch(e) {}
 }
-function save()      { _writeLocal(); scheduleSave(); } // structural change → also cloud-sync
-function saveLocal() { _writeLocal(); }                 // viewport-only → no cloud sync flash
+function save()      { _writeLocal(); scheduleSave(); }
+function saveLocal() { _writeLocal(); }
 function load() {
   try {
-    const d = JSON.parse(localStorage.getItem(LS_KEY));
-    if (!d) return false;
-    nodes = d.nodes; rootId = d.rootId;
-    vx = d.vx||0; vy = d.vy||0; vz = d.vz||1;
-    if (d.mapStyle != null) mapStyle = d.mapStyle;
-    if (d.nodeRx   != null) nodeRx   = d.nodeRx;
-    return true;
+    // New multi-map format
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (d && d.maps && d.activeMapId) {
+        mapList     = d.mapList || [];
+        activeMapId = d.activeMapId;
+        const md    = d.maps[activeMapId];
+        if (md && md.nodes) {
+          nodes = md.nodes; rootId = md.rootId;
+          vx = md.vx||0; vy = md.vy||0; vz = md.vz||1;
+          if (md.mapStyle != null) mapStyle = md.mapStyle;
+          if (md.nodeRx   != null) nodeRx   = md.nodeRx;
+          return true;
+        }
+      }
+    }
+    // Migrate from v2
+    const v2raw = localStorage.getItem(LS_KEY_V2);
+    if (v2raw) {
+      const d = JSON.parse(v2raw);
+      if (d && d.nodes) {
+        const id = uid();
+        activeMapId = id;
+        mapList = [{ id, name: 'Carte 1', createdAt: Date.now() }];
+        nodes = d.nodes; rootId = d.rootId;
+        vx = d.vx||0; vy = d.vy||0; vz = d.vz||1;
+        if (d.mapStyle != null) mapStyle = d.mapStyle;
+        if (d.nodeRx   != null) nodeRx   = d.nodeRx;
+        _writeLocal();
+        return true;
+      }
+    }
+    return false;
   } catch(e) { return false; }
 }
 
@@ -942,6 +1061,130 @@ function deselect() {
   updatePanel(); commitEdit();
 }
 
+// ─── Multi-map management ─────────────────────────────────────────────────────
+function updateActiveMapName() {
+  const entry = mapList.find(m => m.id === activeMapId);
+  activeMapNameEl.textContent = entry ? entry.name : '—';
+}
+
+function updateMapsUI() {
+  mapsListEl.innerHTML = '';
+  mapList.forEach(m => {
+    const item = document.createElement('div');
+    item.className = 'map-item' + (m.id === activeMapId ? ' active' : '');
+
+    const dot = document.createElement('div'); dot.className = 'map-item-dot';
+
+    const nameBtn = document.createElement('button');
+    nameBtn.className = 'map-item-name'; nameBtn.textContent = m.name;
+    nameBtn.onclick = () => switchMap(m.id);
+
+    const renBtn = document.createElement('button');
+    renBtn.className = 'map-item-rename'; renBtn.textContent = '✎'; renBtn.title = 'Renommer';
+    renBtn.onclick = e => { e.stopPropagation(); renameMap(m.id); };
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'map-item-del'; delBtn.textContent = '✕'; delBtn.title = 'Supprimer';
+    delBtn.style.visibility = mapList.length <= 1 ? 'hidden' : '';
+    delBtn.onclick = e => { e.stopPropagation(); deleteMap(m.id); };
+
+    item.append(dot, nameBtn, renBtn, delBtn);
+    mapsListEl.appendChild(item);
+  });
+  mapsCountEl.textContent = `${mapList.length}/${MAX_MAPS}`;
+  mapsNewBtn.disabled = mapList.length >= MAX_MAPS;
+  updateActiveMapName();
+}
+
+function createMap() {
+  if (mapList.length >= MAX_MAPS) { toast(`Limite de ${MAX_MAPS} cartes atteinte`); return; }
+  _writeLocal();
+  const id   = uid();
+  const name = `Carte ${mapList.length + 1}`;
+  mapList.push({ id, name, createdAt: Date.now() });
+  activeMapId = id;
+  selectedId = null; editingId = null; editEl.classList.add('hidden');
+  undoStack = []; _lastBgStyle = -1;
+  initMap();
+  cleanOrphans(); applyStyleUI(); renderAll(); center();
+  save();
+  mapsModal.classList.add('hidden');
+  updateMapsUI();
+  toast(`"${name}" créée`);
+}
+
+async function switchMap(id) {
+  if (id === activeMapId) { mapsModal.classList.add('hidden'); return; }
+  _writeLocal();
+  let store;
+  try { store = JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch(e) { store = {}; }
+  let md = store.maps && store.maps[id];
+
+  if (!md && currentUser && fbDb) {
+    setSyncState('syncing');
+    try {
+      const doc = await fbDb.collection('maps').doc(currentUser.uid).collection('items').doc(id).get();
+      if (doc.exists) md = JSON.parse(doc.data().data);
+    } catch(e) { console.error('switchMap cloud:', e); }
+    setSyncState('idle');
+  }
+  if (!md || !md.nodes) { toast('Carte introuvable'); return; }
+
+  selectedId = null; editingId = null; editEl.classList.add('hidden');
+  undoStack = []; _lastBgStyle = -1;
+  activeMapId = id;
+  nodes = md.nodes; rootId = md.rootId;
+  vx = md.vx||0; vy = md.vy||0; vz = md.vz||1;
+  if (md.mapStyle != null) { mapStyle = md.mapStyle; nodeRx = md.nodeRx ?? STYLES[mapStyle].rx; }
+  _writeLocal();
+  cleanOrphans(); applyStyleUI(); renderAll(); center();
+  mapsModal.classList.add('hidden');
+  updateMapsUI();
+  toast('Carte chargée');
+}
+
+function renameMap(id) {
+  const entry = mapList.find(m => m.id === id);
+  if (!entry) return;
+  const newName = prompt('Nouveau nom :', entry.name);
+  if (!newName || !newName.trim() || newName.trim() === entry.name) return;
+  entry.name = newName.trim();
+  _writeLocal(); save(); updateMapsUI();
+}
+
+function deleteMap(id) {
+  if (mapList.length <= 1) { toast('Impossible de supprimer la seule carte'); return; }
+  const entry = mapList.find(m => m.id === id);
+  showConfirm(
+    'Supprimer ?',
+    `"${entry ? entry.name : 'Cette carte'}" sera supprimée définitivement.`,
+    () => _doDeleteMap(id)
+  );
+}
+function _doDeleteMap(id) {
+  mapList = mapList.filter(m => m.id !== id);
+  let store;
+  try { store = JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch(e) { store = {}; }
+  if (store.maps) delete store.maps[id];
+
+  if (id === activeMapId) {
+    activeMapId = mapList[0].id;
+    const md = store.maps && store.maps[activeMapId];
+    if (md && md.nodes) {
+      nodes = md.nodes; rootId = md.rootId;
+      vx = md.vx||0; vy = md.vy||0; vz = md.vz||1;
+      if (md.mapStyle != null) { mapStyle = md.mapStyle; nodeRx = md.nodeRx ?? STYLES[mapStyle].rx; }
+    } else { initMap(); }
+    selectedId = null; editingId = null; editEl.classList.add('hidden');
+    undoStack = []; _lastBgStyle = -1;
+    cleanOrphans(); applyStyleUI(); renderAll(); center();
+  }
+  store.activeMapId = activeMapId; store.mapList = mapList;
+  try { localStorage.setItem(LS_KEY, JSON.stringify(store)); } catch(e) {}
+  if (currentUser && fbDb) cloudDeleteMap(id);
+  save(); updateMapsUI(); toast('Carte supprimée');
+}
+
 // ─── Action panel ─────────────────────────────────────────────────────────────
 const apRemove  = document.getElementById('ap-remove-image');
 const apCenterC = document.getElementById('ap-center-children');
@@ -993,12 +1236,23 @@ function addSibling(id) {
 }
 function centerOnChildren(id) {
   if (!id || !nodes[id]) return;
-  const children = nodes[id].children.map(c => nodes[c]).filter(Boolean);
-  if (!children.length) return;
+  const parent   = nodes[id];
+  const children = parent.children.map(c => nodes[c]).filter(Boolean);
+  if (!children.length) return toast('Pas d\'enfants à redistribuer');
   push();
-  nodes[id].x = children.reduce((s, c) => s + c.x, 0) / children.length;
-  nodes[id].y = children.reduce((s, c) => s + c.y, 0) / children.length;
-  save(); renderAll(); toast('Nœud recentré');
+  // Redistribute children evenly in a fan around the parent (parent stays put)
+  let base = -Math.PI / 2;
+  if (parent.parentId && nodes[parent.parentId])
+    base = Math.atan2(parent.y - nodes[parent.parentId].y, parent.x - nodes[parent.parentId].x);
+  const n    = children.length;
+  const step = n === 1 ? 0 : Math.min(CHILD_SPREAD, (2 * Math.PI) / n);
+  const span = step * (n - 1);
+  children.forEach((c, i) => {
+    const angle = base - span / 2 + i * step;
+    c.x = parent.x + Math.cos(angle) * CHILD_R;
+    c.y = parent.y + Math.sin(angle) * CHILD_R;
+  });
+  save(); renderAll(); toast('Enfants repositionnés');
 }
 
 function deleteNode(id) {
@@ -1159,13 +1413,25 @@ document.getElementById('mode-dark').onclick  = () => setExportMode('dark');
 document.getElementById('mode-light').onclick = () => setExportMode('light');
 document.getElementById('btn-center').onclick   = center;
 document.getElementById('btn-undo').onclick     = undo;
-document.getElementById('btn-new').onclick      = () => modal.classList.remove('hidden');
-document.getElementById('modal-cancel').onclick = () => modal.classList.add('hidden');
+document.getElementById('btn-new').onclick      = () => createMap();
+// Confirmation modal — now generic (used for delete-map confirm)
+function showConfirm(title, msg, fn) {
+  document.querySelector('#modal-box h3').textContent = title;
+  document.querySelector('#modal-box p').textContent  = msg;
+  _pendingConfirm = fn;
+  modal.classList.remove('hidden');
+}
+document.getElementById('modal-cancel').onclick  = () => { modal.classList.add('hidden'); _pendingConfirm = null; };
 document.getElementById('modal-confirm').onclick = () => {
-  modal.classList.add('hidden'); undoStack=[]; selectedId=null; editingId=null;
-  editEl.classList.add('hidden'); _lastBgStyle = -1; initMap();
-  cleanOrphans(); save(); renderAll(); center(); toast('Nouvelle carte créée');
+  modal.classList.add('hidden');
+  if (_pendingConfirm) { const fn = _pendingConfirm; _pendingConfirm = null; fn(); }
 };
+// Maps modal
+document.getElementById('btn-maps').onclick       = () => { updateMapsUI(); mapsModal.classList.remove('hidden'); };
+activeMapNameEl.onclick                           = () => { updateMapsUI(); mapsModal.classList.remove('hidden'); };
+document.getElementById('btn-close-maps').onclick = () => mapsModal.classList.add('hidden');
+document.getElementById('btn-maps-new').onclick   = () => createMap();
+mapsModal.addEventListener('click', e => { if (e.target === mapsModal) mapsModal.classList.add('hidden'); });
 
 // ─── Panel buttons ────────────────────────────────────────────────────────────
 document.getElementById('ap-add-child').onclick      = () => selectedId && addChild(selectedId);
@@ -1393,9 +1659,21 @@ function scheduleSave() {
 async function cloudSave() {
   if (!currentUser || !fbDb) return;
   try {
+    const ts    = firebase.firestore.FieldValue.serverTimestamp();
+    const entry = mapList.find(m => m.id === activeMapId);
+    // Save active map data in subcollection
+    await fbDb.collection('maps').doc(currentUser.uid)
+      .collection('items').doc(activeMapId).set({
+        data: JSON.stringify({ nodes, rootId, vx, vy, vz, mapStyle, nodeRx }),
+        name: entry ? entry.name : 'Carte',
+        updatedAt: ts
+      });
+    // Update index doc
     await fbDb.collection('maps').doc(currentUser.uid).set({
-      data: JSON.stringify({ nodes, rootId, vx, vy, vz, mapStyle, nodeRx }),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      version: 2,
+      activeMapId,
+      mapList: mapList.map(m => ({ id: m.id, name: m.name, createdAt: m.createdAt || 0 })),
+      updatedAt: ts
     });
     setSyncState('ok');
   } catch(e) {
@@ -1408,18 +1686,58 @@ async function cloudSave() {
 async function cloudLoad() {
   if (!currentUser || !fbDb) return false;
   try {
-    const doc = await fbDb.collection('maps').doc(currentUser.uid).get();
-    if (!doc.exists) return false;
-    const d = JSON.parse(doc.data().data);
+    const idxDoc = await fbDb.collection('maps').doc(currentUser.uid).get();
+    if (!idxDoc.exists) return false;
+    const idx = idxDoc.data();
+
+    // Migrate old single-map format (no version field, has 'data' field)
+    if (idx.data && !idx.version) {
+      const d = JSON.parse(idx.data);
+      if (!d || !d.nodes) return false;
+      const id = uid();
+      mapList = [{ id, name: 'Carte 1', createdAt: Date.now() }];
+      activeMapId = id;
+      nodes = d.nodes; rootId = d.rootId;
+      vx = d.vx||0; vy = d.vy||0; vz = d.vz||1;
+      if (d.mapStyle != null) { mapStyle = d.mapStyle; nodeRx = d.nodeRx ?? STYLES[mapStyle].rx; }
+      _writeLocal();
+      cloudSave(); // migrate to new format silently
+      return true;
+    }
+
+    // New multi-map format
+    if (!idx.version || !idx.mapList || !idx.mapList.length) return false;
+    mapList = idx.mapList;
+    const loadId = idx.activeMapId || mapList[0].id;
+
+    const mapDoc = await fbDb.collection('maps').doc(currentUser.uid)
+      .collection('items').doc(loadId).get();
+    if (!mapDoc.exists) return false;
+    const d = JSON.parse(mapDoc.data().data);
     if (!d || !d.nodes) return false;
+
+    activeMapId = loadId;
     nodes = d.nodes; rootId = d.rootId;
-    vx = d.vx || 0; vy = d.vy || 0; vz = d.vz || 1;
+    vx = d.vx||0; vy = d.vy||0; vz = d.vz||1;
     if (d.mapStyle != null) { mapStyle = d.mapStyle; nodeRx = d.nodeRx ?? STYLES[mapStyle].rx; }
+    _writeLocal();
     return true;
   } catch(e) {
     console.error('cloudLoad:', e);
     return false;
   }
+}
+
+async function cloudDeleteMap(id) {
+  if (!currentUser || !fbDb) return;
+  try {
+    await fbDb.collection('maps').doc(currentUser.uid).collection('items').doc(id).delete();
+    await fbDb.collection('maps').doc(currentUser.uid).set({
+      version: 2, activeMapId,
+      mapList: mapList.map(m => ({ id: m.id, name: m.name, createdAt: m.createdAt || 0 })),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch(e) { console.error('cloudDeleteMap:', e); }
 }
 
 const btnAccount = document.getElementById('btn-account');
@@ -1449,15 +1767,14 @@ function updateProfileView(user) {
 }
 
 function handleAuthChange(user) {
+  if (_signingOut) return; // ignore Firebase callbacks during active sign-out
   currentUser = user;
   setAccountUI(user);
-  // If the modal is open, refresh its view immediately
   if (!authModal.classList.contains('hidden')) openAuthModal();
   if (user) {
     updateProfileView(user);
     cloudLoad().then(loaded => {
       if (loaded) {
-        // Wipe stale DOM and state before rendering the cloud map
         selectedId = null; editingId = null;
         editEl.classList.add('hidden');
         undoStack = [];
@@ -1465,6 +1782,7 @@ function handleAuthChange(user) {
         cleanOrphans();
         applyStyleUI();
         renderAll(); center();
+        updateMapsUI();
         toast('Carte chargée depuis le cloud');
       } else {
         setSyncState('idle');
@@ -1590,18 +1908,31 @@ document.getElementById('btn-sync-now').onclick = async () => {
   btn.disabled = false; btn.textContent = '↑ Sauvegarder maintenant';
 };
 
-document.getElementById('btn-logout').onclick = () => {
-  lastSyncTs = null;
-  handleAuthChange(null);   // mise à jour UI immédiate, sans attendre Firebase
+document.getElementById('btn-logout').onclick = async () => {
+  _signingOut = true;
+  lastSyncTs  = null;
+  // Update UI immediately — don't wait for Firebase callback
+  currentUser = null;
+  setAccountUI(null);
   authModal.classList.add('hidden');
   toast('Déconnecté');
-  if (fbAuth) fbAuth.signOut().catch(() => {}); // déconnexion Firebase en tâche de fond
+  if (fbAuth) {
+    try { await fbAuth.signOut(); }
+    catch(e) { console.warn('signOut error:', e); }
+  }
+  _signingOut = false;
 };
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 buildColorGrid();
-if (!load()) { initMap(); save(); }
+if (!load()) {
+  activeMapId = uid();
+  mapList = [{ id: activeMapId, name: 'Carte 1', createdAt: Date.now() }];
+  initMap();
+  _writeLocal();
+}
 applyStyleUI();
+updateMapsUI();
 tryLoadFirebase();
 renderAll();
 center();
