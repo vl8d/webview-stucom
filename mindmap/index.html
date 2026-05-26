@@ -462,7 +462,7 @@
 <div id="action-panel" class="hidden">
   <div class="ap-header">Node</div>
   <button class="ap-btn" id="ap-add-child">+ Enfant <span class="ap-kbd">Tab</span></button>
-  <button class="ap-btn" id="ap-add-sibling">↘ Frère <span class="ap-kbd">Enter</span></button>
+  <button class="ap-btn" id="ap-add-sibling">↘ Sœur <span class="ap-kbd">Enter</span></button>
   <button class="ap-btn" id="ap-center-children" style="display:none">⊙ Centrer sur enfants</button>
   <button class="ap-btn ap-danger" id="ap-delete">✕ Supprimer <span class="ap-kbd">Del</span></button>
   <div class="ap-section">Image</div>
@@ -682,12 +682,27 @@ function initMap() {
 }
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
-function childPos(parent, count) {
+function childPos(parent) {
   let base = -Math.PI / 2;
   if (parent.parentId && nodes[parent.parentId])
     base = Math.atan2(parent.y - nodes[parent.parentId].y, parent.x - nodes[parent.parentId].x);
-  const spread = CHILD_SPREAD * count;
-  const angle = count === 0 ? base : base - spread / 2 + CHILD_SPREAD * count;
+  const existing = parent.children.map(c => nodes[c]).filter(Boolean);
+  if (!existing.length)
+    return { x: parent.x + Math.cos(base) * CHILD_R, y: parent.y + Math.sin(base) * CHILD_R };
+  const usedAngles = existing.map(c => Math.atan2(c.y - parent.y, c.x - parent.x));
+  for (let k = 0; k <= existing.length + 3; k++) {
+    const candidates = k === 0 ? [base] : [base + k * CHILD_SPREAD, base - k * CHILD_SPREAD];
+    for (const cand of candidates) {
+      const minDist = usedAngles.reduce((m, a) => {
+        let d = Math.abs(cand - a) % (2 * Math.PI);
+        if (d > Math.PI) d = 2 * Math.PI - d;
+        return Math.min(m, d);
+      }, Infinity);
+      if (minDist >= CHILD_SPREAD * 0.75)
+        return { x: parent.x + Math.cos(cand) * CHILD_R, y: parent.y + Math.sin(cand) * CHILD_R };
+    }
+  }
+  const angle = base + existing.length * CHILD_SPREAD;
   return { x: parent.x + Math.cos(angle) * CHILD_R, y: parent.y + Math.sin(angle) * CHILD_R };
 }
 
@@ -869,7 +884,7 @@ function buildColorGrid() {
 function addChild(pid) {
   if (!pid || !nodes[pid]) return;
   const p = nodes[pid]; push();
-  const pos = childPos(p, p.children.length);
+  const pos = childPos(p);
   const c = { id: uid(), label: 'Nouveau', x: pos.x, y: pos.y, parentId: pid, children: [], colorIndex: p.children.length % NODE_COLORS.length };
   nodes[c.id] = c; p.children.push(c.id);
   save(); renderAll(); select(c.id);
@@ -991,6 +1006,8 @@ document.addEventListener('keydown', e => {
     if (e.key==='Escape') { editEl.value=nodes[editingId]?.label||''; commitEdit(); }
     return;
   }
+  // Prevent global shortcuts from firing when a UI button/input has keyboard focus
+  if (['BUTTON', 'INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
   if ((e.ctrlKey||e.metaKey) && e.key==='z') { e.preventDefault(); undo(); return; }
   if (!selectedId) return;
   switch(e.key) {
@@ -1055,7 +1072,7 @@ document.getElementById('modal-confirm').onclick = () => {
 // ─── Panel buttons ────────────────────────────────────────────────────────────
 document.getElementById('ap-add-child').onclick      = () => selectedId && addChild(selectedId);
 document.getElementById('ap-add-sibling').onclick    = () => selectedId && addSibling(selectedId);
-document.getElementById('ap-center-children').onclick = () => selectedId && centerOnChildren(selectedId);
+document.getElementById('ap-center-children').onclick = function() { if (selectedId) { centerOnChildren(selectedId); this.blur(); } };
 document.getElementById('ap-delete').onclick         = () => selectedId && deleteNode(selectedId);
 document.getElementById('ap-set-image').onclick   = () => selectedId && document.getElementById('img-file-input').click();
 document.getElementById('ap-remove-image').onclick = () => {
