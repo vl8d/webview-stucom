@@ -1442,6 +1442,8 @@ function updateProfileView(user) {
 function handleAuthChange(user) {
   currentUser = user;
   setAccountUI(user);
+  // If the modal is open, refresh its view immediately
+  if (!authModal.classList.contains('hidden')) openAuthModal();
   if (user) {
     updateProfileView(user);
     cloudLoad().then(loaded => {
@@ -1563,12 +1565,12 @@ document.getElementById('btn-sync-now').onclick = async () => {
   btn.disabled = false; btn.textContent = '↑ Sauvegarder maintenant';
 };
 
-document.getElementById('btn-logout').onclick = async () => {
-  if (fbAuth) await fbAuth.signOut();
+document.getElementById('btn-logout').onclick = () => {
   lastSyncTs = null;
+  handleAuthChange(null);   // mise à jour UI immédiate, sans attendre Firebase
   authModal.classList.add('hidden');
   toast('Déconnecté');
-  // handleAuthChange(null) fires via onAuthStateChanged and updates the toolbar/views
+  if (fbAuth) fbAuth.signOut().catch(() => {}); // déconnexion Firebase en tâche de fond
 };
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
