@@ -797,11 +797,6 @@ function toast(msg) {
 const s2w = (sx, sy) => ({ x: (sx - vx) / vz, y: (sy - vy) / vz });
 const w2s = (wx, wy) => ({ x: wx * vz + vx, y: wy * vz + vy });
 
-// Image area height based on stored aspect ratio (adaptive sizing)
-function imageAreaH(n) {
-  if (!n.imageAspect) return IMG_AREA;
-  return Math.max(50, Math.min(160, Math.round(IMG_W / n.imageAspect)));
-}
 // Measure text width using a hidden canvas (font-agnostic)
 let _txCtx = null;
 function textWidth(label) {
@@ -812,11 +807,30 @@ function textWidth(label) {
   }
   return _txCtx.measureText(label || '').width;
 }
+// Node dimensions — image nodes adapt both w and h to the image aspect ratio
 function nodeDim(n) {
-  if (n.isRoot)    { const tw = textWidth(n.label); return { w: Math.max(160, Math.ceil(tw)+32), h: 46 }; }
-  if (n.imageData) { const ia = imageAreaH(n); return { w: IMG_W, h: ia + (n.label ? LBL_H : 0) }; }
+  if (n.isRoot) { const tw = textWidth(n.label); return { w: Math.max(160, Math.ceil(tw)+32), h: 46 }; }
+  if (n.imageData) {
+    const r = n.imageAspect || (IMG_W / IMG_AREA); // default ≈ 1.9
+    let iw, ih;
+    if (r >= 1) {
+      // Landscape / square: target image area height ≈ 90px
+      ih = 90; iw = Math.round(ih * r);
+      if (iw > 280) { iw = 280; ih = Math.round(iw / r); }
+      if (iw < 100) { iw = 100; ih = Math.round(iw / r); }
+    } else {
+      // Portrait: target width ≈ 130px
+      iw = 130; ih = Math.min(200, Math.max(80, Math.round(iw / r)));
+    }
+    return { w: iw, h: ih + (n.label ? LBL_H : 0) };
+  }
   const tw = textWidth(n.label);
   return { w: Math.max(NODE_W, Math.ceil(tw)+24), h: NODE_H };
+}
+// Image area height = node height minus optional label bar
+function imageAreaH(n) {
+  const d = nodeDim(n);
+  return d.h - (n.label ? LBL_H : 0);
 }
 
 // ─── Undo ─────────────────────────────────────────────────────────────────────
