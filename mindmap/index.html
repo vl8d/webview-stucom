@@ -1032,12 +1032,12 @@ function applyT() {
 }
 
 // ─── Render: background + edges ───────────────────────────────────────────────
-let _lastBgStyle = -1;
+let _lastAppliedBg = null;
 function applyBg() {
   const bg = bgOverride || (exportMode === 'light' ? '#f5f5f0' : STYLES[mapStyle].bg);
-  if (wrap.style.background === bg) return;
+  if (_lastAppliedBg === bg) return;
   wrap.style.background = bg;
-  _lastBgStyle = mapStyle;
+  _lastAppliedBg = bg;
 }
 
 function edgePath(p, n) {
@@ -1271,7 +1271,7 @@ function createMap() {
   mapList.push({ id, name, createdAt: Date.now() });
   activeMapId = id;
   selectedId = null; editingId = null; editEl.classList.add('hidden');
-  undoStack = []; _lastBgStyle = -1;
+  undoStack = []; _lastAppliedBg = null;
   initMap();
   cleanOrphans(); applyStyleUI(); renderAll(); center();
   save();
@@ -1298,7 +1298,7 @@ async function switchMap(id) {
   if (!md || !md.nodes) { toast('Carte introuvable'); return; }
 
   selectedId = null; editingId = null; editEl.classList.add('hidden');
-  undoStack = []; _lastBgStyle = -1;
+  undoStack = []; _lastAppliedBg = null;
   activeMapId = id;
   nodes = md.nodes; rootId = md.rootId;
   vx = md.vx||0; vy = md.vy||0; vz = md.vz||1;
@@ -1317,7 +1317,7 @@ function renameMap(id) {
   const newName = prompt('Nouveau nom :', entry.name);
   if (!newName || !newName.trim() || newName.trim() === entry.name) return;
   entry.name = newName.trim();
-  _writeLocal(); save(); updateMapsUI();
+  save(); updateMapsUI();
 }
 
 function deleteMap(id) {
@@ -1342,9 +1342,10 @@ function _doDeleteMap(id) {
       nodes = md.nodes; rootId = md.rootId;
       vx = md.vx||0; vy = md.vy||0; vz = md.vz||1;
       if (md.mapStyle != null) { mapStyle = md.mapStyle; nodeRx = md.nodeRx ?? STYLES[mapStyle].rx; }
-    } else { initMap(); }
+      bgOverride = md.bgOverride !== undefined ? md.bgOverride : null;
+    } else { initMap(); bgOverride = null; }
     selectedId = null; editingId = null; editEl.classList.add('hidden');
-    undoStack = []; _lastBgStyle = -1;
+    undoStack = []; _lastAppliedBg = null;
     cleanOrphans(); applyStyleUI(); renderAll(); center();
   }
   store.activeMapId = activeMapId; store.mapList = mapList;
@@ -1613,7 +1614,7 @@ function buildBgSwatches() {
       bgOverride = c;
       document.querySelectorAll('.bg-swatch').forEach(s => s.classList.remove('active'));
       sw.classList.add('active');
-      _lastBgStyle = -1; applyBg(); save();
+      _lastAppliedBg = null; applyBg(); save();
     });
     container.appendChild(sw);
   });
@@ -1625,7 +1626,7 @@ function applyStyleUI() {
   buildBgSwatches();
 }
 function setMapStyle(idx) {
-  mapStyle = idx; nodeRx = STYLES[idx].rx; _lastBgStyle = -1;
+  mapStyle = idx; nodeRx = STYLES[idx].rx; _lastAppliedBg = null;
   applyStyleUI(); renderAll(); save();
 }
 spStyleBtns.forEach((btn, i) => btn.addEventListener('click', () => setMapStyle(i)));
@@ -1644,7 +1645,7 @@ function setExportMode(m) {
   exportMode = m;
   document.getElementById('mode-dark').classList.toggle('active',  m === 'dark');
   document.getElementById('mode-light').classList.toggle('active', m === 'light');
-  _lastBgStyle = -1; // force applyBg to re-apply on next renderAll
+  _lastAppliedBg = null;
   renderAll();
 }
 document.getElementById('mode-dark').onclick  = () => setExportMode('dark');
@@ -1860,7 +1861,8 @@ document.getElementById('btn-export-pdf').addEventListener('click', async () => 
   const ratio = Math.min(mmW/cv.width, mmH/cv.height);
   const iw=cv.width*ratio, ih=cv.height*ratio;
   const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
-  const [pr,pg,pb] = exportMode === 'light' ? [245,245,240] : [10,10,10];
+  const pdfBgHex = (bgOverride || (exportMode === 'light' ? '#f5f5f0' : STYLES[mapStyle].bg)).replace('#','');
+  const [pr,pg,pb] = [parseInt(pdfBgHex.slice(0,2),16), parseInt(pdfBgHex.slice(2,4),16), parseInt(pdfBgHex.slice(4,6),16)];
   doc.setFillColor(pr,pg,pb); doc.rect(0,0,mmW,mmH,'F');
   doc.addImage(data,'PNG',(mmW-iw)/2,(mmH-ih)/2,iw,ih);
   doc.save('mindmap.pdf'); toast('PDF téléchargé');
@@ -1964,6 +1966,7 @@ async function cloudLoad() {
       nodes = d.nodes; rootId = d.rootId;
       vx = d.vx||0; vy = d.vy||0; vz = d.vz||1;
       if (d.mapStyle != null) { mapStyle = d.mapStyle; nodeRx = d.nodeRx ?? STYLES[mapStyle].rx; }
+      if (d.bgOverride !== undefined) bgOverride = d.bgOverride;
       _writeLocal();
       cloudSave(); // migrate to new format silently
       return true;
@@ -1984,6 +1987,7 @@ async function cloudLoad() {
     nodes = d.nodes; rootId = d.rootId;
     vx = d.vx||0; vy = d.vy||0; vz = d.vz||1;
     if (d.mapStyle != null) { mapStyle = d.mapStyle; nodeRx = d.nodeRx ?? STYLES[mapStyle].rx; }
+    bgOverride = d.bgOverride !== undefined ? d.bgOverride : null;
     _writeLocal();
     return true;
   } catch(e) {
@@ -2107,6 +2111,7 @@ function setAuthTab(mode) {
   tabLogin.classList.toggle('active', mode === 'login');
   tabRegister.classList.toggle('active', mode === 'register');
   btnAuthSubmit.textContent = mode === 'login' ? 'Se connecter' : "S'inscrire";
+  document.getElementById('auth-password').autocomplete = mode === 'login' ? 'current-password' : 'new-password';
   authErrorLogin.textContent = '';
 }
 tabLogin.onclick    = () => setAuthTab('login');
