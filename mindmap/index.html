@@ -157,6 +157,8 @@
   .node-text.dark-label { fill: var(--black); }
   .node-img { pointer-events: none; }
   .node-label-bg { pointer-events: none; }
+  .node-resize-handle { fill: #f5f5f0; stroke: rgba(0,0,0,0.35); stroke-width: 1; cursor: se-resize; }
+  .node-resize-handle:hover { fill: #ddd; }
 
   /* ── Action panel ───────────────────────────────────────── */
   #action-panel {
@@ -566,6 +568,7 @@
   <button class="ap-btn" id="ap-add-sibling">↘ Sœur <span class="ap-kbd">Enter</span></button>
   <button class="ap-btn" id="ap-center-children" style="display:none">⊙ Centrer sur enfants</button>
   <button class="ap-btn ap-danger" id="ap-delete">✕ Supprimer <span class="ap-kbd">Del</span></button>
+  <button class="ap-btn" id="ap-reset-size" style="display:none">↺ Taille auto</button>
   <div class="ap-section">Image</div>
   <button class="ap-btn" id="ap-set-image">▣ Définir image</button>
   <button class="ap-btn ap-danger" id="ap-remove-image" style="display:none">✕ Retirer image</button>
@@ -742,6 +745,7 @@ let vx = 0, vy = 0, vz = 1;
 let mapStyle = 0, nodeRx = STYLES[0].rx;
 let panning = false, px0, py0, pvx, pvy;
 let dragging = null, dox, doy, dragStartX = 0, dragStartY = 0;
+let resizing = null, resizeStartX = 0, resizeStartY = 0, resizeStartW = 0, resizeStartH = 0;
 let undoStack = [];
 let exportMode = 'dark';
 // Multi-map
@@ -826,6 +830,7 @@ const LINE_H = 15; // px per line at 12px font, ~1.25 line-height
 
 // Node dimensions — image nodes adapt to aspect ratio; all nodes adapt to label
 function nodeDim(n) {
+  if (n.manualW) return { w: n.manualW, h: n.manualH || NODE_H };
   if (n.imageData) {
     const r = n.imageAspect || (IMG_W / IMG_AREA); // default ≈ 1.9
     let iw, ih;
@@ -1149,6 +1154,26 @@ function renderNode(n) {
   }
 
   g.classList.toggle('selected', selectedId === n.id);
+
+  // Resize handle (bottom-right corner, visible only when selected)
+  const RSIZE = Math.max(6, Math.min(14, 10 / vz));
+  if (!g._rh) {
+    g._rh = document.createElementNS(SVG_NS, 'rect');
+    g._rh.classList.add('node-resize-handle');
+    g.appendChild(g._rh);
+    const nid = n.id;
+    g._rh.addEventListener('mousedown', e => {
+      e.stopPropagation(); e.preventDefault();
+      if (!nodes[nid]) return;
+      resizing = nid; resizeStartX = e.clientX; resizeStartY = e.clientY;
+      const d = nodeDim(nodes[nid]);
+      resizeStartW = d.w; resizeStartH = d.h;
+    });
+  }
+  g._rh.setAttribute('x', n.x + w/2 - RSIZE);
+  g._rh.setAttribute('y', n.y + h/2 - RSIZE);
+  g._rh.setAttribute('width', RSIZE); g._rh.setAttribute('height', RSIZE);
+  g._rh.setAttribute('display', selectedId === n.id ? '' : 'none');
 }
 
 // ─── Render: full ─────────────────────────────────────────────────────────────
@@ -1305,6 +1330,7 @@ function _doDeleteMap(id) {
 // ─── Action panel ─────────────────────────────────────────────────────────────
 const apRemove  = document.getElementById('ap-remove-image');
 const apCenterC = document.getElementById('ap-center-children');
+const apResetSz = document.getElementById('ap-reset-size');
 function updatePanel() {
   if (!selectedId || !nodes[selectedId]) { panel.classList.add('hidden'); return; }
   const n = nodes[selectedId];
@@ -1318,7 +1344,16 @@ function updatePanel() {
   panel.classList.remove('hidden');
   apRemove.style.display  = n.imageData ? '' : 'none';
   apCenterC.style.display = (n.children && n.children.length > 0) ? '' : 'none';
+  apResetSz.style.display = n.manualW ? '' : 'none';
 }
+
+document.getElementById('ap-reset-size').onclick = () => {
+  if (!selectedId || !nodes[selectedId]) return;
+  push(); delete nodes[selectedId].manualW; delete nodes[selectedId].manualH;
+  renderNode(nodes[selectedId]); renderEdge(nodes[selectedId]);
+  nodes[selectedId].children.forEach(c => { if (nodes[c]) renderEdge(nodes[c]); });
+  save(); updatePanel();
+};
 
 // ─── Color grid ───────────────────────────────────────────────────────────────
 function buildColorGrid() {
@@ -1448,7 +1483,7 @@ wrap.addEventListener('mousedown', e => {
 let _rafPending = false, _latestMx = 0, _latestMy = 0;
 window.addEventListener('mousemove', e => {
   _latestMx = e.clientX; _latestMy = e.clientY;
-  if (!panning && !dragging) return;
+  if (!panning && !dragging && !resizing) return;
   if (_rafPending) return;
   _rafPending = true;
   requestAnimationFrame(() => {
@@ -1462,15 +1497,30 @@ window.addEventListener('mousemove', e => {
       nodes[dragging].children.forEach(c => renderEdge(nodes[c]));
       updatePanel();
     }
+    if (resizing) {
+      const n = nodes[resizing]; if (!n) { resizing = null; return; }
+      const dx = (_latestMx - resizeStartX) / vz;
+      const dy = (_latestMy - resizeStartY) / vz;
+      n.manualW = Math.round(Math.max(50, resizeStartW + dx));
+      n.manualH = Math.round(Math.max(20, resizeStartH + dy));
+      renderNode(n); renderEdge(n);
+      n.children.forEach(c => { if (nodes[c]) renderEdge(nodes[c]); });
+      updatePanel();
+    }
   });
 });
 window.addEventListener('mouseup', () => {
-  if (panning) { panning=false; wrap.classList.remove('grabbing'); saveLocal(); }
+  if (panning)  { panning=false; wrap.classList.remove('grabbing'); saveLocal(); }
   if (dragging) { save(); dragging=null; }
+  if (resizing) { save(); resizing=null; }
 });
 wrap.addEventListener('wheel', e => {
   e.preventDefault();
-  zoom(vz + (e.deltaY>0 ? -STEP_Z : STEP_Z), e.clientX, e.clientY);
+  // Use proportional zoom so trackpad pinch is smooth (no fixed steps)
+  let dy = e.deltaY;
+  if (e.deltaMode === 1) dy *= 16; // line → pixels
+  if (e.deltaMode === 2) dy *= 300; // page → pixels
+  zoom(vz * Math.pow(0.998, dy), e.clientX, e.clientY);
 }, { passive: false });
 
 function onNmd(e, id) {
