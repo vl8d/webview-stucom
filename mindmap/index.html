@@ -1021,8 +1021,9 @@ function applyT() {
 // ─── Render: background + edges ───────────────────────────────────────────────
 let _lastBgStyle = -1;
 function applyBg() {
-  if (_lastBgStyle === mapStyle) return;
-  wrap.style.background = STYLES[mapStyle].bg;
+  const bg = exportMode === 'light' ? '#f5f5f0' : STYLES[mapStyle].bg;
+  if (wrap.style.background === bg) return;
+  wrap.style.background = bg;
   _lastBgStyle = mapStyle;
 }
 
@@ -1043,7 +1044,7 @@ function renderEdge(n) {
   let el = document.getElementById('e-' + n.id);
   if (!el) { el = document.createElementNS(SVG_NS,'path'); el.id = 'e-'+n.id; el.classList.add('edge'); eLayer.appendChild(el); }
   const st = STYLES[mapStyle];
-  el.setAttribute('stroke', st.edgeColor);
+  el.setAttribute('stroke', exportMode === 'light' ? '#c0c0b8' : st.edgeColor);
   el.setAttribute('stroke-width', st.edgeW);
   el.setAttribute('d', edgePath(p, n));
 }
@@ -1090,6 +1091,12 @@ function renderNode(n) {
   rect.setAttribute('x', x); rect.setAttribute('y', y);
   rect.setAttribute('width', w); rect.setAttribute('height', h);
   rect.setAttribute('fill', col.fill); rect.setAttribute('rx', rx);
+  // Show border on root in light preview (same rule as PNG export)
+  if (n.isRoot && (exportMode === 'light' || STYLES[mapStyle].id === 'papier')) {
+    rect.setAttribute('stroke', '#888'); rect.setAttribute('stroke-width', '1.5');
+  } else {
+    rect.removeAttribute('stroke'); rect.removeAttribute('stroke-width');
+  }
 
   // Manage image elements
   if (n.imageData) {
@@ -1586,6 +1593,8 @@ function setExportMode(m) {
   exportMode = m;
   document.getElementById('mode-dark').classList.toggle('active',  m === 'dark');
   document.getElementById('mode-light').classList.toggle('active', m === 'light');
+  _lastBgStyle = -1; // force applyBg to re-apply on next renderAll
+  renderAll();
 }
 document.getElementById('mode-dark').onclick  = () => setExportMode('dark');
 document.getElementById('mode-light').onclick = () => setExportMode('light');
