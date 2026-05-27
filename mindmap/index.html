@@ -159,6 +159,9 @@
   .node-label-bg { pointer-events: none; }
   .node-resize-handle { fill: #f5f5f0; stroke: rgba(0,0,0,0.35); stroke-width: 1; cursor: se-resize; }
   .node-resize-handle:hover { fill: #ddd; }
+  .snap-guide { stroke: rgba(255,255,255,0.28); stroke-width: 1.5; stroke-dasharray: 6,5; pointer-events: none; }
+  .snap-guide.axis { stroke: rgba(100,180,255,0.4); }
+  .ap-btn.ap-active { background: var(--white); color: var(--black); }
   #bg-swatches { display: flex; gap: 5px; flex-wrap: wrap; padding: 2px 0; }
   .bg-swatch {
     width: 22px; height: 22px; border-radius: 50%;
@@ -578,8 +581,11 @@
   <button class="ap-btn" id="ap-add-child">+ Enfant <span class="ap-kbd">Tab</span></button>
   <button class="ap-btn" id="ap-add-sibling">↘ Sœur <span class="ap-kbd">Enter</span></button>
   <button class="ap-btn" id="ap-center-children" style="display:none">⊙ Centrer sur enfants</button>
+  <button class="ap-btn" id="ap-distribute" style="display:none">≡ Espacer</button>
   <button class="ap-btn ap-danger" id="ap-delete">✕ Supprimer <span class="ap-kbd">Del</span></button>
   <button class="ap-btn" id="ap-reset-size" style="display:none">↺ Taille auto</button>
+  <div class="ap-section">Format</div>
+  <button class="ap-btn" id="ap-title-mode">T Titre</button>
   <div class="ap-section">Image</div>
   <button class="ap-btn" id="ap-set-image">▣ Définir image</button>
   <button class="ap-btn ap-danger" id="ap-remove-image" style="display:none">✕ Retirer image</button>
@@ -767,6 +773,7 @@ let mapList = [];   // [{ id, name, createdAt }]
 // Prevents stale Firebase onAuthStateChanged(user) callbacks from re-logging the user in.
 let _forceSignedOut = false;
 let _pendingConfirm = null;
+let snapGuide = null, snapGuide2 = null;
 
 // ─── DOM ──────────────────────────────────────────────────────────────────────
 const wrap    = document.getElementById('canvas-wrap');
@@ -803,6 +810,8 @@ const mapsListEl       = document.getElementById('maps-list');
 const mapsCountEl      = document.getElementById('maps-count');
 const mapsNewBtn       = document.getElementById('btn-maps-new');
 const activeMapNameEl  = document.getElementById('active-map-name');
+const apDistribute     = document.getElementById('ap-distribute');
+const apTitleMode      = document.getElementById('ap-title-mode');
 
 // ─── Utils ────────────────────────────────────────────────────────────────────
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -906,7 +915,7 @@ function _writeLocal() {
     if (!store.maps) store.maps = {};
     store.activeMapId = activeMapId;
     store.mapList     = mapList;
-    store.maps[activeMapId] = { nodes, rootId, vx, vy, vz, mapStyle, nodeRx, bgOverride };
+    store.maps[activeMapId] = { nodes, rootId, vx, vy, vz, mapStyle, nodeRx, bgOverride, exportMode };
     localStorage.setItem(LS_KEY, JSON.stringify(store));
   } catch(e) {}
 }
@@ -927,7 +936,8 @@ function load() {
           vx = md.vx||0; vy = md.vy||0; vz = md.vz||1;
           if (md.mapStyle   != null) mapStyle   = md.mapStyle;
           if (md.nodeRx     != null) nodeRx     = md.nodeRx;
-          if (md.bgOverride !== undefined) bgOverride = md.bgOverride;
+          if (md.bgOverride  !== undefined) bgOverride  = md.bgOverride;
+          if (md.exportMode)               exportMode  = md.exportMode;
           return true;
         }
       }
@@ -1063,7 +1073,7 @@ function renderEdge(n) {
 }
 
 // Multi-line SVG text: rebuild <tspan>s, centered vertically around (cx, cy)
-function setMultilineText(textEl, label, cx, cy) {
+function setMultilineText(textEl, label, cx, cy, titleMode) {
   textEl.textContent = '';
   textEl.setAttribute('x', cx);
   textEl.setAttribute('y', cy);
@@ -1073,6 +1083,10 @@ function setMultilineText(textEl, label, cx, cy) {
     const ts = document.createElementNS(SVG_NS, 'tspan');
     ts.setAttribute('x', cx);
     ts.setAttribute('dy', i === 0 ? -((lines.length - 1) / 2) * lh : lh);
+    if (titleMode && i === 0 && lines.length > 1) {
+      ts.setAttribute('font-size', '13');
+      ts.setAttribute('font-weight', '500');
+    }
     ts.textContent = line;
     textEl.appendChild(ts);
   });
@@ -1167,7 +1181,7 @@ function renderNode(n) {
       lbg.removeAttribute('display');
       g._t.removeAttribute('fill'); g._t.classList.remove('dark-label');
       g._t.setAttribute('fill', '#f5f5f0');
-      setMultilineText(g._t, n.label, n.x, y + ia + lblH / 2);
+      setMultilineText(g._t, n.label, n.x, y + ia + lblH / 2, n.titleMode);
     } else {
       lbg.setAttribute('display', 'none');
       lbg.removeAttribute('clip-path');
@@ -1178,7 +1192,7 @@ function renderNode(n) {
     if (g._lb) g._lb.setAttribute('display', 'none');
     g._t.removeAttribute('fill');
     g._t.classList.toggle('dark-label', !!col.label);
-    setMultilineText(g._t, n.label, n.x, n.y);
+    setMultilineText(g._t, n.label, n.x, n.y, n.titleMode);
   }
 
   g.classList.toggle('selected', selectedId === n.id);
@@ -1306,7 +1320,8 @@ async function switchMap(id) {
   nodes = md.nodes; rootId = md.rootId;
   vx = md.vx||0; vy = md.vy||0; vz = md.vz||1;
   if (md.mapStyle != null) { mapStyle = md.mapStyle; nodeRx = md.nodeRx ?? STYLES[mapStyle].rx; }
-  bgOverride = md.bgOverride !== undefined ? md.bgOverride : null;
+  bgOverride  = md.bgOverride !== undefined ? md.bgOverride : null;
+  exportMode  = md.exportMode || 'dark';
   _writeLocal();
   cleanOrphans(); applyStyleUI(); renderAll(); center();
   mapsModal.classList.add('hidden');
@@ -1346,7 +1361,8 @@ function _doDeleteMap(id) {
       vx = md.vx||0; vy = md.vy||0; vz = md.vz||1;
       if (md.mapStyle != null) { mapStyle = md.mapStyle; nodeRx = md.nodeRx ?? STYLES[mapStyle].rx; }
       bgOverride = md.bgOverride !== undefined ? md.bgOverride : null;
-    } else { initMap(); bgOverride = null; }
+      exportMode = md.exportMode || 'dark';
+    } else { initMap(); bgOverride = null; exportMode = 'dark'; }
     selectedId = null; editingId = null; editEl.classList.add('hidden');
     undoStack = []; _lastAppliedBg = null;
     cleanOrphans(); applyStyleUI(); renderAll(); center();
@@ -1372,9 +1388,12 @@ function updatePanel() {
   const clampY = Math.max(54, Math.min(py, innerHeight - 340));
   panel.style.left = clampX + 'px'; panel.style.top = clampY + 'px';
   panel.classList.remove('hidden');
-  apRemove.style.display  = n.imageData ? '' : 'none';
-  apCenterC.style.display = (n.children && n.children.length > 0) ? '' : 'none';
-  apResetSz.style.display = n.manualW ? '' : 'none';
+  apRemove.style.display   = n.imageData ? '' : 'none';
+  apCenterC.style.display  = (n.children && n.children.length > 0) ? '' : 'none';
+  apResetSz.style.display  = n.manualW ? '' : 'none';
+  const par = n.parentId && nodes[n.parentId];
+  apDistribute.style.display = (par && par.children.length >= 2) ? '' : 'none';
+  apTitleMode.classList.toggle('ap-active', !!n.titleMode);
 }
 
 document.getElementById('ap-reset-size').onclick = () => {
@@ -1435,6 +1454,71 @@ function centerOnChildren(id) {
     c.y = parent.y + Math.sin(angle) * CHILD_R;
   });
   save(); renderAll(); toast('Enfants repositionnés');
+}
+
+function distributeEqualSpacing(id) {
+  if (!id || !nodes[id]) return;
+  const n = nodes[id];
+  if (!n.parentId) return;
+  const parent = nodes[n.parentId]; if (!parent) return;
+  const siblings = parent.children.map(c => nodes[c]).filter(Boolean);
+  if (siblings.length < 2) return;
+  push();
+  // Sort by current angle from parent, then redistribute at equal angular steps keeping each node's distance
+  siblings.sort((a, b) => Math.atan2(a.y - parent.y, a.x - parent.x) - Math.atan2(b.y - parent.y, b.x - parent.x));
+  const a0 = Math.atan2(siblings[0].y - parent.y, siblings[0].x - parent.x);
+  const a1 = Math.atan2(siblings[siblings.length-1].y - parent.y, siblings[siblings.length-1].x - parent.x);
+  const step = (a1 - a0) / (siblings.length - 1);
+  siblings.forEach((sib, i) => {
+    const angle = a0 + i * step;
+    const dist  = Math.hypot(sib.x - parent.x, sib.y - parent.y);
+    sib.x = parent.x + Math.cos(angle) * dist;
+    sib.y = parent.y + Math.sin(angle) * dist;
+  });
+  save(); renderAll(); toast('Espacement égalisé');
+}
+
+// ─── Snap helpers ──────────────────────────────────────────────────────────────
+const _SNAP_ANGLES  = [0, Math.PI/4, Math.PI/2, 3*Math.PI/4, Math.PI, -3*Math.PI/4, -Math.PI/2, -Math.PI/4];
+const _SNAP_THRESH  = 13 * Math.PI / 180; // 13°
+function _snapAngle(a) {
+  for (const sa of _SNAP_ANGLES) {
+    let d = Math.abs(a - sa); if (d > Math.PI) d = 2*Math.PI - d;
+    if (d < _SNAP_THRESH) return sa;
+  }
+  return a;
+}
+function _makeGuide(cls) {
+  const l = document.createElementNS(SVG_NS, 'line');
+  l.classList.add('snap-guide');
+  if (cls) l.classList.add(cls);
+  eLayer.prepend(l);
+  return l;
+}
+function _showSnapGuide(x1, y1, x2, y2) {
+  if (!snapGuide) snapGuide = _makeGuide();
+  snapGuide.setAttribute('x1', x1); snapGuide.setAttribute('y1', y1);
+  snapGuide.setAttribute('x2', x2); snapGuide.setAttribute('y2', y2);
+  snapGuide.removeAttribute('display');
+}
+function _showSnapGuide2(x1, y1, x2, y2) {
+  if (!snapGuide2) snapGuide2 = _makeGuide('axis');
+  snapGuide2.setAttribute('x1', x1); snapGuide2.setAttribute('y1', y1);
+  snapGuide2.setAttribute('x2', x2); snapGuide2.setAttribute('y2', y2);
+  snapGuide2.removeAttribute('display');
+}
+function _hideSnapGuides() {
+  if (snapGuide)  snapGuide.setAttribute('display', 'none');
+  if (snapGuide2) snapGuide2.setAttribute('display', 'none');
+}
+
+// ─── Node navigation helpers ───────────────────────────────────────────────────
+function _selectSibling(id, dir) {
+  const n = nodes[id]; if (!n || !n.parentId) return;
+  const par = nodes[n.parentId]; if (!par) return;
+  const idx  = par.children.indexOf(id);
+  const next = par.children[idx + dir];
+  if (next && nodes[next]) select(next);
 }
 
 function deleteNode(id) {
@@ -1523,7 +1607,43 @@ window.addEventListener('mousemove', e => {
     if (dragging) {
       if (Math.hypot(_latestMx-dragStartX, _latestMy-dragStartY) < 4) return;
       const pt = s2w(_latestMx, _latestMy);
-      nodes[dragging].x = pt.x+dox; nodes[dragging].y = pt.y+doy;
+      let nx = pt.x + dox, ny = pt.y + doy;
+      const dn = nodes[dragging];
+      let angleSnapped = false, axisSnapped = false;
+      const GL = 1800; // guide line half-length in world units
+      if (dn && dn.parentId && nodes[dn.parentId]) {
+        const par = nodes[dn.parentId];
+        const dx = nx - par.x, dy = ny - par.y;
+        const rawA = Math.atan2(dy, dx);
+        const snapA = _snapAngle(rawA);
+        if (snapA !== rawA) {
+          const r = Math.hypot(dx, dy);
+          nx = par.x + Math.cos(snapA) * r;
+          ny = par.y + Math.sin(snapA) * r;
+          _showSnapGuide(par.x - Math.cos(snapA)*GL, par.y - Math.sin(snapA)*GL,
+                         par.x + Math.cos(snapA)*GL, par.y + Math.sin(snapA)*GL);
+          angleSnapped = true;
+        }
+        // Axis-align with siblings (same X or Y)
+        const sibThresh = 10 / vz;
+        for (const sibId of par.children) {
+          if (sibId === dragging) continue;
+          const sib = nodes[sibId]; if (!sib) continue;
+          if (!angleSnapped && Math.abs(ny - sib.y) < sibThresh) {
+            ny = sib.y;
+            _showSnapGuide2(-GL, sib.y, GL, sib.y);
+            axisSnapped = true; break;
+          }
+          if (!angleSnapped && Math.abs(nx - sib.x) < sibThresh) {
+            nx = sib.x;
+            _showSnapGuide2(sib.x, -GL, sib.x, GL);
+            axisSnapped = true; break;
+          }
+        }
+      }
+      if (!angleSnapped) { if (snapGuide)  snapGuide.setAttribute('display', 'none'); }
+      if (!axisSnapped)  { if (snapGuide2) snapGuide2.setAttribute('display', 'none'); }
+      nodes[dragging].x = nx; nodes[dragging].y = ny;
       renderNode(nodes[dragging]); renderEdge(nodes[dragging]);
       nodes[dragging].children.forEach(c => renderEdge(nodes[c]));
       updatePanel();
@@ -1550,7 +1670,7 @@ window.addEventListener('mousemove', e => {
 });
 window.addEventListener('mouseup', () => {
   if (panning)  { panning=false; wrap.classList.remove('grabbing'); saveLocal(); }
-  if (dragging) { save(); dragging=null; }
+  if (dragging) { _hideSnapGuides(); save(); dragging=null; }
   if (resizing) { save(); resizing=null; }
 });
 wrap.addEventListener('wheel', e => {
@@ -1580,6 +1700,10 @@ document.addEventListener('keydown', e => {
   }
   // Prevent global shortcuts from firing when a UI button/input has keyboard focus
   if (['BUTTON', 'INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+  // Close style popover on Escape
+  if (e.key === 'Escape' && !stylePopover.classList.contains('hidden')) {
+    e.preventDefault(); stylePopover.classList.add('hidden'); return;
+  }
   if ((e.ctrlKey||e.metaKey) && e.key==='z') { e.preventDefault(); undo(); return; }
   if (!selectedId) return;
   switch(e.key) {
@@ -1587,6 +1711,11 @@ document.addEventListener('keydown', e => {
     case 'Enter':    e.preventDefault(); addSibling(selectedId); break;
     case 'Delete': case 'Backspace': e.preventDefault(); deleteNode(selectedId); break;
     case 'Escape':   e.preventDefault(); deselect(); break;
+    case 'F2':       e.preventDefault(); startEdit(selectedId); break;
+    case 'ArrowLeft':  e.preventDefault(); { const p = nodes[nodes[selectedId]?.parentId]; if (p) select(p.id); } break;
+    case 'ArrowRight': e.preventDefault(); { const fc = nodes[selectedId]?.children?.[0]; if (fc && nodes[fc]) select(fc); } break;
+    case 'ArrowUp':    e.preventDefault(); _selectSibling(selectedId, -1); break;
+    case 'ArrowDown':  e.preventDefault(); _selectSibling(selectedId,  1); break;
   }
 });
 
@@ -1636,6 +1765,8 @@ function applyStyleUI() {
   rxSlider.value = nodeRx;
   rxValue.textContent = nodeRx;
   buildBgSwatches();
+  document.getElementById('mode-dark').classList.toggle('active',  exportMode === 'dark');
+  document.getElementById('mode-light').classList.toggle('active', exportMode === 'light');
 }
 function setMapStyle(idx) {
   mapStyle = idx; nodeRx = STYLES[idx].rx; _lastAppliedBg = null;
@@ -1689,6 +1820,14 @@ document.getElementById('ap-add-child').onclick      = () => selectedId && addCh
 document.getElementById('ap-add-sibling').onclick    = () => selectedId && addSibling(selectedId);
 document.getElementById('ap-center-children').onclick = function() { if (selectedId) { centerOnChildren(selectedId); this.blur(); } };
 document.getElementById('ap-delete').onclick         = () => selectedId && deleteNode(selectedId);
+document.getElementById('ap-distribute').onclick  = () => selectedId && distributeEqualSpacing(selectedId);
+document.getElementById('ap-title-mode').onclick  = () => {
+  if (!selectedId || !nodes[selectedId]) return;
+  push();
+  if (nodes[selectedId].titleMode) delete nodes[selectedId].titleMode;
+  else nodes[selectedId].titleMode = true;
+  renderNode(nodes[selectedId]); save(); updatePanel();
+};
 document.getElementById('ap-set-image').onclick   = () => selectedId && document.getElementById('img-file-input').click();
 document.getElementById('ap-remove-image').onclick = () => {
   if (!selectedId || !nodes[selectedId]) return;
@@ -1720,6 +1859,34 @@ document.getElementById('img-file-input').addEventListener('change', e => {
     img.src = ev.target.result;
   };
   reader.readAsDataURL(file); e.target.value = '';
+});
+
+// Ctrl+V / paste image from clipboard onto selected node
+document.addEventListener('paste', e => {
+  if (!selectedId || !nodes[selectedId] || editingId) return;
+  const item = [...(e.clipboardData?.items || [])].find(it => it.type.startsWith('image/'));
+  if (!item) return;
+  e.preventDefault();
+  const file = item.getAsFile(); if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 600;
+      let iw = img.width, ih = img.height;
+      if (iw > MAX || ih > MAX) { const r = Math.min(MAX/iw, MAX/ih); iw=Math.round(iw*r); ih=Math.round(ih*r); }
+      const cv = document.createElement('canvas'); cv.width=iw; cv.height=ih;
+      const c2 = cv.getContext('2d');
+      const isPng = file.type === 'image/png';
+      if (!isPng) { c2.fillStyle = '#ffffff'; c2.fillRect(0, 0, iw, ih); }
+      c2.drawImage(img, 0, 0, iw, ih);
+      push(); nodes[selectedId].imageAspect = img.width / img.height;
+      nodes[selectedId].imageData = isPng ? cv.toDataURL('image/png') : cv.toDataURL('image/jpeg', 0.85);
+      renderNode(nodes[selectedId]); renderEdge(nodes[selectedId]); save(); updatePanel(); toast('Image collée');
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
 });
 
 editEl.addEventListener('blur', () => setTimeout(commitEdit, 150));
@@ -1823,11 +1990,17 @@ async function buildCanvas() {
       rrect(ctx, nx, ny, nw, nh, rx); ctx.stroke();
     }
 
-    function drawLines(label, cx, cy, maxW) {
+    function drawLines(label, cx, cy, maxW, titleMode) {
       const lines = labelLines(label);
       const lh = ts(LINE_H);
       const startY = cy - ((lines.length - 1) / 2) * lh;
-      lines.forEach((line, i) => ctx.fillText(line, cx, startY + i * lh, maxW));
+      const baseFont  = `400 ${ts(12)}px "DM Mono", monospace`;
+      const titleFont = `500 ${ts(13)}px "DM Mono", monospace`;
+      lines.forEach((line, i) => {
+        ctx.font = (titleMode && i === 0 && lines.length > 1) ? titleFont : baseFont;
+        ctx.fillText(line, cx, startY + i * lh, maxW);
+      });
+      ctx.font = baseFont;
     }
 
     if (n.imageData && imgCache[n.id]) {
@@ -1841,7 +2014,7 @@ async function buildCanvas() {
         ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(nx, ny+ts(nia), nw, ts(nlb));
         ctx.fillStyle = '#f5f5f0'; ctx.textAlign='center'; ctx.textBaseline='middle';
         ctx.font = `${ts(12)}px "DM Mono", monospace`;
-        drawLines(n.label, tx(n.x), ny+ts(nia)+ts(nlb)/2, nw-ts(8));
+        drawLines(n.label, tx(n.x), ny+ts(nia)+ts(nlb)/2, nw-ts(8), n.titleMode);
       } else {
         drawImg(nx, ny, nw, nh);
       }
@@ -1850,7 +2023,7 @@ async function buildCanvas() {
       ctx.fillStyle = col.label ? TXT_DARK : '#f5f5f0';
       ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.font = `${ts(12)}px "DM Mono", monospace`;
-      drawLines(n.label, tx(n.x), ty(n.y), nw-ts(8));
+      drawLines(n.label, tx(n.x), ty(n.y), nw-ts(8), n.titleMode);
     }
   }
   return cv;
@@ -1946,7 +2119,7 @@ async function cloudSave() {
     // Save active map data in subcollection
     await fbDb.collection('maps').doc(currentUser.uid)
       .collection('items').doc(activeMapId).set({
-        data: JSON.stringify({ nodes, rootId, vx, vy, vz, mapStyle, nodeRx, bgOverride }),
+        data: JSON.stringify({ nodes, rootId, vx, vy, vz, mapStyle, nodeRx, bgOverride, exportMode }),
         name: entry ? entry.name : 'Carte',
         updatedAt: ts
       });
@@ -1982,7 +2155,8 @@ async function cloudLoad() {
       nodes = d.nodes; rootId = d.rootId;
       vx = d.vx||0; vy = d.vy||0; vz = d.vz||1;
       if (d.mapStyle != null) { mapStyle = d.mapStyle; nodeRx = d.nodeRx ?? STYLES[mapStyle].rx; }
-      if (d.bgOverride !== undefined) bgOverride = d.bgOverride;
+      if (d.bgOverride  !== undefined) bgOverride = d.bgOverride;
+      if (d.exportMode)               exportMode = d.exportMode;
       _writeLocal();
       cloudSave(); // migrate to new format silently
       return true;
@@ -2004,6 +2178,7 @@ async function cloudLoad() {
     vx = d.vx||0; vy = d.vy||0; vz = d.vz||1;
     if (d.mapStyle != null) { mapStyle = d.mapStyle; nodeRx = d.nodeRx ?? STYLES[mapStyle].rx; }
     bgOverride = d.bgOverride !== undefined ? d.bgOverride : null;
+    exportMode = d.exportMode || 'dark';
     _writeLocal();
     return true;
   } catch(e) {
