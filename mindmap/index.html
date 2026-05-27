@@ -1103,9 +1103,11 @@ function renderNode(n) {
   const rect = g._r;
   rect.setAttribute('x', x); rect.setAttribute('y', y);
   rect.setAttribute('width', w); rect.setAttribute('height', h);
-  rect.setAttribute('fill', col.fill); rect.setAttribute('rx', rx);
+  const isPaperImg = n.imageData && STYLES[mapStyle].id === 'papier';
+  rect.setAttribute('fill', isPaperImg ? 'none' : col.fill);
+  rect.setAttribute('rx', rx);
   // Show border on root in light preview (same rule as PNG export)
-  if (n.isRoot && (exportMode === 'light' || STYLES[mapStyle].id === 'papier')) {
+  if (n.isRoot && !isPaperImg && (exportMode === 'light' || STYLES[mapStyle].id === 'papier')) {
     rect.setAttribute('stroke', '#888'); rect.setAttribute('stroke-width', '1.5');
   } else {
     rect.removeAttribute('stroke'); rect.removeAttribute('stroke-width');
@@ -1528,8 +1530,16 @@ window.addEventListener('mousemove', e => {
       const n = nodes[resizing]; if (!n) { resizing = null; return; }
       const dx = (_latestMx - resizeStartX) / vz;
       const dy = (_latestMy - resizeStartY) / vz;
-      n.manualW = Math.round(Math.max(50, resizeStartW + dx));
-      n.manualH = Math.round(Math.max(20, resizeStartH + dy));
+      const newW = Math.round(Math.max(50, resizeStartW + dx));
+      if (n.imageData && n.imageAspect) {
+        // Lock aspect ratio: width drives, height is derived
+        const lblH = n.label ? Math.max(LBL_H, 10 + labelLines(n.label).length * LINE_H) : 0;
+        n.manualW = newW;
+        n.manualH = Math.round(newW / n.imageAspect) + lblH;
+      } else {
+        n.manualW = newW;
+        n.manualH = Math.round(Math.max(20, resizeStartH + dy));
+      }
       renderNode(n); renderEdge(n);
       n.children.forEach(c => { if (nodes[c]) renderEdge(nodes[c]); });
       updatePanel();
@@ -1681,6 +1691,7 @@ document.getElementById('ap-set-image').onclick   = () => selectedId && document
 document.getElementById('ap-remove-image').onclick = () => {
   if (!selectedId || !nodes[selectedId]) return;
   push(); delete nodes[selectedId].imageData; delete nodes[selectedId].imageAspect;
+  delete nodes[selectedId].manualW; delete nodes[selectedId].manualH;
   renderNode(nodes[selectedId]); save(); updatePanel();
 };
 
@@ -1697,10 +1708,11 @@ document.getElementById('img-file-input').addEventListener('change', e => {
       if (iw > MAX || ih > MAX) { const r = Math.min(MAX/iw, MAX/ih); iw=Math.round(iw*r); ih=Math.round(ih*r); }
       const cv = document.createElement('canvas'); cv.width=iw; cv.height=ih;
       const c2 = cv.getContext('2d');
-      c2.fillStyle = '#ffffff'; c2.fillRect(0, 0, iw, ih); // flatten transparency → white
+      const isPng = file.type === 'image/png';
+      if (!isPng) { c2.fillStyle = '#ffffff'; c2.fillRect(0, 0, iw, ih); }
       c2.drawImage(img, 0, 0, iw, ih);
       push(); nodes[selectedId].imageAspect = img.width / img.height;
-      nodes[selectedId].imageData = cv.toDataURL('image/jpeg', 0.85);
+      nodes[selectedId].imageData = isPng ? cv.toDataURL('image/png') : cv.toDataURL('image/jpeg', 0.85);
       renderNode(nodes[selectedId]); renderEdge(nodes[selectedId]); save(); updatePanel(); toast('Image définie');
     };
     img.src = ev.target.result;
@@ -1799,10 +1811,12 @@ async function buildCanvas() {
     const nx=tx(n.x-w/2), ny=ty(n.y-h/2), nw=ts(w), nh=ts(h);
     const rx = ts(n.isRoot ? st.rootRx : nodeRx);
 
-    ctx.fillStyle = col.fill; rrect(ctx, nx, ny, nw, nh, rx); ctx.fill();
+    if (!(n.imageData && st.id === 'papier')) {
+      ctx.fillStyle = col.fill; rrect(ctx, nx, ny, nw, nh, rx); ctx.fill();
+    }
 
     // Root or Papier style: add border so light nodes don't vanish
-    if (n.isRoot && (isLight || st.id === 'papier')) {
+    if (n.isRoot && !n.imageData && (isLight || st.id === 'papier')) {
       ctx.strokeStyle = '#888'; ctx.lineWidth = ts(1.5);
       rrect(ctx, nx, ny, nw, nh, rx); ctx.stroke();
     }
