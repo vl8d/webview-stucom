@@ -159,6 +159,15 @@
   .node-label-bg { pointer-events: none; }
   .node-resize-handle { fill: #f5f5f0; stroke: rgba(0,0,0,0.35); stroke-width: 1; cursor: se-resize; }
   .node-resize-handle:hover { fill: #ddd; }
+  #bg-swatches { display: flex; gap: 5px; flex-wrap: wrap; padding: 2px 0; }
+  .bg-swatch {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid #333; cursor: pointer;
+    transition: border-color .12s, transform .1s;
+    flex-shrink: 0;
+  }
+  .bg-swatch:hover { border-color: #888; transform: scale(1.15); }
+  .bg-swatch.active { border-color: var(--white); }
 
   /* ── Action panel ───────────────────────────────────────── */
   #action-panel {
@@ -543,6 +552,8 @@
       <input type="range" id="rx-slider" min="0" max="26" step="1" value="3">
     </div>
   </div>
+  <div class="sp-section">Fond</div>
+  <div class="sp-row"><div id="bg-swatches"></div></div>
   <div class="sp-section">Export</div>
   <div class="sp-row">
     <div class="export-mode" style="width:100%">
@@ -748,6 +759,7 @@ let dragging = null, dox, doy, dragStartX = 0, dragStartY = 0;
 let resizing = null, resizeStartX = 0, resizeStartY = 0, resizeStartW = 0, resizeStartH = 0;
 let undoStack = [];
 let exportMode = 'dark';
+let bgOverride = null; // custom background colour (overrides style default)
 // Multi-map
 let activeMapId = null;
 let mapList = [];   // [{ id, name, createdAt }]
@@ -894,7 +906,7 @@ function _writeLocal() {
     if (!store.maps) store.maps = {};
     store.activeMapId = activeMapId;
     store.mapList     = mapList;
-    store.maps[activeMapId] = { nodes, rootId, vx, vy, vz, mapStyle, nodeRx };
+    store.maps[activeMapId] = { nodes, rootId, vx, vy, vz, mapStyle, nodeRx, bgOverride };
     localStorage.setItem(LS_KEY, JSON.stringify(store));
   } catch(e) {}
 }
@@ -913,8 +925,9 @@ function load() {
         if (md && md.nodes) {
           nodes = md.nodes; rootId = md.rootId;
           vx = md.vx||0; vy = md.vy||0; vz = md.vz||1;
-          if (md.mapStyle != null) mapStyle = md.mapStyle;
-          if (md.nodeRx   != null) nodeRx   = md.nodeRx;
+          if (md.mapStyle   != null) mapStyle   = md.mapStyle;
+          if (md.nodeRx     != null) nodeRx     = md.nodeRx;
+          if (md.bgOverride !== undefined) bgOverride = md.bgOverride;
           return true;
         }
       }
@@ -1021,7 +1034,7 @@ function applyT() {
 // ─── Render: background + edges ───────────────────────────────────────────────
 let _lastBgStyle = -1;
 function applyBg() {
-  const bg = exportMode === 'light' ? '#f5f5f0' : STYLES[mapStyle].bg;
+  const bg = bgOverride || (exportMode === 'light' ? '#f5f5f0' : STYLES[mapStyle].bg);
   if (wrap.style.background === bg) return;
   wrap.style.background = bg;
   _lastBgStyle = mapStyle;
@@ -1122,19 +1135,21 @@ function renderNode(n) {
     const cr = cp.querySelector('rect');
     const hasLabel = !!n.label;
     const ia = imageAreaH(n);
-    const imgH = hasLabel ? ia : h;
-    cr.setAttribute('x', x); cr.setAttribute('y', y); cr.setAttribute('width', w); cr.setAttribute('height', imgH);
+    // Clip to the full node shape (with rounded corners) so image+label never overflow
+    cr.setAttribute('x', x); cr.setAttribute('y', y); cr.setAttribute('width', w); cr.setAttribute('height', h);
+    cr.setAttribute('rx', rx);
 
     if (!g._i) {
       g._i = document.createElementNS(SVG_NS, 'image'); g._i.classList.add('node-img');
-      g._i.setAttribute('preserveAspectRatio', 'xMidYMid slice');
       g.insertBefore(g._i, g._t);
       g._lb = document.createElementNS(SVG_NS, 'rect'); g._lb.classList.add('node-label-bg');
       g.insertBefore(g._lb, g._t);
     }
     const img = g._i, lbg = g._lb;
     img.setAttribute('x', x); img.setAttribute('y', y);
-    img.setAttribute('width', w); img.setAttribute('height', imgH);
+    img.setAttribute('width', w); img.setAttribute('height', ia);
+    // meet = show full image (no crop) when manually resized; slice = cover otherwise
+    img.setAttribute('preserveAspectRatio', n.manualW ? 'xMidYMid meet' : 'xMidYMid slice');
     if (img.getAttribute('href') !== n.imageData) {
       img.setAttribute('href', n.imageData); img.setAttribute('xlink:href', n.imageData);
     }
@@ -1144,12 +1159,15 @@ function renderNode(n) {
       const lblH = labelBarH(n);
       lbg.setAttribute('x', x); lbg.setAttribute('y', y + ia);
       lbg.setAttribute('width', w); lbg.setAttribute('height', lblH);
-      lbg.setAttribute('fill', 'rgba(0,0,0,0.6)'); lbg.removeAttribute('display');
+      lbg.setAttribute('fill', 'rgba(0,0,0,0.6)');
+      lbg.setAttribute('clip-path', `url(#${cid})`); // clip rounded bottom corners
+      lbg.removeAttribute('display');
       g._t.removeAttribute('fill'); g._t.classList.remove('dark-label');
       g._t.setAttribute('fill', '#f5f5f0');
       setMultilineText(g._t, n.label, n.x, y + ia + lblH / 2);
     } else {
       lbg.setAttribute('display', 'none');
+      lbg.removeAttribute('clip-path');
       g._t.textContent = '';
     }
   } else {
@@ -1285,6 +1303,7 @@ async function switchMap(id) {
   nodes = md.nodes; rootId = md.rootId;
   vx = md.vx||0; vy = md.vy||0; vz = md.vz||1;
   if (md.mapStyle != null) { mapStyle = md.mapStyle; nodeRx = md.nodeRx ?? STYLES[mapStyle].rx; }
+  bgOverride = md.bgOverride !== undefined ? md.bgOverride : null;
   _writeLocal();
   cleanOrphans(); applyStyleUI(); renderAll(); center();
   mapsModal.classList.add('hidden');
@@ -1568,10 +1587,42 @@ document.addEventListener('click', e => {
   if (!stylePopover.contains(e.target)) stylePopover.classList.add('hidden');
 });
 
+// Background colour swatches — colours not already present in the site palette
+const BG_COLORS = [
+  { c: null,      label: 'Auto' },     // follows style
+  { c: '#000000', label: 'Noir pur' },
+  { c: '#0d1117', label: 'Nuit' },
+  { c: '#1a0b2e', label: 'Violet' },
+  { c: '#0b2818', label: 'Forêt' },
+  { c: '#2b0d0d', label: 'Bordeaux' },
+  { c: '#ffffff', label: 'Blanc pur' },
+  { c: '#f0ead2', label: 'Parchemin' },
+];
+function buildBgSwatches() {
+  const container = document.getElementById('bg-swatches');
+  container.innerHTML = '';
+  BG_COLORS.forEach(({ c, label }) => {
+    const sw = document.createElement('div');
+    sw.className = 'bg-swatch';
+    sw.title = label;
+    if (c) sw.style.background = c;
+    else sw.style.background = 'linear-gradient(135deg,#f5f5f0 50%,#0a0a0a 50%)';
+    sw.dataset.color = c || '';
+    sw.classList.toggle('active', c === bgOverride);
+    sw.addEventListener('click', () => {
+      bgOverride = c;
+      document.querySelectorAll('.bg-swatch').forEach(s => s.classList.remove('active'));
+      sw.classList.add('active');
+      _lastBgStyle = -1; applyBg(); save();
+    });
+    container.appendChild(sw);
+  });
+}
 function applyStyleUI() {
   spStyleBtns.forEach((btn, i) => btn.classList.toggle('active', i === mapStyle));
   rxSlider.value = nodeRx;
   rxValue.textContent = nodeRx;
+  buildBgSwatches();
 }
 function setMapStyle(idx) {
   mapStyle = idx; nodeRx = STYLES[idx].rx; _lastBgStyle = -1;
@@ -1644,7 +1695,9 @@ document.getElementById('img-file-input').addEventListener('change', e => {
       let iw = img.width, ih = img.height;
       if (iw > MAX || ih > MAX) { const r = Math.min(MAX/iw, MAX/ih); iw=Math.round(iw*r); ih=Math.round(ih*r); }
       const cv = document.createElement('canvas'); cv.width=iw; cv.height=ih;
-      cv.getContext('2d').drawImage(img, 0, 0, iw, ih);
+      const c2 = cv.getContext('2d');
+      c2.fillStyle = '#ffffff'; c2.fillRect(0, 0, iw, ih); // flatten transparency → white
+      c2.drawImage(img, 0, 0, iw, ih);
       push(); nodes[selectedId].imageAspect = img.width / img.height;
       nodes[selectedId].imageData = cv.toDataURL('image/jpeg', 0.85);
       renderNode(nodes[selectedId]); renderEdge(nodes[selectedId]); save(); updatePanel(); toast('Image définie');
@@ -1672,7 +1725,7 @@ function rrect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// object-fit:cover crop for canvas image drawing
+// object-fit:cover (crop) for canvas image drawing
 function drawCover(ctx, img, x, y, w, h) {
   const srcR = img.naturalWidth / img.naturalHeight;
   const dstR = w / h;
@@ -1680,6 +1733,15 @@ function drawCover(ctx, img, x, y, w, h) {
   if (srcR > dstR) { sh = img.naturalHeight; sw = sh * dstR; sx = (img.naturalWidth - sw) / 2; sy = 0; }
   else             { sw = img.naturalWidth;  sh = sw / dstR; sx = 0; sy = (img.naturalHeight - sh) / 2; }
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+// object-fit:contain (no crop, letterbox) for canvas image drawing
+function drawMeet(ctx, img, x, y, w, h) {
+  const srcR = img.naturalWidth / img.naturalHeight;
+  const dstR = w / h;
+  let dw, dh;
+  if (srcR > dstR) { dw = w; dh = w / srcR; }
+  else             { dh = h; dw = h * srcR; }
+  ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
 }
 
 async function buildCanvas() {
@@ -1703,7 +1765,7 @@ async function buildCanvas() {
 
   const isLight = exportMode === 'light';
   const st = STYLES[mapStyle];
-  const BG       = isLight ? '#f5f5f0' : st.bg;
+  const BG       = bgOverride || (isLight ? '#f5f5f0' : st.bg);
   const EDGE_CLR = isLight ? '#c0c0b8' : st.edgeColor;
   const EDGE_W   = ts(st.edgeW);
   const TXT_DARK = '#0a0a0a';
@@ -1753,17 +1815,18 @@ async function buildCanvas() {
 
     if (n.imageData && imgCache[n.id]) {
       // Clip once to the full node shape — keeps image + label bar inside rounded corners
+      const drawImg = (ix,iy,iw,ih) => n.manualW ? drawMeet(ctx,imgCache[n.id],ix,iy,iw,ih) : drawCover(ctx,imgCache[n.id],ix,iy,iw,ih);
       ctx.save(); rrect(ctx, nx, ny, nw, nh, rx); ctx.clip();
       if (n.label) {
         const nia = imageAreaH(n);
         const nlb = labelBarH(n);
-        drawCover(ctx, imgCache[n.id], nx, ny, nw, ts(nia));
+        drawImg(nx, ny, nw, ts(nia));
         ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(nx, ny+ts(nia), nw, ts(nlb));
         ctx.fillStyle = '#f5f5f0'; ctx.textAlign='center'; ctx.textBaseline='middle';
         ctx.font = `${ts(12)}px "DM Mono", monospace`;
         drawLines(n.label, tx(n.x), ny+ts(nia)+ts(nlb)/2, nw-ts(8));
       } else {
-        drawCover(ctx, imgCache[n.id], nx, ny, nw, nh);
+        drawImg(nx, ny, nw, nh);
       }
       ctx.restore();
     } else {
@@ -1865,7 +1928,7 @@ async function cloudSave() {
     // Save active map data in subcollection
     await fbDb.collection('maps').doc(currentUser.uid)
       .collection('items').doc(activeMapId).set({
-        data: JSON.stringify({ nodes, rootId, vx, vy, vz, mapStyle, nodeRx }),
+        data: JSON.stringify({ nodes, rootId, vx, vy, vz, mapStyle, nodeRx, bgOverride }),
         name: entry ? entry.name : 'Carte',
         updatedAt: ts
       });
