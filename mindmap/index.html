@@ -1105,6 +1105,7 @@ function renderNode(n) {
   rect.setAttribute('width', w); rect.setAttribute('height', h);
   const isPaperImg = n.imageData && STYLES[mapStyle].id === 'papier';
   rect.setAttribute('fill', isPaperImg ? 'none' : col.fill);
+  if (isPaperImg) rect.setAttribute('pointer-events', 'all'); else rect.removeAttribute('pointer-events');
   rect.setAttribute('rx', rx);
   // Show border on root in light preview (same rule as PNG export)
   if (n.isRoot && !isPaperImg && (exportMode === 'light' || STYLES[mapStyle].id === 'papier')) {
@@ -1367,7 +1368,7 @@ function updatePanel() {
   const sc = w2s(n.x, n.y);
   const px = sc.x + (w * vz) / 2 + 10;
   const py = sc.y - (h * vz) / 2;
-  const clampX = Math.min(px, innerWidth - 186);
+  const clampX = Math.max(0, Math.min(px, innerWidth - 186));
   const clampY = Math.max(54, Math.min(py, innerHeight - 340));
   panel.style.left = clampX + 'px'; panel.style.top = clampY + 'px';
   panel.classList.remove('hidden');
@@ -1444,6 +1445,7 @@ function deleteNode(id) {
   const par = nodes[nodes[id].parentId];
   if (par) par.children = par.children.filter(c => c !== id);
   rm(id);
+  if (editingId === id) { editingId = null; editEl.classList.add('hidden'); }
   if (selectedId === id) selectedId = null;
   cleanOrphans(); save(); renderAll();
 }
@@ -2064,7 +2066,7 @@ function handleAuthChange(user) {
         selectedId = null; editingId = null;
         editEl.classList.add('hidden');
         undoStack = [];
-        _lastBgStyle = -1;
+        _lastAppliedBg = null;
         cleanOrphans();
         applyStyleUI();
         renderAll(); center();
@@ -2138,6 +2140,7 @@ const POPUP_MSGS = {
 async function signInWithProvider(btnId, makeProvider, successMsg) {
   _forceSignedOut = false;  // user is actively trying to log in
   authErrorLogin.textContent = '';
+  if (!fbAuth) { authErrorLogin.textContent = 'Firebase non disponible.'; return; }
   const btn = document.getElementById(btnId);
   btn.disabled = true;
   try {
