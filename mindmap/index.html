@@ -564,6 +564,15 @@
       <button class="mode-tab" id="mode-light" style="flex:1">○ Clair</button>
     </div>
   </div>
+  <div class="sp-section">Résolution PNG</div>
+  <div class="sp-row" style="flex-direction:column;gap:4px">
+    <div class="export-mode" style="width:100%">
+      <button class="mode-tab" id="qual-2x" style="flex:1" title="Rapide · fichier léger">×2</button>
+      <button class="mode-tab active" id="qual-4x" style="flex:1" title="Bonne qualité">×4 HD</button>
+      <button class="mode-tab" id="qual-7x" style="flex:1" title="Très haute qualité (auto-réduit si carte énorme)">×7 MAX</button>
+    </div>
+    <div id="qual-hint" style="font-size:.52rem;color:var(--grey);letter-spacing:.04em;text-align:center"></div>
+  </div>
 </div>
 
 <div id="canvas-wrap">
@@ -764,7 +773,8 @@ let panning = false, px0, py0, pvx, pvy;
 let dragging = null, dox, doy, dragStartX = 0, dragStartY = 0;
 let resizing = null, resizeStartX = 0, resizeStartY = 0, resizeStartW = 0, resizeStartH = 0;
 let undoStack = [];
-let exportMode = 'dark';
+let exportMode    = 'dark';
+let exportQuality = 4;  // PNG scale factor (2 / 4 / 7) — auto-capped if canvas would be too large
 let bgOverride = null; // custom background colour (overrides style default)
 // Multi-map
 let activeMapId = null;
@@ -913,8 +923,9 @@ function _writeLocal() {
     let store;
     try { store = JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch(e) { store = {}; }
     if (!store.maps) store.maps = {};
-    store.activeMapId = activeMapId;
-    store.mapList     = mapList;
+    store.activeMapId   = activeMapId;
+    store.mapList       = mapList;
+    store.exportQuality = exportQuality;
     store.maps[activeMapId] = { nodes, rootId, vx, vy, vz, mapStyle, nodeRx, bgOverride, exportMode };
     localStorage.setItem(LS_KEY, JSON.stringify(store));
   } catch(e) {}
@@ -928,8 +939,9 @@ function load() {
     if (raw) {
       const d = JSON.parse(raw);
       if (d && d.maps && d.activeMapId) {
-        mapList     = d.mapList || [];
-        activeMapId = d.activeMapId;
+        mapList       = d.mapList || [];
+        activeMapId   = d.activeMapId;
+        if (d.exportQuality) exportQuality = d.exportQuality;
         const md    = d.maps[activeMapId];
         if (md && md.nodes) {
           nodes = md.nodes; rootId = md.rootId;
@@ -1767,6 +1779,10 @@ function applyStyleUI() {
   buildBgSwatches();
   document.getElementById('mode-dark').classList.toggle('active',  exportMode === 'dark');
   document.getElementById('mode-light').classList.toggle('active', exportMode === 'light');
+  document.getElementById('qual-2x').classList.toggle('active', exportQuality === 2);
+  document.getElementById('qual-4x').classList.toggle('active', exportQuality === 4);
+  document.getElementById('qual-7x').classList.toggle('active', exportQuality === 7);
+  _updateQualHint();
 }
 function setMapStyle(idx) {
   mapStyle = idx; nodeRx = STYLES[idx].rx; _lastAppliedBg = null;
@@ -1793,6 +1809,36 @@ function setExportMode(m) {
 }
 document.getElementById('mode-dark').onclick  = () => setExportMode('dark');
 document.getElementById('mode-light').onclick = () => setExportMode('light');
+
+const qualHint = document.getElementById('qual-hint');
+function _updateQualHint() {
+  const { x1, y1, x2, y2 } = mapBounds();
+  if (x1 === Infinity) { qualHint.textContent = ''; return; }
+  const PAD = 64, rawW = (x2-x1)+2*PAD, rawH = (y2-y1)+2*PAD;
+  const MAX_DIM = 8000;
+  let S = exportQuality;
+  if (rawW * S > MAX_DIM || rawH * S > MAX_DIM) S = Math.max(1, Math.floor(MAX_DIM / Math.max(rawW, rawH)));
+  qualHint.textContent = `≈ ${Math.round(rawW*S)} × ${Math.round(rawH*S)} px`;
+}
+function setExportQuality(q) {
+  exportQuality = q;
+  document.getElementById('qual-2x').classList.toggle('active', q === 2);
+  document.getElementById('qual-4x').classList.toggle('active', q === 4);
+  document.getElementById('qual-7x').classList.toggle('active', q === 7);
+  _updateQualHint();
+  _saveQuality();
+}
+function _saveQuality() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    const store = raw ? JSON.parse(raw) : {};
+    store.exportQuality = exportQuality;
+    localStorage.setItem(LS_KEY, JSON.stringify(store));
+  } catch(e) {}
+}
+document.getElementById('qual-2x').onclick = () => setExportQuality(2);
+document.getElementById('qual-4x').onclick = () => setExportQuality(4);
+document.getElementById('qual-7x').onclick = () => setExportQuality(7);
 document.getElementById('btn-center').onclick   = center;
 document.getElementById('btn-undo').onclick     = undo;
 document.getElementById('btn-new').onclick      = () => createMap();
@@ -1930,7 +1976,14 @@ async function buildCanvas() {
   const { all, x1: bx1, y1: by1, x2: bx2, y2: by2 } = mapBounds();
   if (!all.length) return null;
   let x1=bx1, y1=by1, x2=bx2, y2=by2;
-  const PAD = 64, S = 3;
+  const PAD = 64;
+  const MAX_DIM = 8000; // safe canvas limit across browsers (~256 MB)
+  const rawW = (bx2 - bx1) + 2 * PAD, rawH = (by2 - by1) + 2 * PAD;
+  let S = exportQuality;
+  if (rawW * S > MAX_DIM || rawH * S > MAX_DIM) {
+    S = Math.max(1, Math.floor(MAX_DIM / Math.max(rawW, rawH)));
+    toast(`Carte très grande — résolution réduite à ×${S}`);
+  }
   x1-=PAD; y1-=PAD; x2+=PAD; y2+=PAD;
   const W = Math.round((x2-x1)*S), H = Math.round((y2-y1)*S);
 
@@ -2035,7 +2088,7 @@ document.getElementById('btn-export-png').addEventListener('click', async () => 
   const cv = await buildCanvas();
   if (!cv) return toast('Erreur export');
   const a = document.createElement('a'); a.download='mindmap.png'; a.href=cv.toDataURL('image/png'); a.click();
-  toast('PNG téléchargé');
+  toast(`PNG téléchargé · ${cv.width}×${cv.height} px`);
 });
 
 // ─── Export PDF ───────────────────────────────────────────────────────────────
