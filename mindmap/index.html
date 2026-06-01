@@ -162,6 +162,11 @@
   .snap-guide { stroke: rgba(255,255,255,0.28); stroke-width: 1.5; stroke-dasharray: 6,5; pointer-events: none; }
   .snap-guide.axis { stroke: rgba(100,180,255,0.4); }
   .ap-btn.ap-active { background: var(--white); color: var(--black); }
+  .cross-link { fill: none; stroke: #8b5cf6; stroke-width: 1.5; stroke-dasharray: 6,4; pointer-events: stroke; cursor: pointer; }
+  .cross-link:hover { stroke-width: 2.5; stroke: #a78bfa; }
+  .cross-link.cl-temp { pointer-events: none; opacity: .55; }
+  #canvas-wrap.linking { cursor: crosshair; }
+  #canvas-wrap.linking .node-group { cursor: crosshair; }
   #bg-swatches { display: flex; gap: 5px; flex-wrap: wrap; padding: 2px 0; }
   .bg-swatch {
     width: 22px; height: 22px; border-radius: 50%;
@@ -591,10 +596,14 @@
   <button class="ap-btn" id="ap-add-sibling">↘ Sœur <span class="ap-kbd">Enter</span></button>
   <button class="ap-btn" id="ap-center-children" style="display:none">⊙ Centrer sur enfants</button>
   <button class="ap-btn" id="ap-distribute" style="display:none">≡ Espacer</button>
+  <button class="ap-btn" id="ap-insert" style="display:none">↥ Intercaler</button>
   <button class="ap-btn ap-danger" id="ap-delete">✕ Supprimer <span class="ap-kbd">Del</span></button>
   <button class="ap-btn" id="ap-reset-size" style="display:none">↺ Taille auto</button>
   <div class="ap-section">Format</div>
   <button class="ap-btn" id="ap-title-mode">T Titre</button>
+  <div class="ap-section">Liens</div>
+  <button class="ap-btn" id="ap-link-to">⤳ Lier à…</button>
+  <button class="ap-btn ap-danger" id="ap-remove-links" style="display:none">✕ Retirer liens</button>
   <div class="ap-section">Image</div>
   <button class="ap-btn" id="ap-set-image">▣ Définir image</button>
   <button class="ap-btn ap-danger" id="ap-remove-image" style="display:none">✕ Retirer image</button>
@@ -784,6 +793,9 @@ let mapList = [];   // [{ id, name, createdAt }]
 let _forceSignedOut = false;
 let _pendingConfirm = null;
 let snapGuide = null, snapGuide2 = null;
+let crossLinks  = [];   // [{id, from, to}, ...]
+let linkingFrom = null; // node id when in link-drawing mode
+let linkTempLine = null;
 
 // ─── DOM ──────────────────────────────────────────────────────────────────────
 const wrap    = document.getElementById('canvas-wrap');
@@ -822,6 +834,9 @@ const mapsNewBtn       = document.getElementById('btn-maps-new');
 const activeMapNameEl  = document.getElementById('active-map-name');
 const apDistribute     = document.getElementById('ap-distribute');
 const apTitleMode      = document.getElementById('ap-title-mode');
+const apInsert         = document.getElementById('ap-insert');
+const apLinkTo         = document.getElementById('ap-link-to');
+const apRmLinks        = document.getElementById('ap-remove-links');
 
 // ─── Utils ────────────────────────────────────────────────────────────────────
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -926,7 +941,7 @@ function _writeLocal() {
     store.activeMapId   = activeMapId;
     store.mapList       = mapList;
     store.exportQuality = exportQuality;
-    store.maps[activeMapId] = { nodes, rootId, vx, vy, vz, mapStyle, nodeRx, bgOverride, exportMode };
+    store.maps[activeMapId] = { nodes, rootId, vx, vy, vz, mapStyle, nodeRx, bgOverride, exportMode, crossLinks };
     localStorage.setItem(LS_KEY, JSON.stringify(store));
   } catch(e) {}
 }
@@ -950,6 +965,7 @@ function load() {
           if (md.nodeRx     != null) nodeRx     = md.nodeRx;
           if (md.bgOverride  !== undefined) bgOverride  = md.bgOverride;
           if (md.exportMode)               exportMode  = md.exportMode;
+          crossLinks = md.crossLinks || [];
           return true;
         }
       }
@@ -976,7 +992,7 @@ function load() {
 
 // ─── Default map ──────────────────────────────────────────────────────────────
 function initMap() {
-  nodes = {};
+  nodes = {}; crossLinks = [];
   const cx = innerWidth / 2, cy = (innerHeight - 40) / 2 + 40;
   const r = { id: uid(), label: 'Idée centrale', x: cx, y: cy, parentId: null, children: [], colorIndex: -1, isRoot: true };
   nodes[r.id] = r; rootId = r.id;
@@ -1235,10 +1251,14 @@ function cleanOrphans() {
   eLayer.querySelectorAll('[id^="e-"]').forEach(el  => { if (!nodes[el.id.slice(2)]) el.remove(); });
   nLayer.querySelectorAll('[id^="n-"]').forEach(el  => { if (!nodes[el.id.slice(2)]) el.remove(); });
   defs.querySelectorAll('[id^="cp-"]').forEach(el   => { if (!nodes[el.id.slice(3)]) el.remove(); });
+  eLayer.querySelectorAll('[id^="cl-"]').forEach(el => {
+    if (!crossLinks.find(l => 'cl-'+l.id === el.id)) el.remove();
+  });
 }
 function renderAll() {
   applyBg();
   Object.values(nodes).forEach(n => { renderEdge(n); renderNode(n); });
+  renderAllCrossLinks();
   applyT();
   if (selectedId) updatePanel();
 }
@@ -1334,6 +1354,7 @@ async function switchMap(id) {
   if (md.mapStyle != null) { mapStyle = md.mapStyle; nodeRx = md.nodeRx ?? STYLES[mapStyle].rx; }
   bgOverride  = md.bgOverride !== undefined ? md.bgOverride : null;
   exportMode  = md.exportMode || 'dark';
+  crossLinks  = md.crossLinks || [];
   _writeLocal();
   cleanOrphans(); applyStyleUI(); renderAll(); center();
   mapsModal.classList.add('hidden');
@@ -1374,6 +1395,7 @@ function _doDeleteMap(id) {
       if (md.mapStyle != null) { mapStyle = md.mapStyle; nodeRx = md.nodeRx ?? STYLES[mapStyle].rx; }
       bgOverride = md.bgOverride !== undefined ? md.bgOverride : null;
       exportMode = md.exportMode || 'dark';
+      crossLinks = md.crossLinks || [];
     } else { initMap(); bgOverride = null; exportMode = 'dark'; }
     selectedId = null; editingId = null; editEl.classList.add('hidden');
     undoStack = []; _lastAppliedBg = null;
@@ -1405,7 +1427,11 @@ function updatePanel() {
   apResetSz.style.display  = n.manualW ? '' : 'none';
   const par = n.parentId && nodes[n.parentId];
   apDistribute.style.display = (par && par.children.length >= 2) ? '' : 'none';
+  apInsert.style.display     = par ? '' : 'none';
   apTitleMode.classList.toggle('ap-active', !!n.titleMode);
+  apLinkTo.classList.toggle('ap-active', linkingFrom === selectedId);
+  const hasLinks = crossLinks.some(l => l.from === selectedId || l.to === selectedId);
+  apRmLinks.style.display    = hasLinks ? '' : 'none';
 }
 
 document.getElementById('ap-reset-size').onclick = () => {
@@ -1533,6 +1559,117 @@ function _selectSibling(id, dir) {
   if (next && nodes[next]) select(next);
 }
 
+// ─── Insert intermediate node ──────────────────────────────────────────────────
+function insertBetween(id) {
+  if (!id || !nodes[id]) return;
+  const n = nodes[id]; if (!n.parentId) return;
+  const par = nodes[n.parentId]; if (!par) return;
+  push();
+  const newId = uid();
+  const mid = {
+    id: newId, label: 'Nouveau',
+    x: (par.x + n.x) / 2, y: (par.y + n.y) / 2,
+    parentId: par.id, children: [n.id], colorIndex: n.colorIndex
+  };
+  nodes[newId] = mid;
+  par.children = par.children.map(c => c === id ? newId : c);
+  n.parentId = newId;
+  save(); renderAll(); select(newId);
+  setTimeout(() => startEdit(newId), 50);
+}
+
+// ─── Cross-links ───────────────────────────────────────────────────────────────
+// Returns the point on the border of node n in direction of angle
+function edgePoint(n, angle) {
+  const { w, h } = nodeDim(n);
+  const ax = Math.cos(angle), ay = Math.sin(angle);
+  const tx = ax !== 0 ? (w/2) / Math.abs(ax) : Infinity;
+  const ty = ay !== 0 ? (h/2) / Math.abs(ay) : Infinity;
+  const t  = Math.min(tx, ty);
+  return { x: n.x + ax * t, y: n.y + ay * t };
+}
+
+function _crossLinkPath(from, to) {
+  const angle = Math.atan2(to.y - from.y, to.x - from.x);
+  const p1 = edgePoint(from, angle);
+  const p2 = edgePoint(to, angle + Math.PI);
+  const dx = p2.x - p1.x, dy = p2.y - p1.y;
+  const len = Math.hypot(dx, dy);
+  if (len < 4) return `M${p1.x},${p1.y} L${p2.x},${p2.y}`;
+  // Slight perpendicular curve
+  const cx = (p1.x + p2.x) / 2 - dy * 0.15;
+  const cy = (p1.y + p2.y) / 2 + dx * 0.15;
+  return `M${p1.x},${p1.y} Q${cx},${cy} ${p2.x},${p2.y}`;
+}
+
+function renderCrossLink(link) {
+  const from = nodes[link.from], to = nodes[link.to];
+  if (!from || !to) return;
+  let el = document.getElementById('cl-' + link.id);
+  if (!el) {
+    el = document.createElementNS(SVG_NS, 'path');
+    el.id = 'cl-' + link.id; el.classList.add('cross-link');
+    el.setAttribute('marker-end', 'url(#cl-arrow)');
+    const lid = link.id;
+    el.addEventListener('click', e => {
+      e.stopPropagation(); push();
+      crossLinks = crossLinks.filter(l => l.id !== lid);
+      e.currentTarget.remove(); save(); updatePanel();
+    });
+    eLayer.appendChild(el);
+  }
+  el.setAttribute('d', _crossLinkPath(from, to));
+}
+
+function renderAllCrossLinks() {
+  crossLinks.forEach(l => renderCrossLink(l));
+  // update temp line if linking
+  if (linkingFrom && nodes[linkingFrom]) {
+    const src = nodes[linkingFrom];
+    const pt  = s2w(_latestMx, _latestMy);
+    _showLinkTemp(src.x, src.y, pt.x, pt.y);
+  }
+}
+
+function _showLinkTemp(x1, y1, x2, y2) {
+  if (!linkTempLine) {
+    linkTempLine = document.createElementNS(SVG_NS, 'line');
+    linkTempLine.classList.add('cross-link', 'cl-temp');
+    eLayer.appendChild(linkTempLine);
+  }
+  linkTempLine.setAttribute('x1', x1); linkTempLine.setAttribute('y1', y1);
+  linkTempLine.setAttribute('x2', x2); linkTempLine.setAttribute('y2', y2);
+  linkTempLine.removeAttribute('display');
+}
+function _hideLinkTemp() {
+  if (linkTempLine) linkTempLine.setAttribute('display', 'none');
+}
+
+function startLinking(id) {
+  if (!id || !nodes[id]) return;
+  linkingFrom = id;
+  wrap.classList.add('linking');
+  panel.classList.add('hidden');
+  toast('Cliquez sur le nœud cible — Echap pour annuler');
+}
+function cancelLinking() {
+  linkingFrom = null;
+  wrap.classList.remove('linking');
+  _hideLinkTemp();
+  if (selectedId) updatePanel();
+}
+function createCrossLink(fromId, toId) {
+  if (!fromId || !toId || fromId === toId) return;
+  if (!nodes[fromId] || !nodes[toId]) return;
+  // Avoid duplicates (either direction)
+  if (crossLinks.find(l => (l.from===fromId&&l.to===toId)||(l.from===toId&&l.to===fromId))) {
+    toast('Lien déjà existant'); return;
+  }
+  push();
+  crossLinks.push({ id: uid(), from: fromId, to: toId });
+  save(); renderAllCrossLinks(); updatePanel(); toast('Lien créé');
+}
+
 function deleteNode(id) {
   if (!id || !nodes[id]) return;
   if (nodes[id].isRoot) return toast('Impossible de supprimer le nœud racine');
@@ -1543,6 +1680,8 @@ function deleteNode(id) {
   rm(id);
   if (editingId === id) { editingId = null; editEl.classList.add('hidden'); }
   if (selectedId === id) selectedId = null;
+  // Remove cross-links involving deleted nodes
+  crossLinks = crossLinks.filter(l => nodes[l.from] && nodes[l.to]);
   cleanOrphans(); save(); renderAll();
 }
 
@@ -1601,6 +1740,7 @@ function center() {
 
 // ─── Events ───────────────────────────────────────────────────────────────────
 wrap.addEventListener('mousedown', e => {
+  if (linkingFrom) { cancelLinking(); return; }
   const t = e.target;
   if (t===svgRoot || t===world || t.id==='edges-layer' || t.id==='nodes-layer') {
     panning = true; px0=e.clientX; py0=e.clientY; pvx=vx; pvy=vy;
@@ -1610,6 +1750,10 @@ wrap.addEventListener('mousedown', e => {
 let _rafPending = false, _latestMx = 0, _latestMy = 0;
 window.addEventListener('mousemove', e => {
   _latestMx = e.clientX; _latestMy = e.clientY;
+  if (linkingFrom && nodes[linkingFrom]) {
+    const src = nodes[linkingFrom], pt = s2w(_latestMx, _latestMy);
+    _showLinkTemp(src.x, src.y, pt.x, pt.y);
+  }
   if (!panning && !dragging && !resizing) return;
   if (_rafPending) return;
   _rafPending = true;
@@ -1695,6 +1839,12 @@ wrap.addEventListener('wheel', e => {
 }, { passive: false });
 
 function onNmd(e, id) {
+  if (linkingFrom) {
+    e.stopPropagation();
+    createCrossLink(linkingFrom, id);
+    cancelLinking();
+    return;
+  }
   e.stopPropagation(); if (e.detail===2) return;
   if (!nodes[id]) return;
   select(id);
@@ -1712,7 +1862,8 @@ document.addEventListener('keydown', e => {
   }
   // Prevent global shortcuts from firing when a UI button/input has keyboard focus
   if (['BUTTON', 'INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
-  // Close style popover on Escape
+  // Escape: cancel link mode > close popover > deselect
+  if (e.key === 'Escape' && linkingFrom) { e.preventDefault(); cancelLinking(); return; }
   if (e.key === 'Escape' && !stylePopover.classList.contains('hidden')) {
     e.preventDefault(); stylePopover.classList.add('hidden'); return;
   }
@@ -1867,6 +2018,22 @@ document.getElementById('ap-add-sibling').onclick    = () => selectedId && addSi
 document.getElementById('ap-center-children').onclick = function() { if (selectedId) { centerOnChildren(selectedId); this.blur(); } };
 document.getElementById('ap-delete').onclick         = () => selectedId && deleteNode(selectedId);
 document.getElementById('ap-distribute').onclick  = () => selectedId && distributeEqualSpacing(selectedId);
+document.getElementById('ap-insert').onclick      = () => selectedId && insertBetween(selectedId);
+document.getElementById('ap-link-to').onclick     = () => {
+  if (!selectedId) return;
+  if (linkingFrom) { cancelLinking(); return; }
+  startLinking(selectedId);
+};
+document.getElementById('ap-remove-links').onclick = () => {
+  if (!selectedId) return;
+  push();
+  const before = crossLinks.length;
+  crossLinks = crossLinks.filter(l => l.from !== selectedId && l.to !== selectedId);
+  eLayer.querySelectorAll('[id^="cl-"]').forEach(el => {
+    if (!crossLinks.find(l => 'cl-'+l.id === el.id)) el.remove();
+  });
+  if (crossLinks.length < before) { save(); updatePanel(); toast('Liens supprimés'); }
+};
 document.getElementById('ap-title-mode').onclick  = () => {
   if (!selectedId || !nodes[selectedId]) return;
   push();
@@ -2026,6 +2193,34 @@ async function buildCanvas() {
     ctx.stroke();
   });
 
+  // Cross-links (dashed, with arrowhead)
+  if (crossLinks.length) {
+    ctx.setLineDash([ts(6), ts(4)]);
+    ctx.strokeStyle = '#8b5cf6'; ctx.lineWidth = ts(1.5);
+    for (const link of crossLinks) {
+      const lf = nodes[link.from], lt = nodes[link.to];
+      if (!lf || !lt) continue;
+      const angle = Math.atan2(lt.y - lf.y, lt.x - lf.x);
+      const p1 = edgePoint(lf, angle), p2 = edgePoint(lt, angle + Math.PI);
+      const ddx = p2.x - p1.x, ddy = p2.y - p1.y, len = Math.hypot(ddx, ddy);
+      if (len < 4) continue;
+      const cxm = (p1.x+p2.x)/2 - ddy*0.15, cym = (p1.y+p2.y)/2 + ddx*0.15;
+      ctx.beginPath(); ctx.moveTo(tx(p1.x), ty(p1.y));
+      ctx.quadraticCurveTo(tx(cxm), ty(cym), tx(p2.x), ty(p2.y)); ctx.stroke();
+      // Arrowhead at p2
+      const ea = Math.atan2(p2.y - cym, p2.x - cxm);
+      const as = ts(7);
+      ctx.setLineDash([]); ctx.fillStyle = '#8b5cf6';
+      ctx.beginPath();
+      ctx.moveTo(tx(p2.x), ty(p2.y));
+      ctx.lineTo(tx(p2.x)-as*Math.cos(ea-0.42), ty(p2.y)-as*Math.sin(ea-0.42));
+      ctx.lineTo(tx(p2.x)-as*Math.cos(ea+0.42), ty(p2.y)-as*Math.sin(ea+0.42));
+      ctx.closePath(); ctx.fill();
+      ctx.setLineDash([ts(6), ts(4)]);
+    }
+    ctx.setLineDash([]);
+  }
+
   // Nodes
   for (const n of all) {
     const {w,h} = nodeDim(n);
@@ -2172,7 +2367,7 @@ async function cloudSave() {
     // Save active map data in subcollection
     await fbDb.collection('maps').doc(currentUser.uid)
       .collection('items').doc(activeMapId).set({
-        data: JSON.stringify({ nodes, rootId, vx, vy, vz, mapStyle, nodeRx, bgOverride, exportMode }),
+        data: JSON.stringify({ nodes, rootId, vx, vy, vz, mapStyle, nodeRx, bgOverride, exportMode, crossLinks }),
         name: entry ? entry.name : 'Carte',
         updatedAt: ts
       });
@@ -2210,6 +2405,7 @@ async function cloudLoad() {
       if (d.mapStyle != null) { mapStyle = d.mapStyle; nodeRx = d.nodeRx ?? STYLES[mapStyle].rx; }
       if (d.bgOverride  !== undefined) bgOverride = d.bgOverride;
       if (d.exportMode)               exportMode = d.exportMode;
+      crossLinks = d.crossLinks || [];
       _writeLocal();
       cloudSave(); // migrate to new format silently
       return true;
@@ -2232,6 +2428,7 @@ async function cloudLoad() {
     if (d.mapStyle != null) { mapStyle = d.mapStyle; nodeRx = d.nodeRx ?? STYLES[mapStyle].rx; }
     bgOverride = d.bgOverride !== undefined ? d.bgOverride : null;
     exportMode = d.exportMode || 'dark';
+    crossLinks = d.crossLinks || [];
     _writeLocal();
     return true;
   } catch(e) {
@@ -2443,6 +2640,15 @@ document.getElementById('btn-logout').onclick = async () => {
 };
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
+// Arrow marker for cross-link paths
+(function() {
+  const mk = document.createElementNS(SVG_NS, 'marker');
+  mk.id = 'cl-arrow'; mk.setAttribute('markerWidth','8'); mk.setAttribute('markerHeight','6');
+  mk.setAttribute('refX','7'); mk.setAttribute('refY','3'); mk.setAttribute('orient','auto');
+  const p = document.createElementNS(SVG_NS, 'path');
+  p.setAttribute('d','M0,0 L0,6 L8,3 z'); p.setAttribute('fill','#8b5cf6');
+  mk.appendChild(p); defs.appendChild(mk);
+})();
 buildColorGrid();
 if (!load()) {
   activeMapId = uid();
