@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiches THÈME &amp; CAS — Droit &amp; déontologie de l'information</title>
+<style>
+  :root{
+    --ink:#17222E;
+    --ink-soft:#46586a;
+    --paper:#EEF1F3;
+    --card:#FFFFFF;
+    --line:#DBE2E8;
+    --teal:#0E6E6E;        /* THÈME */
+    --teal-bg:#E4EFEE;
+    --rust:#B25A1E;        /* CAS */
+    --rust-bg:#F6EBE0;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.42;font-size:15.5px;}
+  .wrap{max-width:840px;margin:0 auto;padding:26px 18px 80px;}
+
+  .kicker{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);font-weight:700;margin:0 0 6px;}
+  h1.title{font-family:var(--serif);font-weight:700;font-size:29px;line-height:1.12;margin:0 0 6px;letter-spacing:-.01em;}
+  .subtitle{color:var(--ink-soft);font-size:14px;margin:0 0 16px;max-width:62ch;}
+
+  .legend{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:16px;}
+  .legend h2{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 9px;font-weight:700;}
+  .legend-row{display:flex;flex-wrap:wrap;gap:9px 22px;}
+  .legend-item{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--ink-soft);max-width:340px;}
+  .swatch{flex:0 0 auto;width:13px;height:13px;border-radius:3px;margin-top:3px;}
+  .swatch.th{background:var(--teal);}
+  .swatch.ca{background:var(--rust);}
+  .legend-item strong{color:var(--ink);}
+  .symkey{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-soft);line-height:1.9;}
+  .symkey span{display:inline-block;margin-right:13px;white-space:nowrap;}
+
+  .filters{margin-bottom:8px;}
+  .frow{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px;align-items:center;}
+  .frow .flabel{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;margin-right:4px;}
+  .filters button{font-family:var(--sans);font-size:12.5px;font-weight:600;border:1px solid var(--line);background:var(--card);color:var(--ink-soft);padding:6px 12px;border-radius:999px;cursor:pointer;transition:all .15s ease;}
+  .filters button:hover{border-color:var(--ink-soft);color:var(--ink);}
+  .filters button.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .filters button:focus-visible{outline:2px solid var(--teal);outline-offset:2px;}
+
+  section.deck{margin-top:22px;}
+  .sechead{display:flex;align-items:center;gap:12px;margin:6px 0 16px;}
+  .sechead .tag{font-family:var(--serif);font-size:12px;font-weight:700;color:#fff;padding:4px 11px;border-radius:6px;letter-spacing:.02em;}
+  .sechead.th .tag{background:var(--teal);}
+  .sechead.ca .tag{background:var(--rust);}
+  .sechead h2{font-family:var(--serif);font-size:19px;margin:0;font-weight:700;}
+  .sechead .ln{flex:1;height:1px;background:var(--line);}
+
+  .card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:16px 18px 16px 22px;margin-bottom:14px;overflow:hidden;}
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;}
+  .card.th::before{background:var(--teal);}
+  .card.ca::before{background:var(--rust);}
+
+  .card-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:3px;}
+  .eyebrow{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--ink-soft);}
+  .badge{font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;padding:3px 8px;border-radius:999px;white-space:nowrap;}
+  .badge.th{background:var(--teal-bg);color:var(--teal);}
+  .badge.ca{background:var(--rust-bg);color:var(--rust);}
+  .card h3{font-family:var(--serif);font-size:18.5px;line-height:1.15;margin:2px 0 9px;font-weight:700;letter-spacing:-.01em;}
+
+  .row{margin:0 0 7px;}
+  .row:last-child{margin-bottom:0;}
+  .row .k{font-size:13.5px;font-weight:700;display:block;margin-bottom:1px;}
+  .card.th .row .k{color:var(--teal);}
+  .card.ca .row .k{color:var(--rust);}
+  .row.illustrate .k{color:var(--ink);}
+  .card ul{margin:1px 0 0;padding-left:17px;}
+  .card li{font-size:13.5px;margin-bottom:2px;}
+  .card .inline{font-size:13.5px;margin:1px 0 0;}
+  .card strong{font-weight:700;}
+  .themechips{display:flex;flex-wrap:wrap;gap:5px;margin-top:1px;}
+  .chip{font-size:11px;font-weight:600;background:#EEF2F4;color:var(--ink-soft);border-radius:5px;padding:2px 7px;}
+  .card.ca .illustrate{background:var(--rust-bg);border-radius:8px;padding:8px 10px;margin-top:9px;}
+  .card.th .related{background:var(--teal-bg);border-radius:8px;padding:8px 10px;margin-top:9px;}
+  .card.th .related .k{color:var(--teal);}
+
+  .no-result{display:none;text-align:center;color:var(--ink-soft);padding:40px 0;font-size:15px;}
+  footer.foot{margin-top:26px;font-size:12px;color:var(--ink-soft);border-top:1px solid var(--line);padding-top:13px;}
+
+  @media (max-width:560px){
+    .wrap{padding:18px 12px 60px;}
+    h1.title{font-size:24px;}
+    .card{padding:15px 14px 15px 19px;}
+    .card h3{font-size:17px;}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+
+  @media print{
+    @page{size:A5;margin:11mm 10mm;}
+    body{background:#fff;font-size:10.5pt;}
+    .wrap{max-width:none;padding:0;}
+    .filters,.no-result,footer.foot,.legend .symkey{display:none!important;}
+    .legend{break-inside:avoid;}
+    .card,.sechead{break-inside:avoid;}
+    .card{border:1px solid #bbb;margin-bottom:7mm;}
+    .card::before,.badge,.swatch,.chip,.illustrate,.related,.sechead .tag{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="kicker">Examen oral · Belgique francophone</p>
+    <h1 class="title">Fiches THÈME &amp; CAS</h1>
+    <p class="subtitle">Droit &amp; déontologie de l'information — format télégraphique (mots-clés, pas de phrases). Construit à partir de tes cas de cours. Filtre par thème ou par type. Imprimable en A5.</p>
+
+    <div class="legend">
+      <h2>Repères</h2>
+      <div class="legend-row">
+        <div class="legend-item"><span class="swatch th"></span><span><strong>FICHE THÈME</strong> — un grand thème : définition · règle · limites · cas reliés.</span></div>
+        <div class="legend-item"><span class="swatch ca"></span><span><strong>FICHE CAS</strong> — un cas concret : qui/quoi · reproche · décision · thèmes · ce que ça illustre.</span></div>
+      </div>
+      <div class="symkey">
+        <span>📌 définition</span><span>⚖️ règle</span><span>⚠️ limites</span><span>🔗 cas reliés</span>
+        <span>🧩 qui / quoi</span><span>❌ reproche</span><span>✅ décision</span><span>📎 thèmes</span><span>💡 illustre</span>
+      </div>
+    </div>
+
+    <div class="filters">
+      <div class="frow" id="typeFilter">
+        <span class="flabel">Type</span>
+        <button class="active" data-t="all">Tout</button>
+        <button data-t="theme">Fiches thème</button>
+        <button data-t="cas">Fiches cas</button>
+      </div>
+      <div class="frow" id="themeFilter">
+        <span class="flabel">Thème</span>
+        <button class="active" data-th="all">Tous</button>
+        <button data-th="t1">1 · Liberté d'expression</button>
+        <button data-th="t2">2 · Délit de presse</button>
+        <button data-th="t3">3 · Droits d'auteur &amp; IA</button>
+        <button data-th="t4">4 · Mineurs</button>
+        <button data-th="t5">5 · RGPD</button>
+        <button data-th="t6">6 · Déontologie / CDJ</button>
+        <button data-th="t7">7 · Cordon sanitaire</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================= -->
+  <!-- =====================  FICHES THÈME  ========================= -->
+  <!-- ============================================================= -->
+  <section class="deck" id="sec-theme">
+    <div class="sechead th"><span class="tag">TYPE 1</span><h2>Fiches THÈME</h2><span class="ln"></span></div>
+
+    <!-- T1 -->
+    <article class="card th" data-type="theme" data-theme="t1">
+      <div class="card-head"><span class="eyebrow">Thème 1</span><span class="badge th">Thème</span></div>
+      <h3>Liberté d'expression &amp; de la presse</h3>
+      <div class="row"><span class="k">📌 Définition</span><p class="inline">Droit fondamental d'informer, s'exprimer et critiquer — pilier de la démocratie.</p></div>
+      <div class="row"><span class="k">⚖️ Règle</span>
+        <ul>
+          <li>Art. <strong>10 CEDH</strong> → liberté d'expression</li>
+          <li>Art. <strong>19 &amp; 25 Constitution</strong> → expression + presse</li>
+          <li>Art. <strong>9 Code déonto</strong> → liberté rédactionnelle</li>
+          <li>Presse = <strong>chien de garde</strong> du pouvoir</li>
+        </ul>
+      </div>
+      <div class="row"><span class="k">⚠️ Limites / conditions</span>
+        <ul>
+          <li>❌ pas <strong>absolue</strong></li>
+          <li><strong>vérifier</strong> · <strong>prudence</strong> · <strong>respect des personnes</strong></li>
+          <li>équilibre avec <strong>réputation</strong> + <strong>vie privée</strong></li>
+          <li>personnalités publiques → <strong>+ de critique</strong> admise</li>
+          <li>sanction si faits <strong>faux</strong> / non vérifiés / <strong>intention de nuire</strong></li>
+        </ul>
+      </div>
+      <div class="row related"><span class="k">🔗 Cas reliés</span>
+        <ul>
+          <li><strong>Eerdekens c. De Groote</strong> → presse prime</li>
+          <li><strong>Es Sense</strong> → critique ≠ faute</li>
+          <li><strong>RTL-TVI (resto chinois)</strong> → liberté mal exercée</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- T2 -->
+    <article class="card th" data-type="theme" data-theme="t2">
+      <div class="card-head"><span class="eyebrow">Thème 2</span><span class="badge th">Thème</span></div>
+      <h3>Délit de presse</h3>
+      <div class="row"><span class="k">📌 Définition</span><p class="inline">Diffusion <strong>publique</strong> et <strong>écrite</strong> d'une opinion portant atteinte à une personne ou un groupe.</p></div>
+      <div class="row"><span class="k">⚖️ Règle</span>
+        <ul>
+          <li><strong>3 conditions</strong> : public + opinion + écrit</li>
+          <li>Art. <strong>150 Constitution</strong> → assises (sauf mobile raciste)</li>
+          <li><strong>Loi 30/07/1981</strong> → racisme &amp; xénophobie</li>
+          <li><strong>diffamation</strong> · <strong>calomnie</strong> · <strong>haine en ligne</strong> · cyberharcèlement</li>
+        </ul>
+      </div>
+      <div class="row"><span class="k">⚠️ Limites / conditions</span>
+        <ul>
+          <li>réseaux sociaux = <strong>pas de zone de non-droit</strong></li>
+          <li>mobile <strong>raciste</strong> → <strong>correctionnalisation</strong></li>
+          <li>calomnie = fausseté <strong>+ intention de nuire</strong></li>
+          <li>victime = <strong>partie civile</strong></li>
+        </ul>
+      </div>
+      <div class="row related"><span class="k">🔗 Cas reliés</span>
+        <ul>
+          <li><strong>Cécile Djunga</strong> → haine en ligne raciste</li>
+          <li><strong>Eerdekens c. De Groote</strong> → diffamation rejetée</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- T3 -->
+    <article class="card th" data-type="theme" data-theme="t3">
+      <div class="card-head"><span class="eyebrow">Thème 3</span><span class="badge th">Thème</span></div>
+      <h3>Droits d'auteur &amp; voisins (+ IA)</h3>
+      <div class="row"><span class="k">📌 Définition</span><p class="inline">Protection automatique de toute <strong>œuvre originale</strong> dès sa création.</p></div>
+      <div class="row"><span class="k">⚖️ Règle</span>
+        <ul>
+          <li><strong>Code de droit économique, Livre XI</strong></li>
+          <li>droits <strong>patrimoniaux</strong> (€) + <strong>moraux</strong> (lien auteur)</li>
+          <li><strong>droits voisins</strong> = interprètes / producteurs / diffuseurs</li>
+          <li>durée : <strong>70 ans</strong> post mortem (voisins 50, musique 70)</li>
+          <li><strong>droit à l'image</strong> → art. 8 CEDH + art. XI.174 CDE</li>
+          <li><strong>SABAM</strong> = gestion collective</li>
+        </ul>
+      </div>
+      <div class="row"><span class="k">⚠️ Limites / conditions</span>
+        <ul>
+          <li>reproduction <strong>sans accord</strong> = illégale (numérique inclus)</li>
+          <li>IA : <strong>input</strong> (entraînement) / <strong>output</strong> (concurrence)</li>
+          <li>analyse IA OK <strong>sauf sources illégales</strong></li>
+          <li><strong>IA = pas de personnalité juridique</strong> → responsable humain</li>
+        </ul>
+      </div>
+      <div class="row related"><span class="k">🔗 Cas reliés</span>
+        <ul>
+          <li><strong>IA / bibliothèques pirates</strong> → blocage</li>
+          <li><strong>Play Nostalgie</strong> → image artistes sans accord</li>
+          <li><strong>Dubuisson « Bush » / Delvaux</strong> → contrefaçon</li>
+          <li><strong>Ventures Media</strong> → IA + faux journalistes</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- T4 -->
+    <article class="card th" data-type="theme" data-theme="t4">
+      <div class="card-head"><span class="eyebrow">Thème 4</span><span class="badge th">Thème</span></div>
+      <h3>Protection des mineurs</h3>
+      <div class="row"><span class="k">📌 Définition</span><p class="inline">Vigilance <strong>renforcée</strong> dès qu'un mineur est concerné (image, vie privée, identification).</p></div>
+      <div class="row"><span class="k">⚖️ Règle</span>
+        <ul>
+          <li>Art. <strong>24, 25, 27 Code déonto</strong></li>
+          <li><strong>Directive identification</strong> (2014) + <strong>Avis mineurs</strong> (2018)</li>
+          <li>audiovisuel : pas de contenu nuisant au <strong>développement</strong> (directive <strong>SMA</strong>)</li>
+          <li>pub alcool : <strong>art. 4.2</strong> → pas de mineur « ni apparence »</li>
+          <li>pub : <strong>transparence</strong> (DSA + SMA)</li>
+        </ul>
+      </div>
+      <div class="row"><span class="k">⚠️ Limites / conditions</span>
+        <ul>
+          <li>identification directe <strong>ou indirecte</strong> (prénom + lieu)</li>
+          <li><strong>risque d'imitation</strong> (audiovisuel)</li>
+          <li>intérêt général doit être <strong>fort + justifié</strong></li>
+        </ul>
+      </div>
+      <div class="row related"><span class="k">🔗 Cas reliés</span>
+        <ul>
+          <li><strong>Identification mineur (CDJ)</strong> → vie privée violée</li>
+          <li><strong>Bière Filou</strong> → mascotte perçue mineure</li>
+          <li><strong>Radio 220 volts</strong> → risque d'imitation</li>
+          <li><strong>Go Muscu (TikTok/CSA)</strong> → pub cachée, public jeune</li>
+          <li><strong>Photos de classe Facebook</strong> → consentement enfant</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- T5 -->
+    <article class="card th" data-type="theme" data-theme="t5">
+      <div class="card-head"><span class="eyebrow">Thème 5</span><span class="badge th">Thème</span></div>
+      <h3>RGPD &amp; données personnelles</h3>
+      <div class="row"><span class="k">📌 Définition</span><p class="inline">Loi européenne (<strong>25 mai 2018</strong>) protégeant les <strong>données personnelles</strong>.</p></div>
+      <div class="row"><span class="k">⚖️ Règle</span>
+        <ul>
+          <li><strong>donnée perso</strong> = toute info identifiant qqn</li>
+          <li>Art. <strong>5</strong> = principes (transparence, minimisation, sécurité…)</li>
+          <li>Art. <strong>6</strong> = base légale (consentement / <strong>intérêt légitime</strong> / contrat / loi)</li>
+          <li>Art. <strong>7</strong> = consentement <strong>libre · spécifique · éclairé · univoque</strong></li>
+          <li>Art. <strong>17</strong> effacement · Art. <strong>21</strong> opposition</li>
+          <li><strong>APD</strong> (Chambre Contentieuse) · amendes <strong>20 M€ / 4 % CA</strong></li>
+        </ul>
+      </div>
+      <div class="row"><span class="k">⚠️ Limites / conditions</span>
+        <ul>
+          <li>retrait <strong>aussi simple</strong> que l'accord</li>
+          <li>❌ <strong>dark pattern</strong> = consentement invalide</li>
+          <li><strong>masquer ≠ effacer</strong></li>
+          <li><strong>responsable du traitement</strong> = celui qui décide</li>
+        </ul>
+      </div>
+      <div class="row related"><span class="k">🔗 Cas reliés</span>
+        <ul>
+          <li><strong>noyb c. RTL Belgium</strong> → cookies, dark pattern</li>
+          <li><strong>Photos de classe Facebook</strong> → consentement vs intérêt légitime</li>
+          <li><strong>Contribution énergie</strong> → effacement bafoué</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- T6 -->
+    <article class="card th" data-type="theme" data-theme="t6">
+      <div class="card-head"><span class="eyebrow">Thème 6</span><span class="badge th">Thème</span></div>
+      <h3>Déontologie journalistique (Code &amp; CDJ)</h3>
+      <div class="row"><span class="k">📌 Définition</span><p class="inline">Règles que la <strong>profession</strong> se donne, contrôlées par le <strong>CDJ</strong> (autorégulation).</p></div>
+      <div class="row"><span class="k">⚖️ Règle</span>
+        <ul>
+          <li>Code <strong>16/10/2013</strong> (éd. 2023) — <strong>4 piliers</strong> : vérité · indépendance · loyauté · droits des personnes</li>
+          <li>Art. <strong>1</strong> vérité · <strong>3</strong> omission · <strong>5</strong> faits/opinions · <strong>9</strong> liberté rédac · <strong>11</strong> indépendance · <strong>17</strong> loyauté · <strong>19</strong> plagiat · <strong>22</strong> droit de réponse · <strong>24-25</strong> personnes</li>
+          <li><strong>CDJ</strong> = indépendant, traite plaintes, peut <strong>s'autosaisir</strong></li>
+          <li>sanction = <strong>publier la décision</strong> (pas d'amende)</li>
+        </ul>
+      </div>
+      <div class="row"><span class="k">⚠️ Limites / conditions</span>
+        <ul>
+          <li><strong>≠ droit</strong> (tribunaux) → autorégulation</li>
+          <li>juge <strong>article par article</strong> → fondée / partielle / non fondée</li>
+          <li>réseaux sociaux = <strong>activité journalistique</strong> (art. 7)</li>
+          <li>ne juge pas le <strong>choix</strong> d'inviter, mais le <strong>traitement</strong></li>
+        </ul>
+      </div>
+      <div class="row related"><span class="k">🔗 Cas reliés</span>
+        <ul>
+          <li><strong>Ventures Media</strong> → IA + faux profils (fondée)</li>
+          <li><strong>RTL-TVI</strong> → vérification (fondée)</li>
+          <li><strong>Deborsu</strong> → opinion OK (non fondée)</li>
+          <li><strong>SudPresse Bredene</strong> → stigmatisation</li>
+          <li><strong>Une DH Musk</strong> → banalisation</li>
+          <li><strong>La Cible c. DH/LaLibre</strong> → omission (art. 3)</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- T7 -->
+    <article class="card th" data-type="theme" data-theme="t7">
+      <div class="card-head"><span class="eyebrow">Thème 7</span><span class="badge th">Thème</span></div>
+      <h3>Cordon sanitaire médiatique</h3>
+      <div class="row"><span class="k">📌 Définition</span><p class="inline">Empêcher l'extrême droite de s'exprimer <strong>en direct</strong> / sans encadrement dans les médias.</p></div>
+      <div class="row"><span class="k">⚖️ Règle</span>
+        <ul>
+          <li><strong>politique</strong> (1989) = pas d'alliance</li>
+          <li><strong>médiatique</strong> (~1990) = pas de tribune directe</li>
+          <li>initié <strong>RTBF</strong> · formalisé <strong>CSA</strong> (1999) · obligatoire audiovisuel FWB</li>
+          <li>étendu presse via <strong>recommandation CDJ</strong> (2011)</li>
+          <li>cadre : <strong>2 décrets</strong> + règlement CSA + déontologie (art. 9)</li>
+        </ul>
+      </div>
+      <div class="row"><span class="k">⚠️ Limites / conditions</span>
+        <ul>
+          <li>❌ interdit : <strong>direct</strong> / tribune libre</li>
+          <li>✅ permis : <strong>citer</strong> si <strong>contrôle éditorial</strong> + contexte</li>
+          <li>presse écrite = <strong>engagement déonto</strong>, pas loi stricte</li>
+          <li><strong>citer ≠ tribune</strong></li>
+        </ul>
+      </div>
+      <div class="row related"><span class="k">🔗 Cas reliés</span>
+        <ul>
+          <li><strong>RTBF / Trump différé</strong> → liberté éditoriale</li>
+          <li><strong>La Cible c. DH/LaLibre (Nation)</strong> → cordon non rompu, omission</li>
+          <li><strong>Bardella</strong> → encadrement renforcé</li>
+          <li><strong>Une DH Musk</strong> → mise à distance manquée</li>
+        </ul>
+      </div>
+    </article>
+  </section>
+
+  <!-- ============================================================= -->
+  <!-- ======================  FICHES CAS  ========================== -->
+  <!-- ============================================================= -->
+  <section class="deck" id="sec-cas">
+    <div class="sechead ca"><span class="tag">TYPE 2</span><h2>Fiches CAS</h2><span class="ln"></span></div>
+
+    <!-- C1 -->
+    <article class="card ca" data-type="cas" data-theme="t1 t2">
+      <div class="card-head"><span class="eyebrow">Cas · Liberté d'expression / Délit de presse</span><span class="badge ca">Cas</span></div>
+      <h3>Eerdekens c. Mélanie De Groote</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">Journaliste (mag. <em>Wilfried</em>) vs ex-bourgmestre d'Andenne · portrait « Le vieux fauve d'Andenne » (33 témoins, 3 ans).</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li><strong>diffamation</strong> · <strong>calomnie</strong> · atteinte vie privée</li><li>timing = avant élections (procédure-bâillon)</li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li>Tribunal Namur <strong>12/02/2026</strong> → journaliste <strong>gagne</strong></li><li>intérêt général + enquête sérieuse · Eerdekens paie <strong>4000 €</strong></li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">Liberté d'expression</span><span class="chip">Délit de presse</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">La presse prime quand l'enquête est sérieuse et le sujet d'intérêt public.</p></div>
+    </article>
+
+    <!-- C2 -->
+    <article class="card ca" data-type="cas" data-theme="t2">
+      <div class="card-head"><span class="eyebrow">Cas · Délit de presse</span><span class="badge ca">Cas</span></div>
+      <h3>Cécile Djunga</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">Animatrice RTBF · messages <strong>racistes</strong> reçus sur Facebook après un passage TV.</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li>propos <strong>publics, ciblés, racistes</strong> → délit de presse</li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li><strong>correctionnalisé</strong> (mobile raciste)</li><li>Trib. correctionnel Bruxelles <strong>2021</strong> · auteur <strong>condamné</strong></li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">Délit de presse</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">Réseaux sociaux = pas de non-droit ; le mobile raciste change le tribunal.</p></div>
+    </article>
+
+    <!-- C3 -->
+    <article class="card ca" data-type="cas" data-theme="t1 t6">
+      <div class="card-head"><span class="eyebrow">Cas · Liberté d'expression / Déontologie</span><span class="badge ca">Cas</span></div>
+      <h3>Es Sense (podcast RTBF)</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">Société de développement perso vs RTBF · podcast critique « Les Clés du Succès ».</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li>seulement des témoignages négatifs · manipulation supposée</li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li>CDJ → <strong>non fondée</strong> · témoignages représentatifs</li><li><strong>liberté rédactionnelle</strong> respectée</li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">Liberté d'expression</span><span class="chip">Déontologie</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">Un contenu critique n'est pas pour autant une faute déontologique.</p></div>
+    </article>
+
+    <!-- C4 -->
+    <article class="card ca" data-type="cas" data-theme="t1 t6">
+      <div class="card-head"><span class="eyebrow">Cas · Liberté d'expression / Déontologie</span><span class="badge ca">Cas</span></div>
+      <h3>RTL-TVI (restaurant chinois)</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">Émission « Je vous dérange » · suggère un resto refusant des clients belges · caméra cachée.</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li>pas de <strong>vérification</strong> · imprudence</li><li><strong>droit de réponse</strong> ignoré · risque de <strong>stigmatisation</strong></li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li>CDJ → <strong>fondée</strong> · caméra cachée jugée OK ici</li><li>sanction = <strong>publier la décision</strong></li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">Liberté d'expression</span><span class="chip">Déontologie</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">La liberté ne dispense jamais de vérifier et de donner la parole à l'accusé.</p></div>
+    </article>
+
+    <!-- C5 -->
+    <article class="card ca" data-type="cas" data-theme="t3">
+      <div class="card-head"><span class="eyebrow">Cas · Droits d'auteur &amp; IA</span><span class="badge ca">Cas</span></div>
+      <h3>IA &amp; bibliothèques pirates (LibGen)</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">Auteurs/éditeurs (ADEB, SCAM…) vs sites pirates (LibGen, Z-Library, SciHub) servant à entraîner l'IA.</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li>reproduction d'œuvres <strong>sans autorisation</strong></li><li>entraînement IA sur <strong>sources illégales</strong></li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li>Trib. entreprise Bruxelles <strong>16/07/2025</strong> · « usage illégal manifeste »</li><li><strong>blocage</strong> + amende <strong>500 000 €/infraction</strong></li><li>IA = <strong>pas de personnalité juridique</strong></li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">Droits d'auteur &amp; IA</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">L'IA ne supprime pas le droit d'auteur ; la responsabilité reste humaine.</p></div>
+    </article>
+
+    <!-- C6 -->
+    <article class="card ca" data-type="cas" data-theme="t3">
+      <div class="card-head"><span class="eyebrow">Cas · Droits d'auteur &amp; IA</span><span class="badge ca">Cas</span></div>
+      <h3>Play Nostalgie (pub IA)</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">Pub radio · images d'artistes (U2, Prince, Queen…) <strong>modifiées par IA</strong> (lip-sync).</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li><strong>pub trompeuse</strong> · image d'artistes <strong>sans consentement</strong></li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li><strong>JEP</strong> → problématique (absence de preuve du consentement)</li><li><strong>modification / arrêt</strong> demandé</li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">Droits d'auteur &amp; IA</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">Utiliser l'image/voix d'un artiste exige son consentement, IA ou pas.</p></div>
+    </article>
+
+    <!-- C7 -->
+    <article class="card ca" data-type="cas" data-theme="t3">
+      <div class="card-head"><span class="eyebrow">Cas · Droits d'auteur</span><span class="badge ca">Cas</span></div>
+      <h3>Brasserie Dubuisson « Bush » / Delvaux</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">Pub bière « Bush » (1997) inspirée de Paul Delvaux (« Trains du soir ») · SABAM pour la Fondation.</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li><strong>contrefaçon</strong> · reproduction non autorisée</li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li>débat <strong>inspiration vs contrefaçon</strong></li><li>défense : image issue d'une <strong>maquette/photo</strong>, pas du tableau</li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">Droits d'auteur</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">Frontière floue entre inspiration artistique et contrefaçon.</p></div>
+    </article>
+
+    <!-- C8 -->
+    <article class="card ca" data-type="cas" data-theme="t4">
+      <div class="card-head"><span class="eyebrow">Cas · Protection des mineurs</span><span class="badge ca">Cas</span></div>
+      <h3>Identification d'un mineur (CDJ)</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">Article de presse permettant d'<strong>identifier un enfant</strong> mineur non concerné par l'affaire.</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li><strong>identification</strong> + <strong>vie privée</strong> d'un mineur</li><li>imprécision sur certains faits</li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li>CDJ → <strong>partiellement fondée</strong> · art. <strong>1, 3, 24, 25</strong></li><li>enquête jugée sérieuse (reste rejeté)</li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">Protection des mineurs</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">Même via une republication, le média répond de l'identification d'un mineur.</p></div>
+    </article>
+
+    <!-- C9 -->
+    <article class="card ca" data-type="cas" data-theme="t4">
+      <div class="card-head"><span class="eyebrow">Cas · Protection des mineurs</span><span class="badge ca">Cas</span></div>
+      <h3>Bière Filou (mascotte)</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">Mascotte « Filou » tenant une bière · perçue par une partie du public comme un mineur.</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li><strong>art. 4.2</strong> Convention pub alcool → mineur (ou apparence) interdit</li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li><strong>JEP</strong> (+ Jury d'appel) → visuel <strong>interdit</strong></li><li>marque déposée ≠ usage toujours autorisé</li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">Protection des mineurs</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">Une marque déposée ne prime pas sur la protection des mineurs.</p></div>
+    </article>
+
+    <!-- C10 -->
+    <article class="card ca" data-type="cas" data-theme="t4">
+      <div class="card-head"><span class="eyebrow">Cas · Protection des mineurs</span><span class="badge ca">Cas</span></div>
+      <h3>Radio « 220 volts »</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">Séquence radio · jeu mettant en scène un acte potentiellement dangereux, à une heure accessible aux jeunes.</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li>contenu nuisible · <strong>risque d'imitation</strong> (public jeune)</li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li>émission <strong>arrêtée</strong> · radio reconnaît un message problématique</li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">Protection des mineurs</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">La responsabilité sociale du média couvre aussi le risque d'imitation.</p></div>
+    </article>
+
+    <!-- C11 -->
+    <article class="card ca" data-type="cas" data-theme="t5">
+      <div class="card-head"><span class="eyebrow">Cas · RGPD</span><span class="badge ca">Cas</span></div>
+      <h3>noyb c. RTL Belgium (cookies)</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">ONG <strong>noyb</strong> vs RTL Belgium · bannière cookies trompeuse.</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li>pas de « Refuser » au 1er niveau</li><li><strong>dark pattern</strong> (couleurs) · retrait difficile</li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li><strong>APD 11/10/2024</strong> · <strong>2 violations</strong> confirmées</li><li>astreinte <strong>20 000 €/jour/injonction</strong></li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">RGPD</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">« Le design d'une interface est un acte juridique » — le consentement doit être réel.</p></div>
+    </article>
+
+    <!-- C12 -->
+    <article class="card ca" data-type="cas" data-theme="t5 t4">
+      <div class="card-head"><span class="eyebrow">Cas · RGPD / Mineurs</span><span class="badge ca">Cas</span></div>
+      <h3>Photos de classe sur Facebook</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">École publie des photos d'élèves (groupe Facebook parents) · un père avait refusé le consentement.</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li>publication <strong>sans consentement</strong> · vie privée de l'enfant</li><li>sécurité du groupe</li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li>APD → photo de <strong>groupe</strong> = <strong>intérêt légitime</strong></li><li><strong>portrait</strong> = consentement · <strong>droit d'opposition</strong> (art. 21)</li><li>école = <strong>responsable du traitement</strong></li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">RGPD</span><span class="chip">Protection des mineurs</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">Portrait → consentement ; groupe/ambiance → intérêt légitime.</p></div>
+    </article>
+
+    <!-- C13 -->
+    <article class="card ca" data-type="cas" data-theme="t5">
+      <div class="card-head"><span class="eyebrow">Cas · RGPD</span><span class="badge ca">Cas</span></div>
+      <h3>Entreprise « contribution énergie »</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">Client demande la <strong>suppression</strong> de ses données · continue à recevoir appels &amp; pubs pendant des mois.</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li>non-respect <strong>effacement</strong> (art. 17) + <strong>opposition</strong> (art. 21)</li><li>données <strong>masquées</strong> au lieu d'effacées</li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li><strong>APD</strong> (Chambre Contentieuse) · amende <strong>245 000 → 172 431 €</strong></li><li>excuse « employé débordé » <strong>rejetée</strong></li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">RGPD</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">Masquer ≠ effacer ; le responsable ne se défausse pas sur un employé.</p></div>
+    </article>
+
+    <!-- C14 -->
+    <article class="card ca" data-type="cas" data-theme="t6 t3">
+      <div class="card-head"><span class="eyebrow">Cas · Déontologie / IA</span><span class="badge ca">Cas</span></div>
+      <h3>CDJ c. Ventures Media</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">Autosaisine <strong>18/03/2026</strong> · articles <strong>générés par IA</strong> signés de <strong>faux journalistes</strong> (test, plusieurs mois).</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li>indépendance (art. 9, 11) · vérité (1, 3, 4)</li><li>méthodes <strong>déloyales</strong> (17) · <strong>plagiat</strong> (19)</li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li><strong>plainte fondée</strong> · public <strong>trompé</strong> · publication 48 h</li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">Déontologie</span><span class="chip">Droits d'auteur &amp; IA</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">L'IA reste un outil sous contrôle de la rédaction ; faux profils = malhonnêteté grave.</p></div>
+    </article>
+
+    <!-- C15 -->
+    <article class="card ca" data-type="cas" data-theme="t6 t7">
+      <div class="card-head"><span class="eyebrow">Cas · Déontologie / Cordon sanitaire</span><span class="badge ca">Cas</span></div>
+      <h3>Une DH « Ils foncent, on traîne » (Musk)</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">Une de La Dernière Heure · photo d'Elon Musk faisant un <strong>salut nazi</strong>, sans explication.</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li><strong>banalisation</strong> d'un geste grave · <strong>contexte</strong> absent</li><li>manque de <strong>responsabilité sociale</strong></li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li>CDJ <strong>03/09/2025</strong> → <strong>contraire à la déontologie</strong></li><li>titre n'a pas permis de saisir la gravité (art. 1, 22, 24)</li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">Déontologie</span><span class="chip">Cordon sanitaire</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">Un titre accrocheur ne peut pas empêcher de comprendre la gravité d'une info.</p></div>
+    </article>
+
+    <!-- C16 -->
+    <article class="card ca" data-type="cas" data-theme="t6">
+      <div class="card-head"><span class="eyebrow">Cas · Déontologie</span><span class="badge ca">Cas</span></div>
+      <h3>Affaire Deborsu (vaccination)</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">Journaliste F. Deborsu poste un avis <strong>pro-vaccin</strong> sur Facebook (2021) · plainte d'un citoyen.</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li>abus de statut · opinion non signalée · stigmatisation supposée</li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li>CDJ → <strong>non fondée</strong> · opinion claire (art. 5 OK)</li><li><strong>neutralité non obligatoire</strong> · pas de stigmatisation (art. 28)</li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">Déontologie</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">Sur les réseaux = activité journalistique, mais un journaliste peut donner une opinion assumée.</p></div>
+    </article>
+
+    <!-- C17 -->
+    <article class="card ca" data-type="cas" data-theme="t6">
+      <div class="card-head"><span class="eyebrow">Cas · Déontologie</span><span class="badge ca">Cas</span></div>
+      <h3>SudPresse — Bredene (« voyeurs gay »)</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">Article (2013) sur le voyeurisme sur une plage naturiste · titre « Chasse aux voyeurs <strong>gay</strong> à Bredene ».</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li><strong>stigmatisation</strong> des homosexuels</li><li>amalgame homosexualité / perversion (titre)</li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li>CDJ saisi · enjeu central = <strong>titre stigmatisant</strong> (art. 28, respect des personnes)</li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">Déontologie</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">Le vocabulaire et le titre peuvent à eux seuls violer le respect des personnes.</p></div>
+    </article>
+
+    <!-- C18 -->
+    <article class="card ca" data-type="cas" data-theme="t7">
+      <div class="card-head"><span class="eyebrow">Cas · Cordon sanitaire</span><span class="badge ca">Cas</span></div>
+      <h3>RTBF / discours Trump en léger différé</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">RTBF diffuse l'investiture de Trump (20/01/2025) en <strong>différé 3 min</strong>, au nom du cordon sanitaire.</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li>« <strong>censure</strong> » / atteinte à l'info brute (G.-L. Bouchez, MR)</li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li>CDJ <strong>06/02/2026</strong> → <strong>n'ouvre pas de dossier</strong></li><li>liberté éditoriale (art. 9) · diffusé <strong>en entier</strong> = pas de censure</li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">Cordon sanitaire</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">Choisir direct / différé relève de la liberté éditoriale, pas de la censure.</p></div>
+    </article>
+
+    <!-- C19 -->
+    <article class="card ca" data-type="cas" data-theme="t7 t6">
+      <div class="card-head"><span class="eyebrow">Cas · Cordon sanitaire / Déontologie</span><span class="badge ca">Cas</span></div>
+      <h3>La Cible ASBL c. DH.be / LaLibre.be (Nation)</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">Article sur une manif gilets jaunes · interview d'un cadre du parti <strong>Nation</strong> (extrême droite).</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li>cordon <strong>rompu</strong> (tribune) · <strong>omission</strong> (art. 3) · incitation discrimination (art. 28)</li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li>CDJ <strong>07/10/2020</strong> · cordon <strong>non rompu</strong> · art. 28 <strong>non fondé</strong></li><li>art. <strong>3 fondé</strong> (omission) · publication 48 h</li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">Cordon sanitaire</span><span class="chip">Déontologie</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">Citer ≠ tribune ; la faute vient de l'omission, pas du cordon.</p></div>
+    </article>
+
+    <!-- C20 -->
+    <article class="card ca" data-type="cas" data-theme="t7">
+      <div class="card-head"><span class="eyebrow">Cas · Cordon sanitaire</span><span class="badge ca">Cas</span></div>
+      <h3>Interview Bardella</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">Figure d'extrême droite invitée dans une émission d'actualité · interview jugée peu critique.</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li>manque de <strong>contradiction</strong> · déséquilibre · visibilité = tribune ?</li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li>CDJ ne juge pas le <strong>choix</strong> d'inviter (liberté éditoriale)</li><li>attendu : <strong>encadrement renforcé</strong> (issue prévue : partiellement fondée)</li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">Cordon sanitaire</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">Plus l'invité est controversé, plus la distance critique doit être forte.</p></div>
+    </article>
+
+    <!-- C21 -->
+    <article class="card ca" data-type="cas" data-theme="t4">
+      <div class="card-head"><span class="eyebrow">Cas · Protection des mineurs</span><span class="badge ca">Cas</span></div>
+      <h3>« Go Muscu » — TikTok fitness (CSA)</h3>
+      <div class="row"><span class="k">🧩 Qui / Quoi</span><p class="inline">Étude CSA (fév. 2026) · 400 vidéos fitness de 10 créateurs belges · public majoritairement <strong>jeune</strong>.</p></div>
+      <div class="row"><span class="k">❌ Reproche</span><ul><li><strong>publicité cachée</strong> (6/10 ne déclarent pas)</li><li>normes corporelles · conseils non certifiés</li></ul></div>
+      <div class="row"><span class="k">✅ Décision</span><ul><li><strong>rapport</strong> (pas de sanction) · CSA compétent <strong>FWB</strong> seulement</li><li>cadre à adapter (<strong>DSA</strong> / directive <strong>SMA</strong>)</li></ul></div>
+      <div class="row"><span class="k">📎 Thèmes</span><div class="themechips"><span class="chip">Protection des mineurs</span></div></div>
+      <div class="row illustrate"><span class="k">💡 Illustre</span><p class="inline">Les influenceurs peuvent relever du droit audiovisuel ; la pub doit être déclarée.</p></div>
+    </article>
+
+  </section>
+
+  <p class="no-result" id="noResult">Aucune fiche pour ce filtre.</p>
+
+  <footer class="foot">
+    À vérifier avec tes notes : l'issue exacte de quelques cas non tranchés au moment du cours (<strong>SudPresse/Bredene</strong>, <strong>Bardella</strong>, <strong>Dubuisson</strong>) et les numéros d'articles. Impression A5 : menu → Imprimer → A5 (filtres et note non imprimés).
+  </footer>
+
+</div>
+
+<script>
+  (function(){
+    var typeBtns = document.querySelectorAll('#typeFilter button');
+    var themeBtns = document.querySelectorAll('#themeFilter button');
+    var cards = document.querySelectorAll('.card[data-type]');
+    var secTheme = document.getElementById('sec-theme');
+    var secCas = document.getElementById('sec-cas');
+    var noResult = document.getElementById('noResult');
+    var curType = 'all', curTheme = 'all';
+
+    function apply(){
+      var total = 0, nTheme = 0, nCas = 0;
+      cards.forEach(function(el){
+        var t = el.getAttribute('data-type');
+        var themes = el.getAttribute('data-theme').split(' ');
+        var okType = (curType === 'all') || (t === curType);
+        var okTheme = (curTheme === 'all') || (themes.indexOf(curTheme) !== -1);
+        var show = okType && okTheme;
+        el.style.display = show ? '' : 'none';
+        if(show){ total++; if(t==='theme') nTheme++; else nCas++; }
+      });
+      secTheme.style.display = nTheme ? '' : 'none';
+      secCas.style.display = nCas ? '' : 'none';
+      noResult.style.display = total ? 'none' : 'block';
+    }
+
+    typeBtns.forEach(function(b){
+      b.addEventListener('click', function(){
+        typeBtns.forEach(function(x){x.classList.remove('active');});
+        b.classList.add('active'); curType = b.getAttribute('data-t'); apply();
+        window.scrollTo({top:0,behavior:'smooth'});
+      });
+    });
+    themeBtns.forEach(function(b){
+      b.addEventListener('click', function(){
+        themeBtns.forEach(function(x){x.classList.remove('active');});
+        b.classList.add('active'); curTheme = b.getAttribute('data-th'); apply();
+        window.scrollTo({top:0,behavior:'smooth'});
+      });
+    });
+  })();
+</script>
+</body>
+</html>
