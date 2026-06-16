@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — Droit et déontologie de l'information</title>
+<style>
+  :root{
+    --bg:#0f1226;
+    --card:#1a1f3d;
+    --card2:#222a52;
+    --accent:#8a4f7d;
+    --accent2:#b65f9c;
+    --good:#2e9e6b;
+    --bad:#d2455b;
+    --text:#eef0fa;
+    --muted:#a6acce;
+    --border:#34406f;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(160deg,#0f1226 0%,#171a38 100%);
+    color:var(--text);
+    min-height:100vh;
+    line-height:1.5;
+    padding:16px;
+  }
+  .wrap{
+    max-width:720px;
+    margin:0 auto;
+  }
+  header{
+    text-align:center;
+    padding:18px 8px 6px;
+  }
+  header h1{
+    font-size:1.45rem;
+    margin:0 0 4px;
+    background:linear-gradient(90deg,var(--accent2),#d98fc2);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  header p{
+    margin:0;
+    color:var(--muted);
+    font-size:.9rem;
+  }
+
+  /* progress */
+  .progress-info{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:.85rem;
+    color:var(--muted);
+    margin:18px 0 8px;
+  }
+  .bar{
+    height:10px;
+    background:var(--card2);
+    border-radius:20px;
+    overflow:hidden;
+    border:1px solid var(--border);
+  }
+  .bar > div{
+    height:100%;
+    width:0;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    border-radius:20px;
+    transition:width .35s ease;
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:22px 20px;
+    margin-top:16px;
+    box-shadow:0 12px 30px rgba(0,0,0,.35);
+  }
+  .cat{
+    display:inline-block;
+    font-size:.72rem;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    background:var(--card2);
+    color:var(--accent2);
+    border:1px solid var(--border);
+    padding:4px 10px;
+    border-radius:20px;
+    margin-bottom:14px;
+    font-weight:600;
+  }
+  .question{
+    font-size:1.12rem;
+    font-weight:600;
+    margin:0 0 18px;
+  }
+  .choices{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .choice{
+    text-align:left;
+    background:var(--card2);
+    color:var(--text);
+    border:1.5px solid var(--border);
+    border-radius:12px;
+    padding:13px 15px;
+    font-size:1rem;
+    cursor:pointer;
+    transition:transform .08s ease,border-color .15s ease,background .15s ease;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .choice .key{
+    flex:0 0 26px;
+    height:26px;
+    border-radius:7px;
+    background:var(--bg);
+    border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    font-size:.85rem;font-weight:700;color:var(--muted);
+  }
+  .choice:hover:not(:disabled){border-color:var(--accent2);transform:translateY(-1px);}
+  .choice:disabled{cursor:default;opacity:1;}
+  .choice.correct{
+    border-color:var(--good);
+    background:rgba(46,158,107,.18);
+  }
+  .choice.correct .key{background:var(--good);color:#fff;border-color:var(--good);}
+  .choice.wrong{
+    border-color:var(--bad);
+    background:rgba(210,69,91,.16);
+  }
+  .choice.wrong .key{background:var(--bad);color:#fff;border-color:var(--bad);}
+  .choice.dim{opacity:.55;}
+
+  .feedback{
+    margin-top:16px;
+    padding:14px 15px;
+    border-radius:12px;
+    font-size:.95rem;
+    display:none;
+    border:1px solid var(--border);
+  }
+  .feedback.show{display:block;animation:fade .25s ease;}
+  .feedback.ok{background:rgba(46,158,107,.14);border-color:var(--good);}
+  .feedback.no{background:rgba(210,69,91,.12);border-color:var(--bad);}
+  .feedback .verdict{font-weight:700;margin-bottom:4px;display:block;}
+  .feedback.ok .verdict{color:#5fd6a0;}
+  .feedback.no .verdict{color:#ff8497;}
+  .feedback .rule{color:var(--text);}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  .actions{
+    margin-top:18px;
+    display:flex;
+    justify-content:flex-end;
+  }
+  .btn{
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    padding:12px 24px;
+    font-size:1rem;
+    font-weight:600;
+    cursor:pointer;
+    transition:opacity .15s ease,transform .08s ease;
+  }
+  .btn:hover{opacity:.92;transform:translateY(-1px);}
+  .btn[disabled]{opacity:.4;cursor:not-allowed;transform:none;}
+  .btn.ghost{
+    background:transparent;
+    border:1.5px solid var(--accent2);
+    color:var(--accent2);
+  }
+
+  /* start + results screens */
+  .center{text-align:center;}
+  .lead{color:var(--muted);font-size:.95rem;margin:8px 0 0;}
+  .grid-info{
+    display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:18px 0 6px;
+  }
+  .pill{
+    font-size:.78rem;background:var(--card2);border:1px solid var(--border);
+    border-radius:20px;padding:6px 12px;color:var(--muted);
+  }
+  .score-big{
+    font-size:3rem;font-weight:800;margin:6px 0 0;
+    background:linear-gradient(90deg,var(--accent2),#e0a6cf);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .score-sub{color:var(--muted);margin:0 0 6px;}
+  .recap-title{font-weight:700;margin:22px 0 8px;font-size:1rem;}
+  .recap-item{
+    background:var(--card2);border:1px solid var(--border);
+    border-left:4px solid var(--bad);
+    border-radius:10px;padding:12px 14px;margin-bottom:10px;text-align:left;
+  }
+  .recap-item .rq{font-weight:600;font-size:.92rem;margin-bottom:6px;}
+  .recap-item .ra{font-size:.85rem;color:var(--muted);}
+  .recap-item .ra b{color:#5fd6a0;}
+  .perfect{
+    background:rgba(46,158,107,.14);border:1px solid var(--good);
+    border-radius:12px;padding:16px;color:#9ee9c4;font-weight:600;
+  }
+  footer{
+    text-align:center;color:var(--muted);font-size:.75rem;
+    margin:26px 0 8px;padding:0 10px;
+  }
+  .hidden{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Droit &amp; déontologie de l'information</h1>
+    <p>Quiz interactif — contexte belge francophone</p>
+  </header>
+
+  <!-- START SCREEN -->
+  <section id="start" class="card center">
+    <h2 style="margin-top:4px;">Prêt·e à réviser ?</h2>
+    <p class="lead">Un quiz pour t'entraîner sur les instances, la liberté d'expression, le délit de presse, les droits d'auteur &amp; l'IA, la protection des mineurs, le RGPD, la déontologie (Code CDJ), le cordon sanitaire et les cas concrets vus au cours.</p>
+    <div class="grid-info">
+      <span class="pill">CDJ · APD · JEP · SABAM</span>
+      <span class="pill">QCM &amp; Vrai/Faux</span>
+      <span class="pill">Feedback immédiat</span>
+      <span class="pill" id="qcount-pill"></span>
+    </div>
+    <p class="lead" style="margin-top:14px;">Les questions sont mélangées aléatoirement à chaque lancement.</p>
+    <div style="margin-top:20px;">
+      <button class="btn" id="startBtn">Commencer le quiz</button>
+    </div>
+  </section>
+
+  <!-- QUIZ SCREEN -->
+  <section id="quiz" class="hidden">
+    <div class="progress-info">
+      <span id="progressLabel">Question 1/—</span>
+      <span id="scoreLabel">Score : 0</span>
+    </div>
+    <div class="bar"><div id="barFill"></div></div>
+
+    <div class="card">
+      <span class="cat" id="qCat"></span>
+      <p class="question" id="qText"></p>
+      <div class="choices" id="qChoices"></div>
+      <div class="feedback" id="qFeedback">
+        <span class="verdict" id="fVerdict"></span>
+        <span class="rule" id="fRule"></span>
+      </div>
+      <div class="actions">
+        <button class="btn" id="nextBtn" disabled>Question suivante</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS SCREEN -->
+  <section id="results" class="hidden card center">
+    <div class="cat">Résultat final</div>
+    <p class="score-big" id="finalScore">0/0</p>
+    <p class="score-sub" id="finalPct"></p>
+    <p class="lead" id="finalMsg"></p>
+    <div id="recapZone" style="margin-top:10px;"></div>
+    <div style="margin-top:22px;">
+      <button class="btn" id="restartBtn">Recommencer</button>
+    </div>
+  </section>
+
+  <footer>
+    Outil de révision pédagogique basé sur les supports du cours. Les avis du CDJ, décisions de l'APD/JEP et références juridiques sont simplifiés à des fins d'entraînement.
+  </footer>
+</div>
+
+<script>
+/* ===================== BANQUE DE QUESTIONS ===================== */
+const QUESTIONS = [
+
+/* ---------- INSTANCES ---------- */
+{
+  cat:"Les instances",
+  q:"Que signifie le sigle CDJ ?",
+  type:"qcm",
+  choices:[
+    "Conseil de déontologie journalistique",
+    "Comité de défense des journalistes",
+    "Cour de justice déontologique",
+    "Conseil des droits journalistiques"
+  ],
+  answer:0,
+  explain:"Le CDJ est le Conseil de déontologie journalistique : l'instance d'autorégulation des journalistes en Belgique francophone."
+},
+{
+  cat:"Les instances",
+  q:"Le CDJ est un tribunal qui peut infliger des amendes pénales.",
+  type:"vf", answer:1,
+  explain:"Faux. Le CDJ est un organe d'autorégulation, pas un tribunal. Sa sanction principale est la publication de sa décision."
+},
+{
+  cat:"Les instances",
+  q:"Quelle est la sanction typique prononcée par le CDJ lorsqu'une plainte est jugée fondée ?",
+  type:"qcm",
+  choices:[
+    "Une peine de prison pour le journaliste",
+    "Une amende de 500 000 €",
+    "L'obligation de publier sa décision (avis)",
+    "La fermeture du média"
+  ],
+  answer:2,
+  explain:"Le CDJ ne peut pas condamner pénalement : il rend un avis et peut imposer la publication de sa décision (parfois en page d'accueil)."
+},
+{
+  cat:"Les instances",
+  q:"Que signifie APD, l'autorité chargée du RGPD en Belgique ?",
+  type:"qcm",
+  choices:[
+    "Agence de protection digitale",
+    "Autorité de protection des données",
+    "Administration des plateformes et données",
+    "Autorité publique du numérique"
+  ],
+  answer:1,
+  explain:"L'APD (Autorité de protection des données) est le « gendarme » belge du RGPD ; sa Chambre Contentieuse rend les décisions."
+},
+{
+  cat:"Les instances",
+  q:"Au sein de l'APD, quel organe rend les décisions et inflige les sanctions ?",
+  type:"qcm",
+  choices:[
+    "Le service marketing",
+    "La Chambre Contentieuse",
+    "Le tribunal correctionnel",
+    "Le CSA"
+  ],
+  answer:1,
+  explain:"C'est la Chambre Contentieuse de l'APD qui traite les plaintes et prononce les sanctions (avertissements, amendes, astreintes)."
+},
+{
+  cat:"Les instances",
+  q:"Que peut faire le JEP (Jury d'Éthique Publicitaire) face à une publicité problématique ?",
+  type:"qcm",
+  choices:[
+    "Prononcer une peine de prison",
+    "Demander la modification ou l'arrêt de la publicité",
+    "Infliger une amende de 20 millions €",
+    "Saisir directement la cour d'assises"
+  ],
+  answer:1,
+  explain:"Le JEP est un organe d'autorégulation : il ne prononce pas de sanctions pénales mais peut exiger la modification ou l'arrêt d'une publicité."
+},
+{
+  cat:"Les instances",
+  q:"Le JEP est un véritable tribunal de l'État belge.",
+  type:"vf", answer:1,
+  explain:"Faux. Le JEP est un mécanisme d'autorégulation du secteur publicitaire, pas une juridiction."
+},
+{
+  cat:"Les instances",
+  q:"Quel est le rôle principal de la SABAM en Belgique ?",
+  type:"qcm",
+  choices:[
+    "Réguler les chaînes de télévision",
+    "Protéger les données personnelles",
+    "Percevoir et redistribuer les droits d'auteur",
+    "Sanctionner les délits de presse"
+  ],
+  answer:2,
+  explain:"La SABAM est une société de gestion collective qui perçoit et redistribue les rémunérations liées à l'exploitation des œuvres."
+},
+{
+  cat:"Les instances",
+  q:"En principe, devant quelle juridiction un délit de presse devrait-il être jugé ?",
+  type:"qcm",
+  choices:[
+    "La cour d'assises",
+    "Le tribunal de police",
+    "Le Conseil d'État",
+    "Le JEP"
+  ],
+  answer:0,
+  explain:"Le délit de presse relève en principe de la cour d'assises — procédure lourde — sauf correctionnalisation pour les propos racistes/xénophobes."
+},
+{
+  cat:"Les instances",
+  q:"Quelle instance supervise, en Fédération Wallonie-Bruxelles, les services de médias audiovisuels et les créateurs de contenu établis sur son territoire ?",
+  type:"qcm",
+  choices:[
+    "Le CSA (Conseil supérieur de l'audiovisuel)",
+    "La SABAM",
+    "L'APD",
+    "Le JEP"
+  ],
+  answer:0,
+  explain:"Le CSA régule l'audiovisuel en FWB. Limite importante : il n'est compétent que pour les acteurs établis en FWB, pas pour TikTok comme plateforme."
+},
+
+/* ---------- LIBERTÉ D'EXPRESSION ---------- */
+{
+  cat:"Liberté d'expression",
+  q:"Quel article de la Convention européenne des droits de l'homme (CEDH) garantit la liberté d'expression ?",
+  type:"qcm",
+  choices:["L'article 6","L'article 8","L'article 10","L'article 28"],
+  answer:2,
+  explain:"L'article 10 de la CEDH protège la liberté d'expression. (L'article 8 protège, lui, la vie privée et le droit à l'image.)"
+},
+{
+  cat:"Liberté d'expression",
+  q:"Une personnalité publique (homme politique) doit accepter un niveau de critique plus élevé qu'un simple citoyen.",
+  type:"vf", answer:0,
+  explain:"Vrai. Du fait de leur rôle public, les responsables politiques doivent tolérer une critique plus large que les particuliers."
+},
+{
+  cat:"Liberté d'expression",
+  q:"Qu'est-ce qu'une procédure-bâillon (SLAPP) ?",
+  type:"qcm",
+  choices:[
+    "Une procédure accélérée pour publier vite",
+    "Une action en justice visant à intimider ou faire taire un journaliste",
+    "Une autorisation préalable de publication",
+    "Un droit de réponse imposé par la loi"
+  ],
+  answer:1,
+  explain:"Une SLAPP (procédure-bâillon) est une action judiciaire destinée à intimider un journaliste et à dissuader les enquêtes critiques."
+},
+{
+  cat:"Liberté d'expression",
+  q:"La liberté d'expression est un droit absolu, sans aucune limite.",
+  type:"vf", answer:1,
+  explain:"Faux. Elle connaît des limites : vérification, prudence, respect des personnes, interdiction de la haine, etc."
+},
+{
+  cat:"Liberté d'expression",
+  q:"Selon le Code de déontologie, comment distingue-t-on les faits du commentaire ?",
+  type:"qcm",
+  choices:[
+    "Les faits et le commentaire sont tous deux libres",
+    "Les faits sont contraignants, le commentaire est libre",
+    "Le commentaire est contraignant, les faits sont libres",
+    "Tout est contraignant"
+  ],
+  answer:1,
+  explain:"« Les faits sont contraignants ; le commentaire, l'opinion, la critique, la satire sont libres » — un principe clé du Code (art. 10)."
+},
+{
+  cat:"Liberté d'expression",
+  q:"Dans l'affaire Eerdekens vs De Groote, quel droit le tribunal a-t-il fait primer ?",
+  type:"qcm",
+  choices:[
+    "Le droit à la réputation du politique",
+    "Le secret des affaires",
+    "La liberté de la presse",
+    "Le droit à l'oubli"
+  ],
+  answer:2,
+  explain:"Le tribunal a donné raison à la journaliste : sujet d'intérêt général, enquête sérieuse, pas d'intention de nuire → la liberté de la presse prime."
+},
+
+/* ---------- DÉLIT DE PRESSE ---------- */
+{
+  cat:"Délit de presse",
+  q:"Comment peut-on définir un délit de presse ?",
+  type:"qcm",
+  choices:[
+    "Tout retard de publication d'un journal",
+    "La diffusion publique d'un message portant atteinte à une personne ou un groupe",
+    "Une faute d'orthographe dans un article",
+    "Le refus de citer ses sources"
+  ],
+  answer:1,
+  explain:"Le délit de presse vise la diffusion publique, par écrit, d'une opinion portant atteinte à autrui."
+},
+{
+  cat:"Délit de presse",
+  q:"Qu'est-ce que la « correctionnalisation » d'un délit de presse ?",
+  type:"qcm",
+  choices:[
+    "Corriger les fautes d'un article avant publication",
+    "Renvoyer l'affaire devant un tribunal correctionnel plutôt que devant la cour d'assises",
+    "Annuler la plainte",
+    "Transformer une amende en peine de prison"
+  ],
+  answer:1,
+  explain:"La correctionnalisation permet de juger un délit de presse à caractère raciste devant le tribunal correctionnel, et non la cour d'assises."
+},
+{
+  cat:"Délit de presse",
+  q:"Dans l'affaire Cécile Djunga, pourquoi les propos racistes ont-ils pu être jugés par le tribunal correctionnel ?",
+  type:"qcm",
+  choices:[
+    "Parce que la victime était journaliste",
+    "Parce qu'ils avaient un caractère raciste (correctionnalisation)",
+    "Parce qu'ils étaient diffusés à la télévision",
+    "Parce qu'ils étaient anonymes"
+  ],
+  answer:1,
+  explain:"Le caractère raciste des messages a permis la correctionnalisation : jugés au tribunal correctionnel de Bruxelles en 2021, l'auteur a été condamné."
+},
+{
+  cat:"Délit de presse",
+  q:"Des propos racistes publiés publiquement sur Facebook peuvent constituer un délit de presse.",
+  type:"vf", answer:0,
+  explain:"Vrai. Un message public et écrit sur un réseau social peut être qualifié de délit de presse — les réseaux ne sont pas des zones de non-droit."
+},
+{
+  cat:"Délit de presse",
+  q:"Quelle notion désigne une information fausse diffusée avec l'intention volontaire de nuire ?",
+  type:"qcm",
+  choices:["La diffamation","La calomnie","La satire","Le droit de réponse"],
+  answer:1,
+  explain:"La calomnie suppose une information fausse ET l'intention volontaire de nuire. La diffamation porte atteinte à l'honneur sans nécessairement cette intention démontrée."
+},
+
+/* ---------- DROITS D'AUTEUR & IA ---------- */
+{
+  cat:"Droits d'auteur & IA",
+  q:"En Belgique, à partir de quand une œuvre (texte, image…) est-elle protégée par le droit d'auteur ?",
+  type:"qcm",
+  choices:[
+    "Après un dépôt officiel payant",
+    "Automatiquement, dès sa création",
+    "Seulement après publication",
+    "Uniquement si elle est enregistrée à la SABAM"
+  ],
+  answer:1,
+  explain:"En Belgique, toute œuvre originale est protégée automatiquement dès sa création, sans formalité de dépôt."
+},
+{
+  cat:"Droits d'auteur & IA",
+  q:"Combien de temps le droit d'auteur protège-t-il l'œuvre après la mort de l'auteur ?",
+  type:"qcm",
+  choices:["10 ans","30 ans","50 ans","70 ans"],
+  answer:3,
+  explain:"Le droit d'auteur protège l'œuvre jusqu'à 70 ans après la mort de l'auteur."
+},
+{
+  cat:"Droits d'auteur & IA",
+  q:"LibGen, Z-Library ou SciHub sont des exemples de bibliothèques pirates utilisées notamment pour entraîner des IA.",
+  type:"vf", answer:0,
+  explain:"Vrai. Ces « bibliothèques pirates » diffusent illégalement des œuvres protégées, parfois aspirées pour entraîner des modèles d'IA."
+},
+{
+  cat:"Droits d'auteur & IA",
+  q:"L'ordonnance belge « historique » de juillet 2025 concernant LibGen a notamment ordonné…",
+  type:"qcm",
+  choices:[
+    "La fermeture de toutes les IA en Belgique",
+    "Le blocage des sites pirates par les fournisseurs d'accès",
+    "La gratuité totale des livres",
+    "L'interdiction de la SABAM"
+  ],
+  answer:1,
+  explain:"Le tribunal de l'entreprise de Bruxelles a ordonné le blocage des sites pirates (et de leurs miroirs), avec de lourdes amendes pour les intermédiaires récalcitrants."
+},
+{
+  cat:"Droits d'auteur & IA",
+  q:"Dans la décision belge sur les bibliothèques pirates, qui porte la responsabilité juridique des contenus générés par une IA ?",
+  type:"qcm",
+  choices:[
+    "L'IA elle-même, qui a une personnalité juridique",
+    "Personne, car l'IA est neutre",
+    "L'être humain ou l'organisation derrière l'IA",
+    "Uniquement les fournisseurs d'accès"
+  ],
+  answer:2,
+  explain:"Le jugement rappelle que l'IA n'a pas de personnalité juridique : la responsabilité repose sur l'humain ou l'organisation qui l'utilise."
+},
+{
+  cat:"Droits d'auteur & IA",
+  q:"Que protègent les « droits voisins » du droit d'auteur ?",
+  type:"qcm",
+  choices:[
+    "Les voisins de palier de l'auteur",
+    "Les artistes-interprètes, producteurs et diffuseurs",
+    "Les données personnelles",
+    "Les marques commerciales uniquement"
+  ],
+  answer:1,
+  explain:"Les droits voisins protègent ceux qui participent à la diffusion de l'œuvre : artistes-interprètes, producteurs, diffuseurs."
+},
+{
+  cat:"Droits d'auteur & IA",
+  q:"Le droit à l'image découle du droit au respect de la vie privée (art. 8 CEDH) et exige le consentement, surtout en contexte commercial.",
+  type:"vf", answer:0,
+  explain:"Vrai. Utiliser l'image d'une personne — a fortiori dans une publicité — requiert son consentement (droit à l'image rattaché à l'art. 8 CEDH)."
+},
+{
+  cat:"Droits d'auteur & IA",
+  q:"Dans le cas de la pub Play Nostalgie (artistes modifiés par IA), quelle instance a été saisie et a estimé la pub problématique ?",
+  type:"qcm",
+  choices:["Le CDJ","L'APD","Le JEP","La cour d'assises"],
+  answer:2,
+  explain:"C'est le JEP qui a été saisi : faute de preuve du consentement des artistes, il a demandé la modification ou l'arrêt de la publicité."
+},
+
+/* ---------- PROTECTION DES MINEURS ---------- */
+{
+  cat:"Protection des mineurs",
+  q:"Que signifie DSA, le règlement européen qui encadre TikTok et les grandes plateformes ?",
+  type:"qcm",
+  choices:[
+    "Data Security Agreement",
+    "Digital Services Act",
+    "Données et Services Audiovisuels",
+    "Direction des Services Algorithmiques"
+  ],
+  answer:1,
+  explain:"Le DSA (Digital Services Act, 2022) impose aux très grandes plateformes transparence, modération et protection des utilisateurs."
+},
+{
+  cat:"Protection des mineurs",
+  q:"La directive SMA impose de protéger les mineurs contre les contenus susceptibles de nuire à leur développement.",
+  type:"vf", answer:0,
+  explain:"Vrai. La directive Services de Médias Audiovisuels (SMA) protège les mineurs contre les contenus pouvant nuire à leur développement physique, mental ou moral."
+},
+{
+  cat:"Protection des mineurs",
+  q:"Quelle est la différence clé entre un service de partage de vidéos (SPV, comme TikTok) et un éditeur SMA ?",
+  type:"qcm",
+  choices:[
+    "Le SPV est payant, le SMA gratuit",
+    "L'éditeur SMA assume une responsabilité éditoriale sur ce qu'il publie",
+    "Le SMA n'existe qu'à l'étranger",
+    "Il n'y a aucune différence"
+  ],
+  answer:1,
+  explain:"Sur un SPV, chacun publie sans contrôle préalable. L'éditeur SMA, lui, exerce un contrôle éditorial et en est responsable (transparence pub, protection des mineurs…)."
+},
+{
+  cat:"Protection des mineurs",
+  q:"Quel article du Code de déontologie demande une attention particulière aux personnes fragiles, dont les mineurs ?",
+  type:"qcm",
+  choices:["L'article 9","L'article 17","L'article 27","L'article 19"],
+  answer:2,
+  explain:"L'article 27 demande aux journalistes d'être particulièrement attentifs aux personnes en situation fragile, comme les mineurs ou les victimes."
+},
+{
+  cat:"Protection des mineurs",
+  q:"Le CSA peut directement sanctionner TikTok en tant que plateforme, où que se trouve son siège.",
+  type:"vf", answer:1,
+  explain:"Faux. Le CSA n'est compétent que pour les acteurs établis en FWB ; TikTok, dont le siège est à l'étranger, échappe à sa compétence directe."
+},
+{
+  cat:"Protection des mineurs",
+  q:"Dans le cas de la bière « Filou » (tapis de comptoir avec un enfant), quelle instance a jugé la publicité non conforme ?",
+  type:"qcm",
+  choices:["Le CDJ","Le JEP","L'APD","Le tribunal correctionnel"],
+  answer:1,
+  explain:"Le JEP a jugé le visuel contraire à la Convention alcool : une figure enfantine associée à une boisson alcoolisée pose problème au regard de la protection des mineurs."
+},
+
+/* ---------- RGPD ---------- */
+{
+  cat:"RGPD",
+  q:"Quand le RGPD est-il entré en vigueur ?",
+  type:"qcm",
+  choices:["Le 25 mai 2016","Le 25 mai 2018","Le 1er janvier 2020","Le 16 juillet 2025"],
+  answer:1,
+  explain:"Le RGPD, règlement européen, est entré en vigueur le 25 mai 2018."
+},
+{
+  cat:"RGPD",
+  q:"Selon le RGPD, un consentement valable doit être…",
+  type:"qcm",
+  choices:[
+    "Implicite et général",
+    "Libre, spécifique, éclairé et univoque",
+    "Donné une seule fois pour toujours",
+    "Donné uniquement par écrit papier"
+  ],
+  answer:1,
+  explain:"Le consentement doit être libre, spécifique, éclairé et univoque (art. 4.11). Un clic forcé ou trompé n'est pas un consentement valable."
+},
+{
+  cat:"RGPD",
+  q:"Le RGPD permet des amendes pouvant atteindre 20 millions € ou 4 % du chiffre d'affaires mondial.",
+  type:"vf", answer:0,
+  explain:"Vrai. Les sanctions peuvent grimper jusqu'à 20 M€ ou 4 % du CA mondial, et doivent être effectives, proportionnées et dissuasives."
+},
+{
+  cat:"RGPD",
+  q:"Quel principe du RGPD impose de ne collecter que les données strictement nécessaires ?",
+  type:"qcm",
+  choices:[
+    "La maximisation des données",
+    "La minimisation des données",
+    "La conservation illimitée",
+    "La transparence commerciale"
+  ],
+  answer:1,
+  explain:"La minimisation des données impose de ne collecter que l'essentiel au regard de la finalité poursuivie."
+},
+{
+  cat:"RGPD",
+  q:"Dans le cas des photos de classe sur Facebook, quelle distinction l'APD a-t-elle retenue pour la base légale ?",
+  type:"qcm",
+  choices:[
+    "Photo en couleur vs noir et blanc",
+    "Photo de groupe (intérêt légitime) vs portrait ciblé (consentement)",
+    "Photo en intérieur vs extérieur",
+    "Photo récente vs ancienne"
+  ],
+  answer:1,
+  explain:"Foule ≠ portrait : une photo de groupe peut relever de l'intérêt légitime, tandis qu'un portrait ciblé exige le consentement."
+},
+{
+  cat:"RGPD",
+  q:"Dans l'affaire des photos d'école, l'APD a sanctionné l'école sur deux points malgré la légalité des photos de groupe. Lesquels ?",
+  type:"qcm",
+  choices:[
+    "Le prix et la qualité des photos",
+    "Le manque de transparence et la faille de sécurité",
+    "La publicité et le plagiat",
+    "Le racisme et la diffamation"
+  ],
+  answer:1,
+  explain:"L'APD a délivré deux avertissements : manque de transparence (parents non informés de leur droit d'opposition) et faille de sécurité (accès mal contrôlé)."
+},
+{
+  cat:"RGPD",
+  q:"Le « dark pattern » (ex. bouton « Accepter » bien visible, refus quasi invisible) est conforme au RGPD.",
+  type:"vf", answer:1,
+  explain:"Faux. Un design trompeur qui oriente vers l'acceptation fausse le consentement : l'APD a confirmé ce type de violation (cas des cookies)."
+},
+{
+  cat:"RGPD",
+  q:"Qui est le « responsable du traitement » dans le cas des photos d'école ?",
+  type:"qcm",
+  choices:[
+    "Facebook",
+    "Les parents",
+    "L'école, car elle décide des publications",
+    "Le fournisseur d'accès internet"
+  ],
+  answer:2,
+  explain:"L'école est responsable du traitement : c'est elle qui décide de publier les photos, donc elle assume les obligations du RGPD."
+},
+
+/* ---------- DÉONTOLOGIE (Code CDJ) ---------- */
+{
+  cat:"Déontologie (Code CDJ)",
+  q:"Un journaliste omet volontairement un fait essentiel qui changerait la compréhension de l'article. Quel article du Code est en cause ?",
+  type:"qcm",
+  choices:[
+    "L'article 1 (recherche de la vérité)",
+    "L'article 3 (déformation / omission d'information)",
+    "L'article 25 (vie privée)",
+    "L'article 19 (plagiat)"
+  ],
+  answer:1,
+  explain:"L'article 3 interdit de déformer une information ou d'en éliminer une essentielle — c'est la faute retenue dans l'affaire DH.be / Nation."
+},
+{
+  cat:"Déontologie (Code CDJ)",
+  q:"Quel article fonde l'obligation centrale de rechercher et respecter la vérité, de vérifier ses informations ?",
+  type:"qcm",
+  choices:["L'article 1","L'article 9","L'article 17","L'article 28"],
+  answer:0,
+  explain:"L'article 1 pose le principe fondateur : rechercher et respecter la vérité, vérifier la véracité, rapporter avec honnêteté."
+},
+{
+  cat:"Déontologie (Code CDJ)",
+  q:"L'usage de la caméra cachée (enregistrement clandestin) est en principe une méthode déloyale.",
+  type:"vf", answer:0,
+  explain:"Vrai. L'article 17 classe l'enregistrement clandestin parmi les méthodes déloyales — sauf si quatre conditions cumulatives sont réunies (intérêt général, impossibilité d'agir autrement, proportionnalité, validation de la rédaction en chef)."
+},
+{
+  cat:"Déontologie (Code CDJ)",
+  q:"Reproduire textuellement le travail d'un autre sans en citer l'auteur correspond à quelle infraction déontologique ?",
+  type:"qcm",
+  choices:[
+    "La diffamation (art. 25)",
+    "Le plagiat (art. 19)",
+    "L'omission (art. 3)",
+    "Le conflit d'intérêts (art. 12)"
+  ],
+  answer:1,
+  explain:"L'article 19 interdit le plagiat : reproduire un travail original sans en mentionner la source/l'auteur."
+},
+{
+  cat:"Déontologie (Code CDJ)",
+  q:"Quel article impose de respecter la vie privée et de ne pas révéler de données non pertinentes au regard de l'intérêt général ?",
+  type:"qcm",
+  choices:["L'article 1","L'article 17","L'article 25","L'article 9"],
+  answer:2,
+  explain:"L'article 25 protège la vie privée : pas de données personnelles non pertinentes au regard de l'intérêt général."
+},
+{
+  cat:"Déontologie (Code CDJ)",
+  q:"Un titre stigmatisant qui associe une orientation sexuelle à un comportement négatif relève surtout de quel article ?",
+  type:"qcm",
+  choices:[
+    "L'article 28 (caractéristiques personnelles / non-discrimination)",
+    "L'article 1 (vérité)",
+    "L'article 19 (plagiat)",
+    "L'article 9 (indépendance)"
+  ],
+  answer:0,
+  explain:"L'article 28 interdit stéréotypes, stigmatisations et toute incitation même indirecte à la discrimination, au racisme et à la xénophobie."
+},
+{
+  cat:"Déontologie (Code CDJ)",
+  q:"Un journaliste qui publie sur un réseau social accessible au public n'est plus tenu par la déontologie.",
+  type:"vf", answer:1,
+  explain:"Faux. L'article 7 précise que la déontologie s'applique quel que soit le support, y compris l'usage professionnel des réseaux sociaux."
+},
+
+/* ---------- CORDON SANITAIRE ---------- */
+{
+  cat:"Cordon sanitaire",
+  q:"Le cordon sanitaire médiatique est une loi belge contraignante.",
+  type:"vf", answer:1,
+  explain:"Faux. C'est avant tout un accord informel/déontologique entre médias francophones (formalisé par le CSA pour l'audiovisuel), pas une loi pénale."
+},
+{
+  cat:"Cordon sanitaire",
+  q:"Quel est le principe central du cordon sanitaire médiatique ?",
+  type:"qcm",
+  choices:[
+    "Interdire de citer tout parti politique",
+    "Éviter de donner la parole en direct à des partis identifiés comme antidémocratiques/liberticides",
+    "Obliger les médias à inviter l'extrême droite",
+    "Supprimer tout débat politique à la télévision"
+  ],
+  answer:1,
+  explain:"Le cordon vise à éviter de laisser s'exprimer en direct des partis tenant des propos racistes, xénophobes ou antidémocratiques, sans contrôle éditorial."
+},
+{
+  cat:"Cordon sanitaire",
+  q:"Citer un représentant d'extrême droite dans un article, avec contextualisation, viole automatiquement le cordon sanitaire.",
+  type:"vf", answer:1,
+  explain:"Faux. On peut citer ces partis si le journaliste garde le contrôle éditorial (sélection, contextualisation). Le cordon vise la parole libre en direct."
+},
+{
+  cat:"Cordon sanitaire",
+  q:"Dans l'affaire DH.be / mouvement Nation (gilets jaunes), sur quel fondement la plainte a-t-elle été jugée FONDÉE par le CDJ ?",
+  type:"qcm",
+  choices:[
+    "L'article 28 (incitation à la discrimination)",
+    "La rupture du cordon sanitaire",
+    "L'article 3 (omission d'information essentielle)",
+    "Le plagiat (art. 19)"
+  ],
+  answer:2,
+  explain:"Seul l'art. 3 a été retenu : le journaliste a omis d'expliquer que Nation cherchait à récupérer les gilets jaunes. Cordon sanitaire et art. 28 ont été écartés."
+},
+{
+  cat:"Cordon sanitaire",
+  q:"Quelle a été la conséquence concrète imposée à DH.be et LaLibre.be dans cette affaire ?",
+  type:"qcm",
+  choices:[
+    "Une amende de 500 000 €",
+    "La fermeture des sites",
+    "L'affichage d'un message en page d'accueil 48h + un lien permanent vers l'avis du CDJ",
+    "Une peine de prison pour le journaliste"
+  ],
+  answer:2,
+  explain:"Sanction typiquement déontologique : message en page d'accueil pendant 48h et lien permanent sous l'article renvoyant à l'avis du CDJ."
+},
+{
+  cat:"Cordon sanitaire",
+  q:"Quand le cordon sanitaire politique a-t-il été initialement créé en Belgique ?",
+  type:"qcm",
+  choices:["En 1971","En 1989","En 2011","En 2024"],
+  answer:1,
+  explain:"Le cordon sanitaire politique date de 1989 ; le cordon sanitaire médiatique apparaît peu après, vers 1990."
+},
+{
+  cat:"Cordon sanitaire",
+  q:"Dans l'affaire du discours de Trump diffusé en léger différé, le CDJ a estimé que la RTBF avait violé la déontologie.",
+  type:"vf", answer:1,
+  explain:"Faux. Le CDJ n'a pas ouvert de dossier : diffuser un discours en léger différé relève de la liberté rédactionnelle (art. 9), sans censure ni coupure."
+},
+
+/* ---------- CAS CONCRETS / SYNTHÈSE ---------- */
+{
+  cat:"Cas concrets",
+  q:"Dans le cas RTL-TVI (restaurant chinois), quel a été le verdict du CDJ ?",
+  type:"qcm",
+  choices:[
+    "Plainte non fondée, aucune faute",
+    "Plainte fondée : manque de vérification, RTL-TVI doit publier la décision",
+    "Amende de 172 431 €",
+    "Renvoi en cour d'assises"
+  ],
+  answer:1,
+  explain:"Plainte fondée : manquements à la vérification, à la prudence et au droit de réponse. RTL-TVI est sanctionné par l'obligation de publier la décision (la caméra cachée étant, elle, jugée acceptable ici)."
+},
+{
+  cat:"Cas concrets",
+  q:"Dans le cas RTBF / podcast « Es Sense », qu'a décidé le CDJ ?",
+  type:"qcm",
+  choices:[
+    "Plainte fondée, podcast retiré",
+    "Plainte non fondée : liberté rédactionnelle respectée, enquête sérieuse",
+    "Renvoi devant l'APD",
+    "Amende RGPD"
+  ],
+  answer:1,
+  explain:"Plainte non fondée : enquête de deux ans, nombreux témoignages (positifs et négatifs), parole donnée aux fondateurs → liberté rédactionnelle respectée. Le podcast reste diffusé."
+},
+{
+  cat:"Cas concrets",
+  q:"Dans l'affaire Ventures Media (2026), qu'a gravement reproché le CDJ à l'éditeur ?",
+  type:"qcm",
+  choices:[
+    "Avoir publié des contenus générés par IA signés de faux profils de journalistes",
+    "Avoir piraté LibGen",
+    "Avoir refusé un droit de réponse",
+    "Avoir diffusé Trump en direct"
+  ],
+  answer:0,
+  explain:"L'éditeur a diffusé, hors contrôle des rédactions, des contenus générés par IA signés par de faux journalistes — violant notamment les art. 1, 3, 4, 9, 11, 17 et 19."
+},
+{
+  cat:"Cas concrets",
+  q:"Dans l'affaire Ventures Media, quelle « sanction » le CDJ a-t-il demandée ?",
+  type:"qcm",
+  choices:[
+    "Une amende pénale",
+    "La publication d'un texte sur la page d'accueil des sites pendant 48h",
+    "La saisie des serveurs",
+    "Le retrait de la carte de presse à vie"
+  ],
+  answer:1,
+  explain:"Le CDJ a invité Ventures Media à publier, pendant 48h et dans les 7 jours, un texte reconnaissant l'infraction sur la page d'accueil de ses magazines."
+},
+{
+  cat:"Cas concrets",
+  q:"L'utilisation de faux profils de journalistes (photos générées par IA, identités fictives) est admise si le contenu est de qualité.",
+  type:"vf", answer:1,
+  explain:"Faux. Le recours à de faux profils présentés comme journalistiques est prohibé : c'est une méthode malhonnête et déloyale vis-à-vis du public (art. 17)."
+},
+{
+  cat:"Cas concrets",
+  q:"Dans l'affaire SABAM / Brasserie Dubuisson (pub « Bush » inspirée de Delvaux), pourquoi la SABAM a-t-elle perdu ?",
+  type:"qcm",
+  choices:[
+    "Le tribunal a reconnu la contrefaçon",
+    "Pour un motif procédural : son mandat était trop limité (action irrecevable)",
+    "La pub n'existait pas",
+    "Delvaux avait donné son accord"
+  ],
+  answer:1,
+  explain:"Le tribunal n'a pas tranché la contrefaçon : il a déclaré l'action irrecevable car le premier mandat de la SABAM était trop limité. La procédure a primé sur le fond."
+},
+
+/* ---------- DROIT vs DÉONTOLOGIE ---------- */
+{
+  cat:"Droit vs déontologie",
+  q:"Quelle phrase distingue le mieux le droit de la déontologie ?",
+  type:"qcm",
+  choices:[
+    "Le droit concerne la morale ; la déontologie concerne la loi",
+    "Le droit concerne la légalité ; la déontologie concerne les valeurs et l'éthique professionnelle",
+    "Les deux sont identiques",
+    "La déontologie est toujours plus contraignante que la loi"
+  ],
+  answer:1,
+  explain:"Le droit s'intéresse à la légalité (ce qui est légal/illégal) ; la déontologie s'intéresse aux valeurs et à l'éthique de la profession."
+},
+{
+  cat:"Droit vs déontologie",
+  q:"Une amende infligée par un tribunal relève du droit ; un avis publié par le CDJ relève de la déontologie.",
+  type:"vf", answer:0,
+  explain:"Vrai. Le tribunal applique la loi (sanctions juridiques) ; le CDJ rend des avis déontologiques (sanctions morales/professionnelles)."
+},
+{
+  cat:"Droit vs déontologie",
+  q:"Un même comportement (ex. une enquête publiée) peut être à la fois légal et contraire à la déontologie.",
+  type:"vf", answer:0,
+  explain:"Vrai. Légalité et déontologie sont deux plans distincts : un contenu peut être licite mais violer une règle professionnelle (et inversement)."
+},
+{
+  cat:"Droit vs déontologie",
+  q:"Face à une publicité jugée trompeuse, quelle voie relève de l'autorégulation (déontologie du secteur) plutôt que d'un tribunal ?",
+  type:"qcm",
+  choices:[
+    "La cour d'assises",
+    "Le JEP",
+    "Le tribunal correctionnel",
+    "L'APD"
+  ],
+  answer:1,
+  explain:"Le JEP est un mécanisme d'autorégulation (éthique publicitaire) : il agit sur la base d'un code professionnel, pas d'une condamnation judiciaire."
+}
+
+];
+
+/* ===================== LOGIQUE DU QUIZ ===================== */
+let order = [];
+let current = 0;
+let score = 0;
+let missed = [];
+
+const el = id => document.getElementById(id);
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+document.getElementById('qcount-pill').textContent = QUESTIONS.length + " questions";
+
+function startQuiz(){
+  order = shuffle(QUESTIONS.map((_,i)=>i));
+  current = 0; score = 0; missed = [];
+  el('start').classList.add('hidden');
+  el('results').classList.add('hidden');
+  el('quiz').classList.remove('hidden');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const q = QUESTIONS[order[current]];
+  const total = order.length;
+
+  // progress
+  el('progressLabel').textContent = "Question " + (current+1) + "/" + total;
+  el('scoreLabel').textContent = "Score : " + score;
+  el('barFill').style.width = ((current)/total*100) + "%";
+
+  el('qCat').textContent = q.cat;
+  el('qText').textContent = q.q;
+
+  // build choices (shuffle order of QCM choices while tracking correct answer)
+  const choicesWrap = el('qChoices');
+  choicesWrap.innerHTML = "";
+
+  let display;
+  if(q.type === "vf"){
+    display = [
+      {text:"Vrai", isCorrect:(q.answer===0)},
+      {text:"Faux", isCorrect:(q.answer===1)}
+    ];
+  } else {
+    display = q.choices.map((c,i)=>({text:c, isCorrect:(i===q.answer)}));
+    display = shuffle(display);
+  }
+
+  const letters = ["A","B","C","D"];
+  display.forEach((opt,i)=>{
+    const btn = document.createElement('button');
+    btn.className = "choice";
+    btn.innerHTML = '<span class="key">'+letters[i]+'</span><span>'+opt.text+'</span>';
+    btn.onclick = ()=>handleAnswer(btn, opt.isCorrect, display, q);
+    choicesWrap.appendChild(btn);
+  });
+
+  // reset feedback + next button
+  const fb = el('qFeedback');
+  fb.className = "feedback";
+  el('nextBtn').disabled = true;
+  el('nextBtn').textContent = (current === total-1) ? "Voir mes résultats" : "Question suivante";
+}
+
+function handleAnswer(btn, isCorrect, display, q){
+  // disable all
+  const btns = el('qChoices').querySelectorAll('.choice');
+  btns.forEach((b,idx)=>{
+    b.disabled = true;
+    if(display[idx].isCorrect){ b.classList.add('correct'); }
+    else { b.classList.add('dim'); }
+  });
+  if(!isCorrect){ btn.classList.remove('dim'); btn.classList.add('wrong'); }
+
+  // feedback
+  const fb = el('qFeedback');
+  if(isCorrect){
+    score++;
+    fb.className = "feedback show ok";
+    el('fVerdict').textContent = "✅ Bonne réponse";
+  } else {
+    fb.className = "feedback show no";
+    el('fVerdict').textContent = "❌ Mauvaise réponse";
+    const correctText = display.find(d=>d.isCorrect).text;
+    missed.push({q:q.q, correct:correctText, explain:q.explain, cat:q.cat});
+  }
+  el('fRule').textContent = q.explain;
+  el('scoreLabel').textContent = "Score : " + score;
+  el('nextBtn').disabled = false;
+}
+
+function nextQuestion(){
+  current++;
+  if(current >= order.length){
+    showResults();
+  } else {
+    renderQuestion();
+  }
+}
+
+function showResults(){
+  el('quiz').classList.add('hidden');
+  el('results').classList.remove('hidden');
+
+  const total = order.length;
+  const pct = Math.round(score/total*100);
+  el('finalScore').textContent = score + "/" + total;
+  el('finalPct').textContent = pct + "% de bonnes réponses";
+
+  let msg;
+  if(pct === 100) msg = "Sans-faute ! Maîtrise complète de la matière. 🎓";
+  else if(pct >= 80) msg = "Très solide — quelques détails à revoir.";
+  else if(pct >= 60) msg = "Bonne base, mais relis les cas et les articles ratés.";
+  else if(pct >= 40) msg = "À retravailler : concentre-toi sur les instances et les articles du Code.";
+  else msg = "Reprends les synthèses de cours, puis relance le quiz.";
+  el('finalMsg').textContent = msg;
+
+  const zone = el('recapZone');
+  zone.innerHTML = "";
+  if(missed.length === 0){
+    const div = document.createElement('div');
+    div.className = "perfect";
+    div.textContent = "Aucune erreur — rien à revoir. Bravo !";
+    zone.appendChild(div);
+  } else {
+    const t = document.createElement('p');
+    t.className = "recap-title";
+    t.textContent = "À revoir (" + missed.length + ") :";
+    zone.appendChild(t);
+    missed.forEach(m=>{
+      const item = document.createElement('div');
+      item.className = "recap-item";
+      item.innerHTML =
+        '<div class="rq">['+m.cat+'] '+m.q+'</div>'+
+        '<div class="ra">Bonne réponse : <b>'+m.correct+'</b><br>'+m.explain+'</div>';
+      zone.appendChild(item);
+    });
+  }
+}
+
+el('startBtn').onclick = startQuiz;
+el('restartBtn').onclick = startQuiz;
+el('nextBtn').onclick = nextQuestion;
+</script>
+</body>
+</html>
