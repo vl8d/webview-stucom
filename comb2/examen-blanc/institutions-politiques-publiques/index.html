@@ -4,495 +4,149 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Examen Blanc - Institutions & Politiques Publiques</title>
+    <meta name="description" content="Entraîne-toi sur 100 questions (5 niveaux) sur les institutions belges, le paysage politique et les politiques culturelles.">
     <link rel="icon" href=":https://content.stucom.tech/isfsc/comb2/instutions-politiques-publiques/belgique.png" />
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Roboto:wght@400;700&display=swap');
-
-        :root {
-            --bg-color: #0a0a0a;
-            --container-bg: #151515;
-            --text-color: #ffffff;
-            --accent-color-1: #00E5FF; /* Cyan électrique */
-            --accent-color-2: #FFEA00; /* Jaune néon */
-            --correct-color: #00E676;
-            --wrong-color: #FF1744;
-            --title-font: 'Montserrat', sans-serif;
-            --main-font: 'Roboto', sans-serif;
-            
-            /* 5 Couleurs de difficulté */
-            --diff-1: #00E676; /* Novice - Vert */
-            --diff-2: #FFEA00; /* Intermédiaire - Jaune */
-            --diff-3: #FF9100; /* Avancé - Orange */
-            --diff-4: #FF1744; /* Expert - Rouge */
-            --diff-5: #D500F9; /* Maître - Violet Néon */
-        }
-
-        body {
-            font-family: var(--main-font);
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 900px;
-            background-color: var(--container-bg);
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
-            border: 1px solid #333;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 40px;
-            border-bottom: 1px solid #333;
-            padding-bottom: 30px;
-        }
-
-        h1 {
-            font-family: var(--title-font);
-            font-weight: 900;
-            font-size: 3.5rem;
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: -2px;
-            color: var(--text-color);
-            line-height: 1.1;
-        }
-
-        h1 span { color: var(--accent-color-1); }
-
-        h2 {
-            font-family: var(--title-font);
-            font-weight: 700;
-            font-size: 1.2rem;
-            margin: 15px 0 0 0;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-        }
-
-        /* --- FILTRES DE DIFFICULTÉ --- */
-        .filters {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            justify-content: center;
-            margin-bottom: 40px;
-        }
-
-        .filter-btn {
-            background-color: #1a1a1a;
-            color: #888;
-            border: 2px solid #333;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-family: var(--title-font);
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 1px;
-        }
-
-        .filter-btn:hover { background-color: #2a2a2a; color: #fff; border-color: #555; }
-        
-        .filter-btn.active {
-            background-color: var(--accent-color-1);
-            color: #000;
-            border-color: var(--accent-color-1);
-        }
-
-        /* --- QUESTIONS --- */
-        .question-block {
-            margin-bottom: 35px;
-            padding: 30px;
-            background-color: #1e1e1e;
-            border-radius: 12px;
-            border-top: 4px solid transparent;
-            position: relative;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
-        .badge {
-            position: absolute;
-            top: -14px;
-            left: 30px;
-            padding: 6px 15px;
-            border-radius: 6px;
-            font-family: var(--title-font);
-            font-weight: 900;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            color: #000;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-        }
-
-        .diff-1 .badge { background-color: var(--diff-1); }
-        .diff-2 .badge { background-color: var(--diff-2); }
-        .diff-3 .badge { background-color: var(--diff-3); }
-        .diff-4 .badge { background-color: var(--diff-4); color: #fff; }
-        .diff-5 .badge { background-color: var(--diff-5); color: #fff; }
-
-        .diff-1 { border-top-color: var(--diff-1); }
-        .diff-2 { border-top-color: var(--diff-2); }
-        .diff-3 { border-top-color: var(--diff-3); }
-        .diff-4 { border-top-color: var(--diff-4); }
-        .diff-5 { border-top-color: var(--diff-5); }
-
-        .question-text {
-            font-family: var(--title-font);
-            font-weight: 700;
-            font-size: 1.25rem;
-            margin-top: 10px;
-            margin-bottom: 25px;
-            color: var(--text-color);
-            line-height: 1.5;
-        }
-
-        .options label {
-            display: flex;
-            align-items: center;
-            margin-bottom: 12px;
-            padding: 16px;
-            background-color: #151515;
-            border-radius: 8px;
-            cursor: pointer;
-            border: 1px solid #333;
-            transition: all 0.2s;
-            font-size: 1.05rem;
-        }
-
-        .options label:hover { background-color: #222; border-color: var(--accent-color-1); }
-
-        input[type="radio"] {
-            appearance: none;
-            width: 22px;
-            height: 22px;
-            border: 2px solid #666;
-            border-radius: 50%;
-            margin-right: 15px;
-            cursor: pointer;
-            position: relative;
-            flex-shrink: 0;
-        }
-
-        input[type="radio"]:checked {
-            border-color: var(--accent-color-1);
-            background-color: var(--accent-color-1);
-        }
-
-        input[type="radio"]:checked::after {
-            content: '';
-            position: absolute;
-            top: 5px; left: 5px;
-            width: 8px; height: 8px;
-            background-color: #000;
-            border-radius: 50%;
-        }
-
-        /* --- BOUTON ET FEEDBACK --- */
-        .btn-submit {
-            width: 100%;
-            padding: 22px;
-            background-color: var(--accent-color-1);
-            color: #000;
-            font-family: var(--title-font);
-            font-weight: 900;
-            font-size: 1.4rem;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            text-transform: uppercase;
-            margin-top: 40px;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 20px rgba(0, 229, 255, 0.2);
-        }
-
-        .btn-submit:hover { background-color: #00B8D4; transform: translateY(-3px); box-shadow: 0 15px 25px rgba(0, 229, 255, 0.3); }
-        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; background-color: #333; color: #888;}
-
-        .feedback {
-            margin-top: 20px;
-            padding: 15px;
-            font-weight: bold;
-            display: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-        }
-        .is-correct .feedback { display: block; background-color: rgba(0, 230, 118, 0.1); color: var(--correct-color); border: 1px solid var(--correct-color); }
-        .is-wrong .feedback { display: block; background-color: rgba(255, 23, 68, 0.1); color: var(--wrong-color); border: 1px solid var(--wrong-color); }
-
-        /* --- SCORE ET HISTORIQUE --- */
-        #finalScore {
-            text-align: center;
-            font-family: var(--title-font);
-            font-weight: 900;
-            font-size: 2.2rem;
-            margin: 40px 0;
-            padding: 25px;
-            background-color: var(--accent-color-2);
-            color: #000;
-            border-radius: 12px;
-            display: none;
-            text-transform: uppercase;
-            box-shadow: 0 10px 30px rgba(255, 234, 0, 0.2);
-        }
-
-        .history-section { margin-top: 60px; padding-top: 40px; border-top: 1px solid #333; }
-        .history-section h3 {
-            font-family: var(--title-font);
-            font-weight: 900;
-            font-size: 1.8rem;
-            text-align: left;
-            color: #fff;
-            text-transform: uppercase;
-            margin-bottom: 25px;
-        }
-        #historyList { list-style: none; padding: 0; }
-        #historyList li {
-            background-color: #1a1a1a;
-            margin-bottom: 15px;
-            padding: 20px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid #2a2a2a;
-        }
-        .hist-date { color: #888; font-size: 0.95rem; display: block; margin-bottom: 5px;}
-        .hist-mode { background: #333; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; color: #fff; text-transform: uppercase; font-family: var(--title-font); font-weight: 700;}
-        .hist-score { font-family: var(--title-font); font-weight: 900; color: var(--accent-color-1); font-size: 1.5rem; }
-
-    </style>
+    <link rel="stylesheet" href="../../assets/quiz-engine.css">
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1><span>Examen</span> Blanc</h1>
-        <h2>Institutions & Politiques Publiques</h2>
-    </header>
+<div id="quiz-app"></div>
 
-    <div class="filters" id="filters">
-        <button class="filter-btn active" data-level="all">Examen Complet (50Q)</button>
-        <button class="filter-btn" data-level="1">Lvl 1 : Novice</button>
-        <button class="filter-btn" data-level="2">Lvl 2 : Intermédiaire</button>
-        <button class="filter-btn" data-level="3">Lvl 3 : Avancé</button>
-        <button class="filter-btn" data-level="4">Lvl 4 : Expert</button>
-        <button class="filter-btn" data-level="5">Lvl 5 : Maître</button>
-    </div>
-
-    <form id="quizForm">
-        <div id="quiz-container">
-            </div>
-        <button type="submit" class="btn-submit" id="submitBtn">Corriger mes réponses</button>
-    </form>
-
-    <div id="finalScore"></div>
-
-    <div class="history-section">
-        <h3>Dashboard des Scores</h3>
-        <ul id="historyList"></ul>
-    </div>
-</div>
-
+<script src="../../assets/quiz-engine.js"></script>
 <script>
     const quizData = [
-        // --- NIVEAU 1 : NOVICE (10 Questions) ---
-        { level: 1, type: 'multiple', question: "La Belgique est-elle officiellement un pays laïc selon sa Constitution ?", options: ["Vrai, c'est l'article 1", "Faux, c'est un pays neutre"], correctAnswer: "Faux, c'est un pays neutre" },
-        { level: 1, type: 'multiple', question: "Dans quelle ville siège le Parlement de la Région wallonne ?", options: ["Bruxelles", "Liège", "Namur"], correctAnswer: "Namur" },
-        { level: 1, type: 'multiple', question: "Courant de pensée né à la Renaissance qui place l'Homme au centre de ses préoccupations :", options: ["Le Marxisme", "L'Humanisme", "Le Structuralisme"], correctAnswer: "L'Humanisme" },
-        { level: 1, type: 'multiple', question: "L'art de flatter le peuple et de jouer sur ses émotions pour s'assurer ses faveurs s'appelle :", options: ["La diplomatie", "La démagogie", "La technocratie"], correctAnswer: "La démagogie" },
-        { level: 1, type: 'multiple', question: "En sociologie, la socialisation primaire a lieu principalement pendant :", options: ["L'enfance (via famille/école)", "La vie active au travail", "La retraite"], correctAnswer: "L'enfance (via famille/école)" },
-        { level: 1, type: 'multiple', question: "En Belgique, le système électoral est caractérisé par :", options: ["Le vote facultatif", "Le vote obligatoire", "Le suffrage capacitaire"], correctAnswer: "Le vote obligatoire" },
-        { level: 1, type: 'multiple', question: "Combien de Régions institutionnelles compte la Belgique ?", options: ["2", "3", "4"], correctAnswer: "3" },
-        { level: 1, type: 'multiple', question: "Laquelle de ces institutions n'est PAS une Communauté en Belgique ?", options: ["La Communauté germanophone", "La Communauté flamande", "La Communauté bruxelloise"], correctAnswer: "La Communauté bruxelloise" },
-        { level: 1, type: 'multiple', question: "L'institution européenne qui regroupe les 27 chefs d'États et de gouvernement est :", options: ["Le Conseil européen", "Le Conseil de l'Europe", "Le Parlement européen"], correctAnswer: "Le Conseil européen" },
-        { level: 1, type: 'multiple', question: "Que signifie le sigle CRISP ?", options: ["Centre de Recherche et d'Information Socio-Politique", "Comité Régional Indépendant des Sciences Politiques", "Centre de Réflexion Interne sur la Politique"], correctAnswer: "Centre de Recherche et d'Information Socio-Politique" },
+        // ============================================================
+        // NIVEAU 1 : NOVICE
+        // ============================================================
+        { level: 1, question: "La Belgique est-elle officiellement un pays laïc selon sa Constitution ?", options: ["Vrai, c'est l'article 1", "Faux, c'est un pays neutre"], correctAnswer: "Faux, c'est un pays neutre" },
+        { level: 1, question: "Dans quelle ville siège le Parlement de la Région wallonne ?", options: ["Bruxelles", "Liège", "Namur"], correctAnswer: "Namur" },
+        { level: 1, question: "Courant de pensée né à la Renaissance qui place l'Homme au centre de ses préoccupations :", options: ["Le Marxisme", "L'Humanisme", "Le Structuralisme"], correctAnswer: "L'Humanisme" },
+        { level: 1, question: "L'art de flatter le peuple et de jouer sur ses émotions pour s'assurer ses faveurs s'appelle :", options: ["La diplomatie", "La démagogie", "La technocratie"], correctAnswer: "La démagogie" },
+        { level: 1, question: "En sociologie, la socialisation primaire a lieu principalement pendant :", options: ["L'enfance (via famille/école)", "La vie active au travail", "La retraite"], correctAnswer: "L'enfance (via famille/école)" },
+        { level: 1, question: "En Belgique, le système électoral est caractérisé par :", options: ["Le vote facultatif", "Le vote obligatoire", "Le suffrage capacitaire"], correctAnswer: "Le vote obligatoire" },
+        { level: 1, question: "Combien de Régions institutionnelles compte la Belgique ?", options: ["2", "3", "4"], correctAnswer: "3" },
+        { level: 1, question: "Laquelle de ces institutions n'est PAS une Communauté en Belgique ?", options: ["La Communauté germanophone", "La Communauté flamande", "La Communauté bruxelloise"], correctAnswer: "La Communauté bruxelloise" },
+        { level: 1, question: "L'institution européenne qui regroupe les 27 chefs d'États et de gouvernement est :", options: ["Le Conseil européen", "Le Conseil de l'Europe", "Le Parlement européen"], correctAnswer: "Le Conseil européen" },
+        { level: 1, question: "Que signifie le sigle CRISP ?", options: ["Centre de Recherche et d'Information Socio-Politique", "Comité Régional Indépendant des Sciences Politiques", "Centre de Réflexion Interne sur la Politique"], correctAnswer: "Centre de Recherche et d'Information Socio-Politique" },
+        { level: 1, question: "En quelle année la Constitution belge a-t-elle été adoptée par le Congrès national ?", options: ["Février 1831", "Juillet 1830", "Janvier 1848"], correctAnswer: "Février 1831", explanation: "La Constitution est adoptée en février 1831 par le Congrès national, l'assemblée constituante réunie après la Révolution belge de 1830." },
+        { level: 1, question: "Qui devient le premier roi des Belges le 21 juillet 1831 ?", options: ["Baudouin Ier", "Léopold Ier", "Albert Ier"], correctAnswer: "Léopold Ier", explanation: "Léopold Ier est intronisé le 21 juillet 1831, date devenue la fête nationale belge." },
+        { level: 1, question: "Où se trouve le siège de l'OTAN ?", options: ["Paris", "Bruxelles", "Genève"], correctAnswer: "Bruxelles", explanation: "L'Organisation du Traité de l'Atlantique nord, fondée en 1949, a son siège à Bruxelles." },
+        { level: 1, question: "Combien d'États membres compte l'ONU aujourd'hui ?", options: ["27", "193", "46"], correctAnswer: "193", explanation: "L'ONU, créée en 1945, compte aujourd'hui 193 États membres, dont la Belgique, membre fondateur." },
+        { level: 1, question: "En quelle année la frontière linguistique belge est-elle définitivement fixée ?", options: ["1962", "1970", "1830"], correctAnswer: "1962", explanation: "La frontière linguistique est tracée définitivement en 1962, avant même la première réforme de l'État de 1970." },
+        { level: 1, question: "Combien de provinces compte la Belgique depuis la scission du Brabant en 1995 ?", options: ["9", "10", "11"], correctAnswer: "10", explanation: "La province de Brabant a été scindée en Brabant flamand et Brabant wallon, portant le nombre total à 10 provinces." },
+        { level: 1, question: "Combien de communes compte la Belgique aujourd'hui, depuis la grande fusion ?", options: ["2739", "596", "581"], correctAnswer: "581", explanation: "On comptait 2739 communes en 1831, 596 jusqu'en 1977, puis 581 depuis la fusion des communes." },
+        { level: 1, question: "Qui a écrit l'ouvrage « Haro sur la Culture » en 1974 ?", options: ["Pierre Bourdieu", "Claude Javeau", "Marcel Hichter"], correctAnswer: "Claude Javeau", explanation: "Le sociologue belge Claude Javeau y interroge la complexité et le flou de la notion de « culture »." },
+        { level: 1, question: "En 1995, la Belgique rejoint pleinement un espace de libre circulation des personnes. Lequel ?", options: ["L'espace Schengen", "La Zone euro", "L'Union douanière"], correctAnswer: "L'espace Schengen", explanation: "L'espace Schengen abolit les frontières intérieures tout en renforçant les contrôles aux frontières extérieures." },
+        { level: 1, question: "Quel Traité de 1957 crée la Communauté économique européenne (CEE) ?", options: ["Le Traité de Paris", "Le Traité de Rome", "Le Traité de Maastricht"], correctAnswer: "Le Traité de Rome", explanation: "Le Traité de Rome (1957) fonde la CEE et met en place la Commission, le Conseil, le Parlement et la Cour de justice." },
 
-        // --- NIVEAU 2 : INTERMÉDIAIRE (10 Questions) ---
-        { level: 2, type: 'multiple', question: "L'engagement des partis à ne pas faire alliance avec l'extrême droite s'appelle :", options: ["Le pacte de sécurité", "Le cordon sanitaire", "La coalition d'exclusion"], correctAnswer: "Le cordon sanitaire" },
-        { level: 2, type: 'multiple', question: "« Donner les clés de compréhension de la société aux citoyens... Renforcer l'esprit critique. » C'est la définition de :", options: ["La culture d'élite", "La propagande", "L'éducation permanente"], correctAnswer: "L'éducation permanente" },
-        { level: 2, type: 'multiple', question: "Comment appelle-t-on, au sein de l'UE, les textes de loi directement obligatoires dès leur entrée en vigueur ?", options: ["Les directives", "Les règlements", "Les résolutions"], correctAnswer: "Les règlements" },
-        { level: 2, type: 'multiple', question: "La théorie des 4 forces (capital économique, social, culturel, symbolique) est attribuée à :", options: ["Guy Rocher", "Claude Javeau", "Pierre Bourdieu"], correctAnswer: "Pierre Bourdieu" },
-        { level: 2, type: 'multiple', question: "Quelle coalition (qualifiée d'atypique) s'est formée en Flandre en 2024 ?", options: ["N-VA + CD&V + Open VLD", "N-VA + CD&V + Vooruit", "N-VA + Vlaams Belang"], correctAnswer: "N-VA + CD&V + Vooruit" },
-        { level: 2, type: 'multiple', question: "Dans quelle ville siège le Parlement Fédéral ?", options: ["Namur", "Anvers", "Bruxelles"], correctAnswer: "Bruxelles" },
-        { level: 2, type: 'multiple', question: "En Belgique, qui nomme les juges à vie pour garantir leur indépendance ?", options: ["Le Premier Ministre", "Le Roi", "Le Parlement"], correctAnswer: "Le Roi" },
-        { level: 2, type: 'multiple', question: "Les provinces belges sont-elles des entités fédérées autonomes ?", options: ["Vrai", "Faux, elles sont soumises à tutelle"], correctAnswer: "Faux, elles sont soumises à tutelle" },
-        { level: 2, type: 'multiple', question: "Dans la théorie des clivages, le clivage 'socio-économique' oppose :", options: ["L'Église et l'État", "Le prolétariat et la bourgeoisie", "Le centre et la périphérie"], correctAnswer: "Le prolétariat et la bourgeoisie" },
-        { level: 2, type: 'multiple', question: "Qui a défini la culture comme un « ensemble complexe qui englobe les connaissances, croyances, arts, lois... » ?", options: ["Jean-Jacques Rousseau", "Edward Tylor", "Claude Javeau"], correctAnswer: "Edward Tylor" },
+        // ============================================================
+        // NIVEAU 2 : INTERMÉDIAIRE
+        // ============================================================
+        { level: 2, question: "L'engagement des partis à ne pas faire alliance avec l'extrême droite s'appelle :", options: ["Le pacte de sécurité", "Le cordon sanitaire", "La coalition d'exclusion"], correctAnswer: "Le cordon sanitaire" },
+        { level: 2, question: "« Donner les clés de compréhension de la société aux citoyens... Renforcer l'esprit critique. » C'est la définition de :", options: ["La culture d'élite", "La propagande", "L'éducation permanente"], correctAnswer: "L'éducation permanente" },
+        { level: 2, question: "Comment appelle-t-on, au sein de l'UE, les textes de loi directement obligatoires dès leur entrée en vigueur ?", options: ["Les directives", "Les règlements", "Les résolutions"], correctAnswer: "Les règlements" },
+        { level: 2, question: "La théorie des 4 forces (capital économique, social, culturel, symbolique) est attribuée à :", options: ["Guy Rocher", "Claude Javeau", "Pierre Bourdieu"], correctAnswer: "Pierre Bourdieu" },
+        { level: 2, question: "Quelle coalition (qualifiée d'atypique) s'est formée en Flandre en 2024 ?", options: ["N-VA + CD&V + Open VLD", "N-VA + CD&V + Vooruit", "N-VA + Vlaams Belang"], correctAnswer: "N-VA + CD&V + Vooruit" },
+        { level: 2, question: "Dans quelle ville siège le Parlement Fédéral ?", options: ["Namur", "Anvers", "Bruxelles"], correctAnswer: "Bruxelles" },
+        { level: 2, question: "En Belgique, qui nomme les juges à vie pour garantir leur indépendance ?", options: ["Le Premier Ministre", "Le Roi", "Le Parlement"], correctAnswer: "Le Roi" },
+        { level: 2, question: "Les provinces belges sont-elles des entités fédérées autonomes ?", options: ["Vrai", "Faux, elles sont soumises à tutelle"], correctAnswer: "Faux, elles sont soumises à tutelle" },
+        { level: 2, question: "Dans la théorie des clivages, le clivage 'socio-économique' oppose :", options: ["L'Église et l'État", "Le prolétariat et la bourgeoisie", "Le centre et la périphérie"], correctAnswer: "Le prolétariat et la bourgeoisie" },
+        { level: 2, question: "Qui a défini la culture comme un « ensemble complexe qui englobe les connaissances, croyances, arts, lois... » ?", options: ["Jean-Jacques Rousseau", "Edward Tylor", "Claude Javeau"], correctAnswer: "Edward Tylor" },
+        { level: 2, question: "Quel article de la Constitution consacre la liberté d'enseignement en Belgique ?", options: ["Article 10", "Article 24", "Article 39"], correctAnswer: "Article 24", explanation: "L'article 24 garantit le droit de créer une école, la gratuité de l'accès et le droit des parents de choisir l'école." },
+        { level: 2, question: "Quelle loi de 1898 reconnaît deux langues officielles et instaure le bilinguisme généralisé en Belgique ?", options: ["La loi d'égalité", "Le décret paysage", "La loi unique"], correctAnswer: "La loi d'égalité", explanation: "La loi d'égalité de 1898 reconnaît le français et le néerlandais comme langues officielles dans tout l'État." },
+        { level: 2, question: "Qui adresse en 1912 une lettre au Roi affirmant « Il n'y a pas de Belges, mais des Wallons et des Flamands » ?", options: ["Jules Destrée", "Robert Schuman", "Marcel Hichter"], correctAnswer: "Jules Destrée", explanation: "Cette lettre est considérée comme un texte fondateur du mouvement wallon revendiquant deux États distincts." },
+        { level: 2, question: "En 1968, quel évènement conduit à la création de Louvain-la-Neuve ?", options: ["Le Walen buiten", "La loi unique", "Le Kazakhgate"], correctAnswer: "Le Walen buiten", explanation: "Les Flamands obtiennent le départ des francophones de l'Université de Louvain, ce qui mènera à la fondation de Louvain-la-Neuve." },
+        { level: 2, question: "Quel surnom porte la coalition fédérale belge de 2020 à 2024, composée de quatre familles politiques ?", options: ["La Suédoise", "La Vivaldi", "L'Arizona"], correctAnswer: "La Vivaldi", explanation: "Vivaldi, en référence aux Quatre Saisons, pour une coalition à quatre couleurs politiques." },
+        { level: 2, question: "À qui doit-on le concept de « démocratie culturelle », qui complète la démocratisation de la culture ?", options: ["Marcel Hichter", "Théodore Adorno", "Frank Lepage"], correctAnswer: "Marcel Hichter", explanation: "Ce sociologue belge propose de passer de « la culture pour tous » à « la culture par chacun et avec chacun »." },
+        { level: 2, question: "Quelle institution a créé, en 1953, la Discothèque nationale de Belgique (devenue plus tard Point Culture) ?", options: ["La Communauté française (FWB)", "Le Fédéral", "L'UNESCO"], correctAnswer: "La Communauté française (FWB)", explanation: "Cet organisme deviendra la Médiathèque de la Communauté française, puis Point Culture." },
+        { level: 2, question: "Combien de sièges francophones sont garantis au parlement bruxellois par l'article 39 de la Constitution ?", options: ["55", "72", "89"], correctAnswer: "72", explanation: "L'article 39 garantit 72 élus francophones et 17 élus néerlandophones, indépendamment des résultats du vote." },
+        { level: 2, question: "Le gouvernement de la Région de Bruxelles-Capitale doit obligatoirement compter au minimum combien de ministres (hors secrétaires d'État) ?", options: ["3", "5", "7"], correctAnswer: "5", explanation: "Un ministre-président et quatre ministres (deux par groupe linguistique), plus trois secrétaires d'État." },
+        { level: 2, question: "Avec Theodor Adorno, quel philosophe et sociologue allemand a développé le concept d'« industrie culturelle » ?", options: ["Max Horkheimer", "Emmanuel Kant", "John Locke"], correctAnswer: "Max Horkheimer", explanation: "Adorno et Horkheimer analysent comment les industries culturelles façonnent des comportements de consommation." },
 
-        // --- NIVEAU 3 : AVANCÉ (10 Questions) ---
-        { level: 3, type: 'multiple', question: "La réforme institutionnelle de 1980 a accompli quoi ?", options: ["La création de la Région Bruxelles-Capitale", "La création de la Région Wallonne et Flamande", "La scission de l'arrondissement BHV"], correctAnswer: "La création de la Région Wallonne et Flamande" },
-        { level: 3, type: 'multiple', question: "Selon Adorno et Horkheimer, à quoi sert principalement la culture de masse ?", options: ["Élever l'esprit critique", "Façonner des comportements de consommation", "Promouvoir l'artisanat local"], correctAnswer: "Façonner des comportements de consommation" },
-        { level: 3, type: 'multiple', question: "Quel phénomène caractérise la Wallonie après la Seconde Guerre mondiale ?", options: ["Un essor économique continu", "Le déclin économique accéléré et la fermeture d'entreprises", "Une hausse massive de sa démographie"], correctAnswer: "Le déclin économique accéléré et la fermeture d'entreprises" },
-        { level: 3, type: 'multiple', question: "Selon Claude Javeau, la culture générale sert essentiellement à :", options: ["Se distinguer des autres classes sociales", "Unifier la population", "Favoriser l'insertion professionnelle"], correctAnswer: "Se distinguer des autres classes sociales" },
-        { level: 3, type: 'multiple', question: "Le pouvoir exécutif fédéral en Belgique comprend :", options: ["La Chambre et le Sénat", "Le Roi et le Gouvernement", "Les Cours et Tribunaux"], correctAnswer: "Le Roi et le Gouvernement" },
-        { level: 3, type: 'multiple', question: "Au sein du Conseil des Ministres fédéral (hors Premier Ministre), la Constitution exige :", options: ["La parité hommes/femmes", "La parité linguistique (francophones/néerlandophones)", "Un nombre proportionnel aux résultats électoraux"], correctAnswer: "La parité linguistique (francophones/néerlandophones)" },
-        { level: 3, type: 'multiple', question: "Le fonctionnement du pouvoir judiciaire a-t-il été copié au niveau des Régions/Communautés ?", options: ["Vrai, chaque entité a sa justice", "Faux, il n'y a pas de pouvoir judiciaire fédéré"], correctAnswer: "Faux, il n'y a pas de pouvoir judiciaire fédéré" },
-        { level: 3, type: 'multiple', question: "Quels éléments ont permis l'émergence de la culture mainstream ?", options: ["Le travail artisanal exclusif", "La société de consommation, médias de masse et société des loisirs", "Uniquement le développement d'internet en 2000"], correctAnswer: "La société de consommation, médias de masse et société des loisirs" },
-        { level: 3, type: 'multiple', question: "Lequel est VRAI concernant l'Espace Schengen ?", options: ["Il ne concerne que les membres de la zone Euro", "Il inclut des États non membres de l'UE comme la Suisse ou la Norvège", "Il a été signé en 2005"], correctAnswer: "Il inclut des États non membres de l'UE comme la Suisse ou la Norvège" },
-        { level: 3, type: 'multiple', question: "Quelle affirmation est vraie concernant les politiques culturelles ?", options: ["La démocratie culturelle a remplacé la démocratisation culturelle avec succès", "La démocratisation et la démocratie culturelles sont deux approches qui se complètent", "La culture élitiste a totalement disparu dans les années 70"], correctAnswer: "La démocratisation et la démocratie culturelles sont deux approches qui se complètent" },
+        // ============================================================
+        // NIVEAU 3 : AVANCÉ
+        // ============================================================
+        { level: 3, question: "La réforme institutionnelle de 1980 a accompli quoi ?", options: ["La création de la Région Bruxelles-Capitale", "La création de la Région Wallonne et Flamande", "La scission de l'arrondissement BHV"], correctAnswer: "La création de la Région Wallonne et Flamande" },
+        { level: 3, question: "Selon Adorno et Horkheimer, à quoi sert principalement la culture de masse ?", options: ["Élever l'esprit critique", "Façonner des comportements de consommation", "Promouvoir l'artisanat local"], correctAnswer: "Façonner des comportements de consommation" },
+        { level: 3, question: "Quel phénomène caractérise la Wallonie après la Seconde Guerre mondiale ?", options: ["Un essor économique continu", "Le déclin économique accéléré et la fermeture d'entreprises", "Une hausse massive de sa démographie"], correctAnswer: "Le déclin économique accéléré et la fermeture d'entreprises" },
+        { level: 3, question: "Selon Claude Javeau, la culture générale sert essentiellement à :", options: ["Se distinguer des autres classes sociales", "Unifier la population", "Favoriser l'insertion professionnelle"], correctAnswer: "Se distinguer des autres classes sociales" },
+        { level: 3, question: "Le pouvoir exécutif fédéral en Belgique comprend :", options: ["La Chambre et le Sénat", "Le Roi et le Gouvernement", "Les Cours et Tribunaux"], correctAnswer: "Le Roi et le Gouvernement" },
+        { level: 3, question: "Au sein du Conseil des Ministres fédéral (hors Premier Ministre), la Constitution exige :", options: ["La parité hommes/femmes", "La parité linguistique (francophones/néerlandophones)", "Un nombre proportionnel aux résultats électoraux"], correctAnswer: "La parité linguistique (francophones/néerlandophones)" },
+        { level: 3, question: "Le fonctionnement du pouvoir judiciaire a-t-il été copié au niveau des Régions/Communautés ?", options: ["Vrai, chaque entité a sa justice", "Faux, il n'y a pas de pouvoir judiciaire fédéré"], correctAnswer: "Faux, il n'y a pas de pouvoir judiciaire fédéré" },
+        { level: 3, question: "Quels éléments ont permis l'émergence de la culture mainstream ?", options: ["Le travail artisanal exclusif", "La société de consommation, médias de masse et société des loisirs", "Uniquement le développement d'internet en 2000"], correctAnswer: "La société de consommation, médias de masse et société des loisirs" },
+        { level: 3, question: "Lequel est VRAI concernant l'Espace Schengen ?", options: ["Il ne concerne que les membres de la zone Euro", "Il inclut des États non membres de l'UE comme la Suisse ou la Norvège", "Il a été signé en 2005"], correctAnswer: "Il inclut des États non membres de l'UE comme la Suisse ou la Norvège" },
+        { level: 3, question: "Quelle affirmation est vraie concernant les politiques culturelles ?", options: ["La démocratie culturelle a remplacé la démocratisation culturelle avec succès", "La démocratisation et la démocratie culturelles sont deux approches qui se complètent", "La culture élitiste a totalement disparu dans les années 70"], correctAnswer: "La démocratisation et la démocratie culturelles sont deux approches qui se complètent" },
+        { level: 3, question: "Quels sont les trois axes identifiés pour réussir la démocratisation culturelle ?", options: ["Décentralisation, gratuité, éducation", "Privatisation, taxation, censure", "Centralisation, tarification, exclusivité"], correctAnswer: "Décentralisation, gratuité, éducation", explanation: "Amener la culture au plus près des gens, réduire les tarifs, et expliquer les codes des différentes formes artistiques." },
+        { level: 3, question: "Combien de centres culturels locaux reconnus par la FWB existe-t-il (hors les trois établissements hors catégorie) ?", options: ["10", "40", "67"], correctAnswer: "67", explanation: "On compte 67 centres culturels locaux et 10 centres culturels régionaux, plus trois hors catégorie (Botanique, Halles de Schaerbeek, Palais des Beaux-Arts de Charleroi)." },
+        { level: 3, question: "Dans la théorie des quatre capitaux de Pierre Bourdieu, lequel manque dans cette liste : économique, social, culturel et... ?", options: ["Symbolique", "Politique", "Numérique"], correctAnswer: "Symbolique", explanation: "Le capital symbolique renvoie aux titres et distinctions qui permettent de se positionner dans la hiérarchie sociale." },
+        { level: 3, question: "Quel terme allemand désigne la culture comme ensemble de savoirs et d'œuvres artistiques (acception humaniste) ?", options: ["Kultur", "Bildung", "Volk"], correctAnswer: "Bildung", explanation: "Kultur désigne ce qui est relatif à une communauté (acception anthropologique), Bildung ce qui relève des savoirs et des arts." },
+        { level: 3, question: "Quelle organisation a fait adopter, en 2005, une Convention sur la diversité des expressions culturelles signée par 150 pays ?", options: ["L'ONU", "L'UNESCO", "L'Union européenne"], correctAnswer: "L'UNESCO", explanation: "Cette Convention consacre le droit souverain des États à mener des politiques culturelles : l'exception culturelle." },
+        { level: 3, question: "Combien de pays composent l'espace Schengen aujourd'hui, d'après le cours ?", options: ["27", "29", "46"], correctAnswer: "29", explanation: "L'espace Schengen compte 29 pays, dont certains hors UE (Norvège, Islande, Suisse, Liechtenstein)." },
+        { level: 3, question: "Quels pays membres de l'UE ne font PAS partie de l'espace Schengen, selon le cours ?", options: ["Chypre et Irlande", "Belgique et Pays-Bas", "France et Allemagne"], correctAnswer: "Chypre et Irlande", explanation: "Deux États membres de l'UE restent en dehors de Schengen : Chypre et l'Irlande." },
+        { level: 3, question: "Quelle part du budget total de la FWB est consacrée à l'Enseignement ?", options: ["15%", "50%", "73%"], correctAnswer: "73%", explanation: "L'Enseignement absorbe l'essentiel du budget de la FWB (environ 11 milliards), laissant 15% pour Santé, Culture, Audiovisuel et Sport réunis." },
+        { level: 3, question: "Frederick Winslow Taylor et Henry Ford sont cités dans le cours à propos de quoi ?", options: ["Les méthodes de production standardisée appliquées à l'industrie culturelle", "La théorie des clivages politiques", "La création de l'Union européenne"], correctAnswer: "Les méthodes de production standardisée appliquées à l'industrie culturelle", explanation: "Travail à la chaîne, division du travail : les industries culturelles empruntent ces méthodes pour standardiser leur production." },
+        { level: 3, question: "Combien de villes créatives UNESCO se trouvent en Belgique francophone, selon le cours ?", options: ["Une seule (Namur, arts numériques)", "Trois (Namur, Liège, Mons)", "Aucune"], correctAnswer: "Une seule (Namur, arts numériques)", explanation: "Le réseau des villes créatives UNESCO comprend trois villes belges, dont une seule francophone : Namur." },
 
-        // --- NIVEAU 4 : EXPERT (10 Questions) ---
-        { level: 4, type: 'multiple', question: "Lors des élections de juin 2024, quel parti francophone a eu la plus forte progression ?", options: ["Le MR", "Le PTB", "Les Engagés"], correctAnswer: "Les Engagés" },
-        { level: 4, type: 'multiple', question: "« Le pouvoir corrompt, le pouvoir absolu corrompt absolument. » Quel principe limite cela ?", options: ["Le principe de proportionnalité", "Le principe d'alternance", "Le suffrage censitaire"], correctAnswer: "Le principe d'alternance" },
-        { level: 4, type: 'multiple', question: "L'idée principale derrière la 'démocratisation de la culture' est :", options: ["Que la culture populaire doit dominer", "Que la culture doit venir à la rencontre des citoyens à un prix raisonnable", "Que tout individu est un artiste"], correctAnswer: "Que la culture doit venir à la rencontre des citoyens à un prix raisonnable" },
-        { level: 4, type: 'multiple', question: "Quel a été l'un des constats d'échec de la démocratisation culturelle stricte ?", options: ["Les classes populaires ont montré une résistance face à la culture perçue comme 'élitiste'", "Les prix des musées sont devenus trop élevés", "Il y avait trop d'offres culturelles disponibles"], correctAnswer: "Les classes populaires ont montré une résistance face à la culture perçue comme 'élitiste'" },
-        { level: 4, type: 'multiple', question: "En Belgique, le pouvoir législatif au niveau fédéral est exercé par :", options: ["Le Roi, la Chambre et le Sénat", "Uniquement la Chambre des Représentants", "Le Gouvernement et le Roi"], correctAnswer: "Le Roi, la Chambre et le Sénat" },
-        { level: 4, type: 'multiple', question: "Laquelle de ces réformes de l'État a installé la Région de Bruxelles-Capitale ?", options: ["La réforme de 1970", "La réforme de 1980", "La réforme de 1988-1989"], correctAnswer: "La réforme de 1988-1989" },
-        { level: 4, type: 'multiple', question: "Quelle est la différence fondamentale entre le Conseil de l'Europe et le Conseil européen ?", options: ["Le premier est basé à Strasbourg (droits de l'homme, 46 pays), le second est l'institution de l'UE (27 pays)", "Le premier gère l'Euro, le second gère les frontières", "Il n'y en a aucune, ce sont des synonymes"], correctAnswer: "Le premier est basé à Strasbourg (droits de l'homme, 46 pays), le second est l'institution de l'UE (27 pays)" },
-        { level: 4, type: 'multiple', question: "La Constitution limite le nombre de ministres du gouvernement fédéral à :", options: ["10 maximum", "15 maximum", "Il n'y a pas de limite légale"], correctAnswer: "15 maximum" },
-        { level: 4, type: 'multiple', question: "Le Collège d'une commune bruxelloise est obligatoirement composé de :", options: ["Bourgmestre + Échevins", "Bourgmestre + Échevins + Président du CPAS", "Bourgmestre + Conseillers communaux"], correctAnswer: "Bourgmestre + Échevins + Président du CPAS" },
-        { level: 4, type: 'multiple', question: "Comment est principalement assuré le financement des partis politiques belges aujourd'hui ?", options: ["Par les dons d'entreprises privées exclusivement", "Majoritairement par des dotations publiques liées à leurs résultats électoraux", "Par les cotisations des membres uniquement"], correctAnswer: "Majoritairement par des dotations publiques liées à leurs résultats électoraux" },
+        // ============================================================
+        // NIVEAU 4 : EXPERT
+        // ============================================================
+        { level: 4, question: "Lors des élections de juin 2024, quel parti francophone a eu la plus forte progression ?", options: ["Le MR", "Le PTB", "Les Engagés"], correctAnswer: "Les Engagés" },
+        { level: 4, question: "« Le pouvoir corrompt, le pouvoir absolu corrompt absolument. » Quel principe limite cela ?", options: ["Le principe de proportionnalité", "Le principe d'alternance", "Le suffrage censitaire"], correctAnswer: "Le principe d'alternance" },
+        { level: 4, question: "L'idée principale derrière la 'démocratisation de la culture' est :", options: ["Que la culture populaire doit dominer", "Que la culture doit venir à la rencontre des citoyens à un prix raisonnable", "Que tout individu est un artiste"], correctAnswer: "Que la culture doit venir à la rencontre des citoyens à un prix raisonnable" },
+        { level: 4, question: "Quel a été l'un des constats d'échec de la démocratisation culturelle stricte ?", options: ["Les classes populaires ont montré une résistance face à la culture perçue comme 'élitiste'", "Les prix des musées sont devenus trop élevés", "Il y avait trop d'offres culturelles disponibles"], correctAnswer: "Les classes populaires ont montré une résistance face à la culture perçue comme 'élitiste'" },
+        { level: 4, question: "En Belgique, le pouvoir législatif au niveau fédéral est exercé par :", options: ["Le Roi, la Chambre et le Sénat", "Uniquement la Chambre des Représentants", "Le Gouvernement et le Roi"], correctAnswer: "Le Roi, la Chambre et le Sénat" },
+        { level: 4, question: "Laquelle de ces réformes de l'État a installé la Région de Bruxelles-Capitale ?", options: ["La réforme de 1970", "La réforme de 1980", "La réforme de 1988-1989"], correctAnswer: "La réforme de 1988-1989" },
+        { level: 4, question: "Quelle est la différence fondamentale entre le Conseil de l'Europe et le Conseil européen ?", options: ["Le premier est basé à Strasbourg (droits de l'homme, 46 pays), le second est l'institution de l'UE (27 pays)", "Le premier gère l'Euro, le second gère les frontières", "Il n'y en a aucune, ce sont des synonymes"], correctAnswer: "Le premier est basé à Strasbourg (droits de l'homme, 46 pays), le second est l'institution de l'UE (27 pays)" },
+        { level: 4, question: "La Constitution limite le nombre de ministres du gouvernement fédéral à :", options: ["10 maximum", "15 maximum", "Il n'y a pas de limite légale"], correctAnswer: "15 maximum" },
+        { level: 4, question: "Le Collège d'une commune bruxelloise est obligatoirement composé de :", options: ["Bourgmestre + Échevins", "Bourgmestre + Échevins + Président du CPAS", "Bourgmestre + Conseillers communaux"], correctAnswer: "Bourgmestre + Échevins + Président du CPAS" },
+        { level: 4, question: "Comment est principalement assuré le financement des partis politiques belges aujourd'hui ?", options: ["Par les dons d'entreprises privées exclusivement", "Majoritairement par des dotations publiques liées à leurs résultats électoraux", "Par les cotisations des membres uniquement"], correctAnswer: "Majoritairement par des dotations publiques liées à leurs résultats électoraux" },
+        { level: 4, question: "Quelle majorité est requise pour réviser un article de la Constitution belge ?", options: ["Majorité simple (50%+1)", "Quorum et majorité des 2/3", "Unanimité des Chambres"], correctAnswer: "Quorum et majorité des 2/3", explanation: "Il faut un quorum de 2/3 des membres présents et une majorité des 2/3 (hors abstentions) pour réviser un article visé." },
+        { level: 4, question: "Que provoque la publication au Moniteur belge d'une déclaration de révision de la Constitution ?", options: ["La dissolution des Chambres et de nouvelles élections", "La démission automatique du Roi", "Un référendum national obligatoire"], correctAnswer: "La dissolution des Chambres et de nouvelles élections", explanation: "Les nouvelles Chambres élues ne pourront réviser que les articles visés par la déclaration." },
+        { level: 4, question: "Quelle institution reçoit en 1989 des matières personnalisables sans jamais recevoir de compétence décrétale transférée, restant un organe décentralisé ?", options: ["La COCOF", "La VGC (Vlaamse Gemeenschapscommissie)", "La COCOM"], correctAnswer: "La VGC (Vlaamse Gemeenschapscommissie)", explanation: "À la différence de la COCOF, la Communauté flamande n'a transféré aucune compétence à la VGC." },
+        { level: 4, question: "En quelle année l'Assemblée de la COCOF reçoit-elle le statut de Parlement ?", options: ["1989", "1993", "2011"], correctAnswer: "2011", explanation: "La COCOF, créée en 1970, reçoit des compétences décrétales en 1993 puis le statut de Parlement en 2011." },
+        { level: 4, question: "Quel plan européen (2,2 milliards d'euros, 2014-2027) soutient les industries culturelles et créatives, notamment 25.000 artistes ?", options: ["Creative Europe", "Erasmus+", "Horizon Europe"], correctAnswer: "Creative Europe", explanation: "Ce programme finance aussi 2.000 salles de cinéma et des milliers de traductions de livres, avec deux objectifs : emploi/économie et diversité culturelle." },
+        { level: 4, question: "Quelles sont les règles de financement des dons aux partis politiques belges ?", options: ["Dons de personnes physiques limités à 500€, dons d'entreprises interdits", "Dons illimités pour les particuliers et les entreprises", "Seuls les dons anonymes sont autorisés"], correctAnswer: "Dons de personnes physiques limités à 500€, dons d'entreprises interdits", explanation: "Ce dispositif public et transparent vise à lutter contre la corruption et à garantir l'égalité des chances entre partis." },
+        { level: 4, question: "Quel est le montant du financement public annuel des partis belges (avec élus), par-delà le montant par voix ?", options: ["1,5 million d'euros/an + 1,25€/voix", "500.000 euros/an + 5€/voix", "10 millions d'euros/an, sans montant par voix"], correctAnswer: "1,5 million d'euros/an + 1,25€/voix" },
+        { level: 4, question: "Quelle institution belge exerce, en plus des matières personnalisables, la compétence sur les CPAS et est considérée comme la « quatrième Communauté » ?", options: ["La COCOF", "La COCOM", "La VGC"], correctAnswer: "La COCOM", explanation: "La COCOM (Commission communautaire commune), créée en 1989, travaille indépendamment des deux Communautés et de la Région bruxelloise." },
+        { level: 4, question: "Selon la Constitution, comment sont désignés les ministres-présidents des entités fédérées, sauf à Bruxelles ?", options: ["Élus directement par les citoyens", "Désignés par leur gouvernement puis ratifiés par le Roi", "Nommés par le Premier Ministre fédéral"], correctAnswer: "Désignés par leur gouvernement puis ratifiés par le Roi", explanation: "Exception : le ministre-président bruxellois est désigné directement par le parlement régional." },
+        { level: 4, question: "Quelle est la particularité du parlement de la Communauté française (FWB) ?", options: ["Il est composé d'élus directs uniquement", "Il est composé de députés wallons et bruxellois déjà élus dans leur Région", "Il est nommé par le gouvernement fédéral"], correctAnswer: "Il est composé de députés wallons et bruxellois déjà élus dans leur Région", explanation: "Il n'y a pas d'élection directe pour la Communauté française : ses députés sont désignés parmi les élus régionaux (wallons et bruxellois francophones)." },
 
-        // --- NIVEAU 5 : MAÎTRE (Podcasts 'Les Clés' & Actualité Récente - 10 Questions) ---
-        { level: 5, type: 'multiple', question: "Dans la formation de l'Arizona (2024), le MR a été décrit comme 'seul contre tous' principalement à cause de son blocage sur :", options: ["L'augmentation de la TVA", "La taxation des plus-values (impôt sur la fortune)", "La limitation des allocations de chômage"], correctAnswer: "La taxation des plus-values (impôt sur la fortune)" },
-        { level: 5, type: 'multiple', question: "Dans le podcast 'Le PTB est-il un parti démocratique ?', le principal argument des détracteurs pour maintenir le PTB hors du pouvoir est :", options: ["Qu'il n'a pas de programme socio-économique", "Des doutes persistants sur son adhésion totale aux principes de la démocratie libérale", "Son manque d'élus locaux"], correctAnswer: "Des doutes persistants sur son adhésion totale aux principes de la démocratie libérale" },
-        { level: 5, type: 'multiple', question: "Quel parti francophone a réussi le pari de la refondation en 2024 pour sortir du 'dilemme du centre' ?", options: ["DéFI", "Les Engagés", "Le Parti Populaire"], correctAnswer: "Les Engagés" },
-        { level: 5, type: 'multiple', question: "Suite aux élections de 2024 (cf. Podcast Ecolo), le parti vert francophone fait face à :", options: ["Une crise durable et une perte de ses repères sociologiques", "Une scission interne entre les ailes gauche et droite", "Un refus net de participer à toute coalition locale"], correctAnswer: "Une crise durable et une perte de ses repères sociologiques" },
-        { level: 5, type: 'multiple', question: "À gauche en 2024 (cf. Podcast 'À gauche, c'est quoi le projet ?'), la dynamique est compliquée par :", options: ["La fusion annoncée du PS et d'Ecolo", "La concurrence féroce entre le PS et le PTB qui empêche un rassemblement", "L'interdiction légale des cartels pré-électoraux"], correctAnswer: "La concurrence féroce entre le PS et le PTB qui empêche un rassemblement" },
-        { level: 5, type: 'multiple', question: "Pourquoi la coalition fédérale en négociation en 2024 a-t-elle été surnommée 'Arizona' ?", options: ["En référence au traité signé dans l'État de l'Arizona", "Parce que les couleurs des 5 partis correspondent à celles du drapeau de l'État de l'Arizona", "C'est le nom de code donné par Bart De Wever en hommage à un film"], correctAnswer: "Parce que les couleurs des 5 partis correspondent à celles du drapeau de l'État de l'Arizona" },
-        { level: 5, type: 'multiple', question: "Quel parti représente la 'famille socialiste' dans les négociations de la coalition Arizona ?", options: ["Le PS", "Vooruit", "Groen"], correctAnswer: "Vooruit" },
-        { level: 5, type: 'multiple', question: "En août 2024, quel document soumis par le formateur Bart De Wever a provoqué un premier blocage majeur ?", options: ["La Note institutionnelle (réforme de l'État)", "La 'Supernota' (socio-économique, marché du travail et fiscalité)", "Le Pacte migratoire"], correctAnswer: "La 'Supernota' (socio-économique, marché du travail et fiscalité)" },
-        { level: 5, type: 'multiple', question: "Le 'cordon sanitaire' médiatique en Belgique francophone s'applique légalement ou déontologiquement :", options: ["À l'extrême droite uniquement (accès interdit au direct)", "À l'extrême droite et à l'extrême gauche (PTB compris)", "À tous les partis n'ayant pas d'élus au Parlement"], correctAnswer: "À l'extrême droite uniquement (accès interdit au direct)" },
-        { level: 5, type: 'multiple', question: "Au lendemain des élections de juin 2024, quel parti a immédiatement annoncé choisir la cure d'opposition, compliquant l'équation fédérale ?", options: ["Le MR", "Le PS", "Le CD&V"], correctAnswer: "Le PS" }
+        // ============================================================
+        // NIVEAU 5 : MAÎTRE (Podcasts 'Les Clés' & Actualité Récente)
+        // ============================================================
+        { level: 5, question: "Dans la formation de l'Arizona (2024), le MR a été décrit comme 'seul contre tous' principalement à cause de son blocage sur :", options: ["L'augmentation de la TVA", "La taxation des plus-values (impôt sur la fortune)", "La limitation des allocations de chômage"], correctAnswer: "La taxation des plus-values (impôt sur la fortune)" },
+        { level: 5, question: "Dans le podcast 'Le PTB est-il un parti démocratique ?', le principal argument des détracteurs pour maintenir le PTB hors du pouvoir est :", options: ["Qu'il n'a pas de programme socio-économique", "Des doutes persistants sur son adhésion totale aux principes de la démocratie libérale", "Son manque d'élus locaux"], correctAnswer: "Des doutes persistants sur son adhésion totale aux principes de la démocratie libérale" },
+        { level: 5, question: "Quel parti francophone a réussi le pari de la refondation en 2024 pour sortir du 'dilemme du centre' ?", options: ["DéFI", "Les Engagés", "Le Parti Populaire"], correctAnswer: "Les Engagés" },
+        { level: 5, question: "Suite aux élections de 2024 (cf. Podcast Ecolo), le parti vert francophone fait face à :", options: ["Une crise durable et une perte de ses repères sociologiques", "Une scission interne entre les ailes gauche et droite", "Un refus net de participer à toute coalition locale"], correctAnswer: "Une crise durable et une perte de ses repères sociologiques" },
+        { level: 5, question: "À gauche en 2024 (cf. Podcast 'À gauche, c'est quoi le projet ?'), la dynamique est compliquée par :", options: ["La fusion annoncée du PS et d'Ecolo", "La concurrence féroce entre le PS et le PTB qui empêche un rassemblement", "L'interdiction légale des cartels pré-électoraux"], correctAnswer: "La concurrence féroce entre le PS et le PTB qui empêche un rassemblement" },
+        { level: 5, question: "Pourquoi la coalition fédérale en négociation en 2024 a-t-elle été surnommée 'Arizona' ?", options: ["En référence au traité signé dans l'État de l'Arizona", "Parce que les couleurs des 5 partis correspondent à celles du drapeau de l'État de l'Arizona", "C'est le nom de code donné par Bart De Wever en hommage à un film"], correctAnswer: "Parce que les couleurs des 5 partis correspondent à celles du drapeau de l'État de l'Arizona" },
+        { level: 5, question: "Quel parti représente la 'famille socialiste' dans les négociations de la coalition Arizona ?", options: ["Le PS", "Vooruit", "Groen"], correctAnswer: "Vooruit" },
+        { level: 5, question: "En août 2024, quel document soumis par le formateur Bart De Wever a provoqué un premier blocage majeur ?", options: ["La Note institutionnelle (réforme de l'État)", "La 'Supernota' (socio-économique, marché du travail et fiscalité)", "Le Pacte migratoire"], correctAnswer: "La 'Supernota' (socio-économique, marché du travail et fiscalité)" },
+        { level: 5, question: "Le 'cordon sanitaire' médiatique en Belgique francophone s'applique légalement ou déontologiquement :", options: ["À l'extrême droite uniquement (accès interdit au direct)", "À l'extrême droite et à l'extrême gauche (PTB compris)", "À tous les partis n'ayant pas d'élus au Parlement"], correctAnswer: "À l'extrême droite uniquement (accès interdit au direct)" },
+        { level: 5, question: "Au lendemain des élections de juin 2024, quel parti a immédiatement annoncé choisir la cure d'opposition, compliquant l'équation fédérale ?", options: ["Le MR", "Le PS", "Le CD&V"], correctAnswer: "Le PS" },
+        { level: 5, question: "Quel groupe, contrôlé par la famille Bolloré, a repris Lagardère (Hachette, Relay, Paris Match) en 2023 ?", options: ["Vivendi", "Disney", "Reworld Media"], correctAnswer: "Vivendi", explanation: "Le cours cite cet exemple de concentration médiatique à propos de la mise en avant du livre de Jordan Bardella dans les points Relay." },
+        { level: 5, question: "Qui a fondé la liste Fouad Ahidar aux élections de juin 2024 à Bruxelles, et sur quel enjeu a-t-il fait campagne ?", options: ["Un ancien socialiste flamand, campagne axée sur la communauté arabo-musulmane et contre le plan Good Move", "Un ancien libéral wallon, campagne pour la fusion des Communautés", "Un ancien écologiste, campagne pour le climat"], correctAnswer: "Un ancien socialiste flamand, campagne axée sur la communauté arabo-musulmane et contre le plan Good Move", explanation: "Fouad Ahidar a été exclu de Vooruit en 2022 après avoir voté contre l'obligation d'étourdissement des animaux avant abattage." },
+        { level: 5, question: "Combien de temps a-t-il fallu, selon le cours, pour former le gouvernement bruxellois après les élections de juin 2024 ?", options: ["Environ 3 mois", "Plus de 600 jours", "Un peu plus d'un an"], correctAnswer: "Plus de 600 jours", explanation: "Un potentiel record du monde, du fait de la complexité institutionnelle bruxelloise et des vetos croisés entre partis." },
+        { level: 5, question: "Quelle coalition a finalement gouverné la Région de Bruxelles-Capitale ?", options: ["MR + Groen + PS + Anders + Engagés", "PS + PTB + Ecolo", "N-VA + MR + Engagés"], correctAnswer: "MR + Groen + PS + Anders + Engagés" },
+        { level: 5, question: "Qui dirige, en tant que ministre-président MR, le gouvernement wallon formé après les élections de 2024 ?", options: ["André Dolimont", "Maxime Prévot", "Elio Di Rupo"], correctAnswer: "André Dolimont", explanation: "La coalition MR-Engagés est dirigée par André Dolimont (MR), avec pour priorité la relance du Plan de relance wallon." },
+        { level: 5, question: "Qui dirige, en tant que ministre-président N-VA, le gouvernement flamand formé en 2024 ?", options: ["Matthias Diependaele", "Bart De Wever", "Jan Jambon"], correctAnswer: "Matthias Diependaele", explanation: "Ce choix de coalition (N-VA, CD&V, Open Vld, Vooruit) écarte l'extrême droite tout en évitant Groen et le PVDA." },
+        { level: 5, question: "D'après le Grand Baromètre Le Soir-RTL-Ipsos cité dans le cours, quel parti explose dans les intentions de vote à Bruxelles (de 17% à 25%) ?", options: ["Le PTB", "Le MR", "Les Engagés"], correctAnswer: "Le PTB", explanation: "Selon ce baromètre, le PTB deviendrait le premier parti de la Région bruxelloise en intentions de vote." },
+        { level: 5, question: "Sur combien de projets (sur 234) le nouveau gouvernement wallon MR-Engagés supprime-t-il dans le Plan de relance wallon ?", options: ["44 projets", "12 projets", "100 projets"], correctAnswer: "44 projets", explanation: "En plus des 44 projets supprimés, le budget de 27 autres projets est réduit, pour une économie de 92 millions d'euros." },
+        { level: 5, question: "Selon le Grand Baromètre cité dans le cours, quel parti passerait en tête en Région wallonne (de 22% à 28%), au détriment du MR ?", options: ["Le PS", "Ecolo", "Les Engagés"], correctAnswer: "Le PS", explanation: "Le MR, premier parti wallon aux élections, chuterait de 28% à 21% dans les intentions de vote, au profit du PS." },
+        { level: 5, question: "Quelle guerre mondiale est directement à l'origine de la vision fondatrice de l'UNESCO ?", options: ["La Première Guerre mondiale", "La Seconde Guerre mondiale", "La Guerre froide"], correctAnswer: "La Seconde Guerre mondiale", explanation: "L'UNESCO est née en réponse à une guerre mondiale marquée par des violences racistes et antisémites." }
     ];
 
-    const quizContainer = document.getElementById('quiz-container');
-    const submitBtn = document.getElementById('submitBtn');
-    const finalScore = document.getElementById('finalScore');
-    let currentFilter = 'all';
-    let currentQuestions = [];
-
-    const levelNames = {
-        1: "Novice", 2: "Intermédiaire", 3: "Avancé", 4: "Expert", 5: "Maître", 'all': "Examen Complet"
-    };
-
-    function buildQuiz(filter) {
-        quizContainer.innerHTML = '';
-        finalScore.style.display = 'none';
-        submitBtn.disabled = false;
-        submitBtn.innerText = "Corriger mes réponses";
-        submitBtn.style.backgroundColor = 'var(--accent-color-1)';
-        submitBtn.style.color = '#000';
-        
-        currentQuestions = filter === 'all' ? [...quizData] : quizData.filter(q => q.level == filter);
-
-        currentQuestions.forEach((q, index) => {
-            const block = document.createElement('div');
-            block.className = `question-block diff-${q.level}`;
-            block.id = `q${index}`;
-
-            let html = `
-                <div class="badge">Niveau ${q.level}</div>
-                <div class="question-text">${index + 1}. ${q.question}</div>
-                <div class="options">
-            `;
-
-            q.options.forEach(option => {
-                html += `<label><input type="radio" name="q${index}" value="${option}"> ${option}</label>`;
-            });
-
-            html += `</div><div class="feedback"></div>`;
-            block.innerHTML = html;
-            quizContainer.appendChild(block);
-        });
-    }
-
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-            currentFilter = e.target.getAttribute('data-level');
-            buildQuiz(currentFilter);
-        });
+    QuizEngine.init({
+        id: 'institutions-politiques-publiques',
+        title: 'Examen Blanc',
+        subtitle: 'Institutions & Politiques Publiques',
+        icon: '🏛️',
+        accent1: '#00E5FF',
+        accent2: '#FFEA00',
+        backHref: null,
+        levelNames: { 1: 'Novice', 2: 'Intermédiaire', 3: 'Avancé', 4: 'Expert', 5: 'Maître' },
+        questions: quizData
     });
-
-    document.getElementById('quizForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        let score = 0;
-
-        currentQuestions.forEach((q, index) => {
-            const selectedOption = document.querySelector(`input[name="q${index}"]:checked`);
-            const questionBlock = document.getElementById(`q${index}`);
-            const feedbackElement = questionBlock.querySelector('.feedback');
-            
-            questionBlock.classList.remove('is-correct', 'is-wrong');
-
-            if (selectedOption) {
-                if (selectedOption.value === q.correctAnswer) {
-                    score++;
-                    questionBlock.classList.add('is-correct');
-                    feedbackElement.innerText = "✓ BIEN JOUÉ";
-                } else {
-                    questionBlock.classList.add('is-wrong');
-                    feedbackElement.innerHTML = `✗ ERREUR<br><span style="font-weight:normal; font-size:0.9em; margin-top:5px; display:block;">Réponse attendue : <i>${q.correctAnswer}</i></span>`;
-                }
-            } else {
-                questionBlock.classList.add('is-wrong');
-                feedbackElement.innerHTML = `✗ SANS RÉPONSE<br><span style="font-weight:normal; font-size:0.9em; margin-top:5px; display:block;">Réponse attendue : <i>${q.correctAnswer}</i></span>`;
-            }
-
-            questionBlock.querySelectorAll('input').forEach(input => input.disabled = true);
-        });
-
-        finalScore.innerHTML = `SCORE : <span>${score}</span> / ${currentQuestions.length}`;
-        finalScore.style.display = 'block';
-
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Correction Terminée";
-
-        window.scrollTo({ top: finalScore.offsetTop - 100, behavior: 'smooth' });
-
-        saveScore(score, currentQuestions.length, currentFilter);
-    });
-
-    function saveScore(score, total, level) {
-        const history = JSON.parse(localStorage.getItem('examMasterHistory')) || [];
-        const date = new Date().toLocaleString('fr-FR', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit'});
-        
-        history.push({ score, total, date, mode: levelNames[level] });
-        if(history.length > 8) history.shift();
-        
-        localStorage.setItem('examMasterHistory', JSON.stringify(history));
-        displayHistory();
-    }
-
-    function displayHistory() {
-        const historyList = document.getElementById('historyList');
-        const history = JSON.parse(localStorage.getItem('examMasterHistory')) || [];
-        
-        historyList.innerHTML = '';
-
-        if (history.length === 0) {
-            historyList.innerHTML = '<li><span class="hist-date">Commence un test pour voir tes résultats ici.</span></li>';
-        } else {
-            [...history].reverse().forEach(item => {
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    <div>
-                        <span class="hist-date">${item.date}</span>
-                        <span class="hist-mode">${item.mode}</span>
-                    </div>
-                    <span class="hist-score">${item.score} / ${item.total}</span>
-                `;
-                historyList.appendChild(li);
-            });
-        }
-    }
-
-    // Init
-    buildQuiz('all');
-    displayHistory();
 </script>
 
 </body>
