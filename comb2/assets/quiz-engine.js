@@ -180,7 +180,7 @@
                     <div class="options">
                 `;
 
-                q.options.forEach((option, oi) => {
+                shuffle(q.options).forEach((option, oi) => {
                     html += `<label><input type="radio" name="q${index}" value="${escapeAttr(option)}"> ${escapeHtml(option)}</label>`;
                 });
 
