@@ -333,11 +333,11 @@
         });
 
         function badgeForPct(pct) {
-            if (pct === 100) return { label: '🏆 Sans-faute', color: '#D500F9' };
-            if (pct >= 90) return { label: '🥇 Maître', color: '#FFD700' };
-            if (pct >= 70) return { label: '🥈 Bien joué', color: '#00E676' };
-            if (pct >= 50) return { label: '🥉 Pas mal', color: '#FF9100' };
-            return { label: '📚 À revoir', color: '#FF1744' };
+            if (pct === 100) return { label: '🏆 Sans-faute', color: '#c084fc' };
+            if (pct >= 90) return { label: '🥇 Maître', color: '#EFBF04' };
+            if (pct >= 70) return { label: '🥈 Bien joué', color: '#4ade80' };
+            if (pct >= 50) return { label: '🥉 Pas mal', color: '#fb923c' };
+            return { label: '📚 À revoir', color: '#f87171' };
         }
 
         function renderScore(score, total, pct, elapsedSec, bestStreak) {
@@ -496,7 +496,7 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             const ctx = canvas.getContext('2d');
-            const colors = [cfg.accent1, cfg.accent2, '#00E676', '#D500F9', '#FF9100'];
+            const colors = [cfg.accent1, cfg.accent2, '#4ade80', '#c084fc', '#fb923c'];
             const pieces = Array.from({ length: 140 }, () => ({
                 x: Math.random() * canvas.width,
                 y: -20 - Math.random() * canvas.height * 0.5,
