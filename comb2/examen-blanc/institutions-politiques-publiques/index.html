@@ -12,6 +12,10 @@
 
 <div id="quiz-app"></div>
 
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="../../assets/auth.js"></script>
 <script src="../../assets/quiz-engine.js"></script>
 <script>
     const quizData = [
@@ -143,7 +147,8 @@
         icon: '🏛️',
         accent1: '#00E5FF',
         accent2: '#FFEA00',
-        backHref: null,
+        backHref: '../index.html',
+        backLabel: '← Tous les cours',
         levelNames: { 1: 'Novice', 2: 'Intermédiaire', 3: 'Avancé', 4: 'Expert', 5: 'Maître' },
         questions: quizData
     });

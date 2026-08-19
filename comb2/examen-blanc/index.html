@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examens Blancs — stucom</title>
+    <meta name="description" content="Plateforme d'examens blancs interactifs : choisis ton cours et entraîne-toi.">
+    <link rel="stylesheet" href="../assets/quiz-engine.css">
+</head>
+<body>
+
+<div id="hub-app"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="../assets/auth.js"></script>
+<script>
+    const COURSES = [
+        {
+            id: 'institutions-politiques-publiques',
+            href: 'institutions-politiques-publiques/',
+            icon: '🏛️',
+            accent: '#00E5FF',
+            title: 'Institutions & Politiques Publiques',
+            description: "La Belgique institutionnelle, le paysage politique et les politiques culturelles. 100 questions, 5 niveaux.",
+            count: 100
+        },
+        {
+            id: 'philosophie-medias-communication',
+            href: 'philosophie-medias-communication/',
+            icon: '🪞',
+            accent: '#FF2E9A',
+            title: 'Philosophie des médias et de la communication',
+            description: "Identité, Éros/Philia, Heidegger et la technique, Kulturindustrie, Black Mirror... 100 questions, 5 niveaux.",
+            count: 100
+        }
+    ];
+
+    const root = document.getElementById('hub-app');
+
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function authErrorMessage(e) {
+        const msgs = {
+            'auth/popup-closed-by-user': "Fenêtre de connexion fermée avant la fin.",
+            'auth/popup-blocked': "Le navigateur a bloqué la fenêtre de connexion — autorise les popups pour ce site.",
+            'auth/unauthorized-domain': "Ce domaine n'est pas encore autorisé pour la connexion Google (à configurer côté Firebase)."
+        };
+        return msgs[e.code] || (e.message || 'Connexion impossible, réessaie.');
+    }
+
+    function renderLoading() {
+        root.innerHTML = `
+            <div class="container">
+                <div class="auth-screen">
+                    <span class="quiz-icon">🎓</span>
+                    <div class="auth-spinner" style="margin-top:20px;"></div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderLogin() {
+        root.innerHTML = `
+            <div class="container">
+                <div class="auth-screen">
+                    <span class="quiz-icon">🎓</span>
+                    <h1>Examens Blancs</h1>
+                    <p>Connecte-toi avec ton compte Google pour accéder aux cours et retrouver tes scores sur tous tes appareils.</p>
+                    <button type="button" id="googleLoginBtn" class="google-btn">
+                        <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
+                        Continuer avec Google
+                    </button>
+                    <div class="auth-error" id="authError"></div>
+                </div>
+            </div>
+        `;
+        const btn = document.getElementById('googleLoginBtn');
+        const errBox = document.getElementById('authError');
+        btn.addEventListener('click', () => {
+            btn.disabled = true;
+            errBox.textContent = '';
+            AuthGate.signInGoogle().catch(e => {
+                errBox.textContent = authErrorMessage(e);
+                btn.disabled = false;
+            });
+        });
+    }
+
+    function renderHub(user) {
+        root.innerHTML = `
+            <div class="container">
+                <header class="quiz-header">
+                    <div class="top-bar">
+                        <span></span>
+                        <div class="user-bar">
+                            ${user.photoURL ? `<img src="${user.photoURL}" alt="">` : ''}
+                            <span>${escapeHtml(user.displayName || user.email || '')}</span>
+                            <button type="button" id="logoutBtn">Se déconnecter</button>
+                        </div>
+                    </div>
+                    <span class="quiz-icon">🎓</span>
+                    <h1 class="quiz-title"><span>Examens</span> Blancs</h1>
+                    <h2 class="quiz-subtitle">Choisis ton cours</h2>
+                </header>
+
+                <div class="hub-grid" id="hubGrid"></div>
+
+                <footer class="quiz-footer">stucom · examens blancs interactifs</footer>
+            </div>
+        `;
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            AuthGate.signOut().catch(() => {});
+        });
+
+        const grid = document.getElementById('hubGrid');
+        grid.innerHTML = COURSES.map(c => `
+            <a class="hub-card" href="${c.href}" style="--hub-accent:${c.accent}">
+                <span class="hub-icon">${c.icon}</span>
+                <h3>${escapeHtml(c.title)}</h3>
+                <p>${escapeHtml(c.description)}</p>
+                <div class="hub-meta">
+                    <span id="meta-${c.id}">${c.count} questions</span>
+                    <span class="hub-cta">Commencer →</span>
+                </div>
+            </a>
+        `).join('');
+
+        // Meilleur score par cours, une fois les données Firestore disponibles (non bloquant).
+        COURSES.forEach(c => {
+            AuthGate.scoresCollection(user.uid, c.id).get().then(snap => {
+                let best = null;
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    const pct = d.pct !== undefined ? d.pct : Math.round((d.score / d.total) * 100);
+                    if (best === null || pct > best) best = pct;
+                });
+                if (best !== null) {
+                    const el = document.getElementById('meta-' + c.id);
+                    if (el) el.textContent = `${c.count} questions · 🏆 ${best}%`;
+                }
+            }).catch(err => console.warn('Lecture des scores échouée :', err));
+        });
+    }
+
+    renderLoading();
+    AuthGate.onReady(user => {
+        if (!user) { renderLogin(); return; }
+        renderHub(user);
+    });
+</script>
+
+</body>
+</html>

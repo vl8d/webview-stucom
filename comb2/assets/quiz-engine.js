@@ -4,7 +4,7 @@
    Chaque page "Examen Blanc" fournit uniquement une config :
 
    QuizEngine.init({
-     id: 'slug-unique-du-cours',       // sert de clé localStorage
+     id: 'slug-unique-du-cours',       // sert de clé localStorage + Firestore
      title: 'Examen Blanc',
      subtitle: 'Nom du cours',
      icon: '🏛️',                       // emoji affiché en tête
@@ -19,10 +19,15 @@
      ]
    });
 
-   Le moteur s'occupe de : construction du DOM, filtres par niveau,
-   mode aléatoire, barre de progression live, streaks, XP, badges de
-   score, confetti, correction avec explications, historique des
-   scores persistant (par cours) et revue des erreurs.
+   Le moteur s'occupe de : la connexion Google obligatoire (via
+   window.AuthGate, voir assets/auth.js), la construction du DOM, les
+   filtres par niveau, le mode aléatoire, la barre de progression live,
+   les streaks, XP, badges de score, confettis, la correction avec
+   explications, l'historique des scores (synchronisé sur Firestore
+   par utilisateur, avec cache local hors-ligne) et la revue des erreurs.
+
+   Si window.AuthGate n'est pas chargé (page qui ne l'inclut pas), le
+   moteur se dégrade automatiquement en mode local seul, sans gate.
    ============================================================ */
 
 (function (global) {
@@ -45,11 +50,54 @@
         document.documentElement.style.setProperty('--accent-1', cfg.accent1);
         document.documentElement.style.setProperty('--accent-2', cfg.accent2);
 
-        const storageKey = 'quizHistory_' + cfg.id;
-        const soundKey = 'quizSoundMuted';
-
         const root = document.getElementById('quiz-app') || document.body;
-        root.innerHTML = buildSkeleton(cfg);
+
+        if (!global.AuthGate) {
+            // Pas de module d'authentification chargé : on démarre en local seul.
+            root.innerHTML = buildSkeleton(cfg, null);
+            startApp(cfg, root, null);
+            return;
+        }
+
+        root.innerHTML = buildLoadingScreen(cfg);
+
+        global.AuthGate.onReady(user => {
+            if (!user) {
+                renderLoginScreen(cfg, root);
+                return;
+            }
+            root.innerHTML = buildSkeleton(cfg, user);
+            startApp(cfg, root, user);
+        });
+    }
+
+    function renderLoginScreen(cfg, root) {
+        root.innerHTML = buildAuthScreen(cfg);
+        const btn = root.querySelector('#googleLoginBtn');
+        const errBox = root.querySelector('#authError');
+        btn.addEventListener('click', () => {
+            btn.disabled = true;
+            errBox.textContent = '';
+            global.AuthGate.signInGoogle().catch(e => {
+                errBox.textContent = authErrorMessage(e);
+                btn.disabled = false;
+            });
+            // Le rendu se met à jour automatiquement via onAuthStateChanged (voir init()).
+        });
+    }
+
+    function authErrorMessage(e) {
+        const msgs = {
+            'auth/popup-closed-by-user': "Fenêtre de connexion fermée avant la fin.",
+            'auth/popup-blocked': "Le navigateur a bloqué la fenêtre de connexion — autorise les popups pour ce site.",
+            'auth/unauthorized-domain': "Ce domaine n'est pas encore autorisé pour la connexion Google (à configurer côté Firebase)."
+        };
+        return msgs[e.code] || (e.message || 'Connexion impossible, réessaie.');
+    }
+
+    function startApp(cfg, root, user) {
+        const storageKey = 'quizHistory_' + cfg.id + (user ? '_' + user.uid : '');
+        const soundKey = 'quizSoundMuted';
 
         const els = {
             filters: root.querySelector('#filters'),
@@ -70,15 +118,24 @@
             statRuns: root.querySelector('#statRuns'),
             statStreak: root.querySelector('#statStreak'),
             clearHistoryBtn: root.querySelector('#clearHistoryBtn'),
-            randomBtn: root.querySelector('#randomBtn')
+            randomBtn: root.querySelector('#randomBtn'),
+            logoutBtn: root.querySelector('#logoutBtn')
         };
 
         let currentFilter = 'all';
         let currentQuestions = [];
         let startTime = null;
         let reviewMode = false;
+        let historyCache = [];
         let soundMuted = localStorage.getItem(soundKey) === '1';
         updateSoundIcon();
+
+        if (els.logoutBtn) {
+            els.logoutBtn.addEventListener('click', () => {
+                global.AuthGate.signOut().catch(() => {});
+                // onAuthStateChanged (dans init) réaffiche automatiquement l'écran de connexion.
+            });
+        }
 
         // ---------- audio (tiny WebAudio beeps, no external files) ----------
         let audioCtx = null;
@@ -115,12 +172,11 @@
         const allBtn = makeFilterBtn('all', `Examen Complet (${cfg.questions.length}Q)`, true);
         els.filters.appendChild(allBtn);
         levelsPresent.forEach(lvl => {
-            const count = cfg.questions.filter(q => q.level === lvl).length;
             const label = `Lvl ${lvl} : ${cfg.levelNames[lvl] || lvl}`;
-            els.filters.appendChild(makeFilterBtn(String(lvl), label, false, count));
+            els.filters.appendChild(makeFilterBtn(String(lvl), label, false));
         });
 
-        function makeFilterBtn(level, label, active, count) {
+        function makeFilterBtn(level, label, active) {
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'filter-btn' + (active ? ' active' : '');
@@ -180,7 +236,7 @@
                     <div class="options">
                 `;
 
-                shuffle(q.options).forEach((option, oi) => {
+                shuffle(q.options).forEach((option) => {
                     html += `<label><input type="radio" name="q${index}" value="${escapeAttr(option)}"> ${escapeHtml(option)}</label>`;
                 });
 
@@ -306,19 +362,38 @@
             buildQuiz(currentFilter, currentFilter === 'random');
         });
 
-        // ---------- history ----------
+        // ---------- history (localStorage cache + sync Firestore par utilisateur) ----------
+        function readLocalHistory() {
+            try { return JSON.parse(localStorage.getItem(storageKey)) || []; }
+            catch (e) { return []; }
+        }
+        function writeLocalHistory(history) {
+            localStorage.setItem(storageKey, JSON.stringify(history));
+        }
+
         function saveScore(score, total, level, pct) {
-            const history = JSON.parse(localStorage.getItem(storageKey)) || [];
             const date = new Date().toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
             const modeLabel = level === 'random' ? '🎲 Aléatoire' : (cfg.levelNames[level] || 'Examen Complet');
-            history.push({ score, total, date, mode: modeLabel, pct });
-            if (history.length > 12) history.shift();
-            localStorage.setItem(storageKey, JSON.stringify(history));
+            const entry = { score, total, date, mode: modeLabel, pct };
+
+            historyCache.push(entry);
+            if (historyCache.length > 12) historyCache.shift();
+            writeLocalHistory(historyCache);
             displayHistory();
+
+            if (user && global.AuthGate) {
+                global.AuthGate.scoresCollection(user.uid, cfg.id).add({
+                    course: cfg.id,
+                    score, total, pct,
+                    mode: modeLabel,
+                    date,
+                    ts: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(err => console.warn('Sync Firestore échouée (score gardé en local) :', err));
+            }
         }
 
         function displayHistory() {
-            const history = JSON.parse(localStorage.getItem(storageKey)) || [];
+            const history = historyCache;
             els.historyList.innerHTML = '';
 
             if (history.length === 0) {
@@ -358,10 +433,44 @@
             els.statStreak.textContent = curStreak;
         }
 
+        function loadHistory() {
+            historyCache = readLocalHistory();
+            displayHistory();
+
+            if (!user || !global.AuthGate) return;
+            global.AuthGate.scoresCollection(user.uid, cfg.id)
+                .orderBy('ts', 'desc')
+                .limit(12)
+                .get()
+                .then(snap => {
+                    const serverHistory = [];
+                    snap.forEach(doc => {
+                        const d = doc.data();
+                        serverHistory.push({ score: d.score, total: d.total, date: d.date, mode: d.mode, pct: d.pct });
+                    });
+                    serverHistory.reverse(); // du plus ancien au plus récent, comme historyCache
+                    if (serverHistory.length) {
+                        historyCache = serverHistory;
+                        writeLocalHistory(historyCache);
+                        displayHistory();
+                    }
+                })
+                .catch(err => console.warn('Lecture Firestore échouée (historique local conservé) :', err));
+        }
+
         els.clearHistoryBtn.addEventListener('click', () => {
-            if (confirm('Effacer tout ton historique de scores pour ce cours ?')) {
-                localStorage.removeItem(storageKey);
-                displayHistory();
+            if (!confirm('Effacer tout ton historique de scores pour ce cours ?')) return;
+            historyCache = [];
+            localStorage.removeItem(storageKey);
+            displayHistory();
+            if (user && global.AuthGate) {
+                global.AuthGate.scoresCollection(user.uid, cfg.id).get()
+                    .then(snap => {
+                        const batch = global.AuthGate.getDb().batch();
+                        snap.forEach(doc => batch.delete(doc.ref));
+                        return batch.commit();
+                    })
+                    .catch(err => console.warn('Suppression Firestore échouée :', err));
             }
         });
 
@@ -422,12 +531,47 @@
         function escapeAttr(str) { return escapeHtml(str); }
 
         // ---------- init ----------
-        displayHistory();
+        loadHistory();
         buildQuiz('all', false);
     }
 
-    function buildSkeleton(cfg) {
+    function buildLoadingScreen(cfg) {
+        return `
+            <div class="container">
+                <div class="auth-screen">
+                    <span class="quiz-icon">${cfg.icon}</span>
+                    <div class="auth-spinner" style="margin-top:20px;"></div>
+                </div>
+            </div>
+        `;
+    }
+
+    function buildAuthScreen(cfg) {
+        return `
+            <div class="container">
+                <div class="auth-screen">
+                    <span class="quiz-icon">${cfg.icon}</span>
+                    <h1>${cfg.title}</h1>
+                    <p>${cfg.subtitle} — connecte-toi avec ton compte Google pour accéder à l'examen blanc et synchroniser tes scores entre tes appareils.</p>
+                    <button type="button" id="googleLoginBtn" class="google-btn">
+                        <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
+                        Continuer avec Google
+                    </button>
+                    <div class="auth-error" id="authError"></div>
+                </div>
+            </div>
+        `;
+    }
+
+    function buildSkeleton(cfg, user) {
         const backLink = cfg.backHref ? `<a class="back-link" href="${cfg.backHref}">${cfg.backLabel}</a>` : '<span></span>';
+        const userBar = user ? `
+            <div class="user-bar">
+                ${user.photoURL ? `<img src="${user.photoURL}" alt="">` : ''}
+                <span>${user.displayName || user.email || ''}</span>
+                <button type="button" id="logoutBtn">Se déconnecter</button>
+            </div>
+        ` : '<span></span>';
         return `
             <div id="toastLayer"></div>
             <canvas id="confettiCanvas"></canvas>
@@ -435,6 +579,7 @@
                 <header class="quiz-header">
                     <div class="top-bar">
                         ${backLink}
+                        ${userBar}
                         <button type="button" id="soundToggle" class="sound-toggle" title="Couper le son">🔊</button>
                     </div>
                     <span class="quiz-icon">${cfg.icon}</span>
