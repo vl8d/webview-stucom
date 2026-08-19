@@ -49,6 +49,11 @@
         return auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
     }
 
+    function signInMicrosoft() {
+        ensureInit();
+        return auth.signInWithPopup(new firebase.auth.OAuthProvider('microsoft.com'));
+    }
+
     function signOut() {
         ensureInit();
         return auth.signOut();
@@ -64,5 +69,5 @@
         return db.collection('examBlanc').doc(uid).collection('courses').doc(courseId).collection('scores');
     }
 
-    global.AuthGate = { onReady, signInGoogle, signOut, getDb, scoresCollection };
+    global.AuthGate = { onReady, signInGoogle, signInMicrosoft, signOut, getDb, scoresCollection };
 })(window);

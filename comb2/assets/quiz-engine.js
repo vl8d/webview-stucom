@@ -73,12 +73,18 @@
 
     function renderLoginScreen(cfg, root) {
         root.innerHTML = buildAuthScreen(cfg);
-        const btn = root.querySelector('#googleLoginBtn');
         const errBox = root.querySelector('#authError');
+        wireLoginButton(root, '#googleLoginBtn', () => global.AuthGate.signInGoogle(), errBox);
+        wireLoginButton(root, '#msLoginBtn', () => global.AuthGate.signInMicrosoft(), errBox);
+    }
+
+    function wireLoginButton(root, selector, signIn, errBox) {
+        const btn = root.querySelector(selector);
+        if (!btn) return;
         btn.addEventListener('click', () => {
             btn.disabled = true;
             errBox.textContent = '';
-            global.AuthGate.signInGoogle().catch(e => {
+            signIn().catch(e => {
                 errBox.textContent = authErrorMessage(e);
                 btn.disabled = false;
             });
@@ -546,17 +552,28 @@
         `;
     }
 
+    function authButtonsHtml() {
+        return `
+            <button type="button" id="googleLoginBtn" class="google-btn">
+                <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
+                Continuer avec Google
+            </button>
+            <div class="auth-divider"><div class="line"></div><span>ou</span><div class="line"></div></div>
+            <button type="button" id="msLoginBtn" class="microsoft-btn">
+                <svg viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+                Continuer avec Microsoft
+            </button>
+        `;
+    }
+
     function buildAuthScreen(cfg) {
         return `
             <div class="container">
                 <div class="auth-screen">
                     <span class="quiz-icon">${cfg.icon}</span>
                     <h1>${cfg.title}</h1>
-                    <p>${cfg.subtitle} — connecte-toi avec ton compte Google pour accéder à l'examen blanc et synchroniser tes scores entre tes appareils.</p>
-                    <button type="button" id="googleLoginBtn" class="google-btn">
-                        <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
-                        Continuer avec Google
-                    </button>
+                    <p>${cfg.subtitle} — connecte-toi pour accéder à l'examen blanc et synchroniser tes scores entre tes appareils.</p>
+                    ${authButtonsHtml()}
                     <div class="auth-error" id="authError"></div>
                 </div>
             </div>
@@ -628,5 +645,5 @@
         `;
     }
 
-    global.QuizEngine = { init };
+    global.QuizEngine = { init, authButtonsHtml, wireLoginButton, authErrorMessage };
 })(window);
