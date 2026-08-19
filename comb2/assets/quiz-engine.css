@@ -593,68 +593,49 @@ input[type="radio"]:checked::after {
     font-size: 0.85rem;
 }
 
-.google-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    width: 100%;
-    max-width: 300px;
-    background: var(--accent-2);
-    color: var(--accent-1);
-    border: 1px solid var(--accent-2);
-    padding: 0.7rem 1.4rem;
-    border-radius: 2px;
-    font-family: var(--main-font);
-    font-weight: 700;
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    transition: background 0.13s ease, border-color 0.13s ease;
-}
-.google-btn:hover { background: #7a1d40; border-color: var(--accent-1); }
-.google-btn svg { width: 16px; height: 16px; flex-shrink: 0; background: #fff; border-radius: 2px; padding: 2px; }
-
-.auth-divider {
+.auth-buttons {
     display: flex;
-    align-items: center;
     gap: 10px;
     width: 100%;
-    max-width: 300px;
-    margin: 14px 0;
+    max-width: 320px;
 }
-.auth-divider .line { flex: 1; height: 1px; background: var(--line-color); }
-.auth-divider span { font-size: 0.62rem; color: var(--muted-color); letter-spacing: 0.12em; text-transform: uppercase; }
 
-.microsoft-btn {
+.provider-btn {
+    flex: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    width: 100%;
-    max-width: 300px;
+    gap: 8px;
     background: var(--container-bg);
     color: var(--text-color);
     border: 1px solid var(--line-color);
-    padding: 0.7rem 1.4rem;
+    padding: 0.7rem 0.8rem;
     border-radius: 2px;
     font-family: var(--main-font);
     font-weight: 700;
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     cursor: pointer;
     transition: border-color 0.13s ease;
 }
-.microsoft-btn:hover { border-color: var(--accent-1); }
-.microsoft-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+.provider-btn:hover { border-color: var(--accent-1); }
+.provider-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+.provider-btn#googleLoginBtn svg { background: #fff; border-radius: 2px; padding: 2px; }
 
 .auth-error {
     margin-top: 16px;
     color: var(--wrong-color);
     font-size: 0.78rem;
     max-width: 380px;
+}
+
+.auth-legal {
+    margin-top: 20px;
+    color: var(--muted-color);
+    font-size: 0.68rem;
+    line-height: 1.6;
+    max-width: 340px;
 }
 
 .auth-spinner {
