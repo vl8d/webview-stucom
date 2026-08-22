@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cartes Flash - Vocabulaire Néerlandais</title>
+    <meta name="description" content="Cartes flash FR/NL classées par thème, avec répétition espacée (méthode Leitner).">
+    <link rel="stylesheet" href="../../../assets/quiz-engine.css">
+</head>
+<body>
+
+<div id="quiz-app"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="../../../assets/auth.js"></script>
+<script src="../../../assets/quiz-engine.js"></script>
+<script src="../../../assets/flashcard-engine.js"></script>
+<script>
+    function deck(id, label, pairs) {
+        return { id, label, cards: pairs.map(p => ({ front: p[0], back: p[1] })) };
+    }
+
+    const DECKS = [
+        deck('salutations', 'Salutations', [
+            ["la salutation", "de begroeting"],
+            ["l'au revoir", "het afscheid"],
+            ["au revoir !", "tot ziens"],
+            ["bonjour", "hallo / dag"],
+            ["bonjour (matin)", "goeiemorgen"],
+            ["bon week-end", "fijn weekend"],
+            ["salut", "hoi / hé"],
+            ["à demain", "tot morgen"],
+            ["bonsoir", "goeienavond"],
+            ["bonne nuit", "goeienacht / slaap lekker"],
+            ["merci", "dank u / bedankt"],
+            ["de rien", "graag gedaan"],
+            ["monsieur", "meneer"],
+            ["madame", "mevrouw"],
+            ["comment vas-tu ?", "hoe gaat het met jou?"],
+            ["comment allez-vous ?", "hoe gaat het met u?"],
+            ["très bien", "heel goed"],
+            ["ça peut aller", "zo zo"],
+            ["super", "prima / super"],
+            ["mal (ça va mal)", "slecht"],
+            ["saluer quelqu'un", "iemand begroeten"],
+            ["tutoyer", "tutoyeren"],
+            ["vouvoyer", "vouvoyeren"],
+            ["quel âge as-tu ?", "hoe oud ben je?"],
+            ["quel âge avez-vous ?", "hoe oud bent u?"],
+            ["d'où viens-tu ?", "waar kom je vandaan?"]
+        ]),
+        deck('nombres', 'Les chiffres', [
+            ["un", "een"], ["deux", "twee"], ["trois", "drie"], ["quatre", "vier"], ["cinq", "vijf"],
+            ["six", "zes"], ["sept", "zeven"], ["huit", "acht"], ["neuf", "negen"], ["dix", "tien"],
+            ["onze", "elf"], ["douze", "twaalf"], ["treize", "dertien"], ["quatorze", "veertien"],
+            ["quinze", "vijftien"], ["seize", "zestien"], ["dix-sept", "zeventien"], ["dix-huit", "achttien"],
+            ["dix-neuf", "negentien"], ["vingt", "twintig"], ["vingt-et-un", "eenentwintig"],
+            ["vingt-sept", "zevenentwintig"], ["trente", "dertig"], ["quarante", "veertig"],
+            ["cinquante", "vijftig"], ["soixante", "zestig"], ["septante", "zeventig"],
+            ["quatre-vingt", "tachtig"], ["nonante", "negentig"], ["cent", "honderd"],
+            ["mille", "duizend"], ["un million", "een miljoen"], ["et (calcul)", "en"],
+            ["fois", "maal"], ["divisé par", "gedeeld door"], ["plus", "plus"], ["moins", "min"],
+            ["égal (fait)", "gelijk (maakt)"], ["virgule", "komma"], ["plus ou moins", "min en meer"]
+        ]),
+        deck('famille', 'La famille', [
+            ["la mère", "de moeder"], ["le père", "de vader"], ["le fils", "de zoon"], ["la fille", "de dochter"],
+            ["l'oncle", "de oom"], ["la tante", "de tante"], ["le beau-père", "de schoonvader"],
+            ["la belle-mère", "de schoonmoeder"], ["le frère", "de broer"], ["la sœur", "de zus"],
+            ["le cousin / neveu", "de neef"], ["la cousine / nièce", "de nicht"],
+            ["la grand-mère", "de grootmoeder / oma"], ["le grand-père", "de grootvader / opa"],
+            ["la famille proche", "het gezin"], ["la famille (élargie)", "de familie"],
+            ["les parents", "de ouders"], ["les enfants", "de kinderen"], ["l'épouse", "de echtgenote"],
+            ["l'époux", "de echtgenoot"], ["être marié", "getrouwd zijn"], ["être divorcé", "gescheiden zijn"],
+            ["être fiancé", "verloofd zijn"], ["rendre visite", "bezoeken"], ["être décédé", "gestorven zijn"],
+            ["tomber amoureux", "verliefd worden"], ["avoir grandi en/au", "opgroeien in"],
+            ["célibataire", "single / vrijgezel"], ["venir d'une grande famille", "uit een groot gezin komen"],
+            ["passer du temps ensemble", "samen tijd doorbrengen"], ["tel père, tel fils", "zoals vader, zo zoon"]
+        ]),
+        deck('caractere', 'Le caractère', [
+            ["impatient", "ongeduldig"], ["timide", "verlegen"], ["amoureux", "verliefd"],
+            ["content", "blij / vrolijk"], ["pessimiste", "pessimistisch"], ["jaloux", "jaloers"],
+            ["impoli", "onbeleefd"], ["honnête", "eerlijk"], ["fascinant", "boeiend"],
+            ["tête en l'air", "verstrooid"], ["fidèle", "trouw"], ["nerveux", "nerveus"],
+            ["stressé", "gestresseerd"], ["fainéant", "lui"], ["calme", "kalm"], ["étonné", "verbaasd"],
+            ["fâché", "boos"], ["être soi-même", "zichzelf zijn"],
+            ["se sentir bien dans sa peau", "zich goed in zijn vel voelen"], ["loyal", "loyaal"],
+            ["courageux", "moedig"], ["la personnalité", "de persoonlijkheid"], ["le caractère", "het karakter"]
+        ]),
+        deck('hobbys', 'Les hobbys', [
+            ["jouer au basket", "basketbal spelen"], ["jouer du piano", "piano spelen"],
+            ["écouter de la musique", "naar muziek luisteren"], ["faire de la gym", "turnen"],
+            ["faire du patin à glace", "schaatsen"], ["bricoler", "knutselen"],
+            ["jouer au foot", "voetbal spelen"], ["jouer au tennis", "tennis spelen"], ["skier", "skiën"],
+            ["faire du skate", "skaten"], ["lire", "lezen"], ["faire du vélo", "fietsen"],
+            ["chanter", "zingen"], ["danser", "dansen"], ["faire du judo", "aan judo doen"],
+            ["faire de la voile", "zeilen"], ["discuter (chatter)", "chatten"],
+            ["surfer sur internet", "op internet surfen"], ["nager", "zwemmen"],
+            ["faire du cheval", "paardrijden"], ["regarder netflix", "netflixen"],
+            ["aller au ciné", "naar de bioscoop gaan"], ["faire du théâtre", "toneelspelen"],
+            ["aller au théâtre", "naar het theater gaan"]
+        ]),
+        deck('metiers', 'Les métiers', [
+            ["l'enseignant (secondaire)", "de leraar / lerares"], ["la femme de ménage", "de schoonmaakster"],
+            ["l'architecte", "de architect"], ["le dentiste", "de tandarts"], ["le photographe", "de fotograaf"],
+            ["le professeur (sup.)", "de docent"], ["le docteur", "de arts / dokter"],
+            ["l'avocat", "de advocaat"], ["le boxeur", "de bokser"], ["le dj", "de dj"],
+            ["l'étudiant (secondaire)", "de leerling"], ["l'étudiant (sup.)", "de student"],
+            ["le footballeur", "de voetballer"], ["le coiffeur", "de kapper / kapster"],
+            ["le barman", "de barman / ober"], ["le cuisinier", "de kok"], ["le ministre", "de minister"],
+            ["le fermier", "de boer"], ["le chanteur", "de zanger / zangeres"],
+            ["le journaliste", "de journalist"], ["travailler en tant que", "werken als"],
+            ["le stagiaire", "de stagiaire"], ["l'employé", "de werknemer"], ["l'employeur", "de werkgever"],
+            ["le travail", "het werk"], ["le temps plein", "voltijds werken"],
+            ["le mi-temps", "deeltijds werken"], ["le supérieur / boss", "de baas"],
+            ["être en congé", "op verlof zijn"], ["gagner (travailler)", "verdienen"],
+            ["le job étudiant", "de studentenjob"], ["le salaire", "het loon"], ["épargner", "sparen"],
+            ["le loyer", "de huur"], ["à vendre", "te koop"]
+        ]),
+        deck('corps', 'Le corps & le visage', [
+            ["le front", "het voorhoofd"], ["les cheveux", "het haar"], ["l'œil / les yeux", "het oog / de ogen"],
+            ["l'oreille / les oreilles", "het oor / de oren"], ["la dent / les dents", "de tand / de tanden"],
+            ["la lèvre / les lèvres", "de lip / de lippen"], ["le menton", "de kin"], ["le cou", "de hals"],
+            ["le nez", "de neus"], ["la joue / les joues", "de wang / de wangen"],
+            ["le sourcil", "de wenkbrauw"], ["les cils", "de wimpers"], ["le visage", "het gezicht"],
+            ["les épaules", "de schouders"], ["la nuque", "de nek"], ["le buste", "de borst"],
+            ["le bras", "de arm"], ["la main", "de hand"], ["la jambe", "het been"], ["la cuisse", "de dij"],
+            ["le pied", "de voet"], ["la cheville", "de enkel"], ["le genou", "de knie"], ["le dos", "de rug"],
+            ["les fesses", "de billen"], ["le coude", "de elleboog"], ["le mollet", "de kuit"],
+            ["le talon", "de hak / de hiel"], ["le ventre", "de buik"], ["la gorge", "de keel"],
+            ["les orteils", "de tenen"], ["les doigts", "de vingers"], ["être nu", "naakt zijn"],
+            ["fort, dur", "hard"], ["doux", "zacht"],
+            ["avoir des papillons dans le ventre", "vlinders in de buik hebben"],
+            ["mi-long", "halflang"], ["perdre ses cheveux", "oude haren kwijt zijn"]
+        ]),
+        deck('vetements', 'Porter des vêtements', [
+            ["la cravate", "de das"], ["le sac à main", "de handtas"], ["l'écharpe", "de sjaal"],
+            ["le chapeau", "de hoed"], ["les lunettes", "de bril"], ["les gants", "de handschoenen"],
+            ["la chemise", "het hemd"], ["le peignoir", "de badjas"], ["la ceinture", "de riem"],
+            ["le pyjama", "de pyjama"], ["le collier", "de halsketting"], ["les chaussettes", "de sokken"],
+            ["la bague", "de ring"], ["la montre", "het horloge"], ["le bracelet", "de armband"],
+            ["les lunettes de soleil", "de zonnebril"], ["le soutif", "de beha"],
+            ["les sous-vêtements", "de onderbroek"], ["le boxer", "de boxershort"],
+            ["la casquette", "de pet"], ["le pantalon", "de broek"], ["la jupe", "de rok"],
+            ["la veste / le manteau", "de jas"], ["porter", "dragen / aanhebben"],
+            ["avoir besoin", "nodig hebben"], ["en cuir", "leer"], ["la boucle d'oreille", "de oorring"],
+            ["le motif", "het patroon"], ["laine", "wollen"], ["plastique", "plastic"],
+            ["vraie / originale", "echt"], ["fausse / contrefaçon", "nep"], ["la marque", "het merk"],
+            ["le piercing", "de piercing"], ["multicolore", "kleurrijk"], ["col en V", "de v-hals"],
+            ["col rond", "de ronde kraag"], ["les manches", "de mouwen"],
+            ["je porte une écharpe", "ik heb een sjaal om"], ["le short de bain", "de zwembroek"],
+            ["la robe", "de jurk"], ["les chaussures", "de schoenen"], ["le t-shirt", "het T-shirt"],
+            ["le bonnet", "de muts"], ["le maillot de bain", "het badpak"], ["les sandales", "de sandalen"],
+            ["la blouse", "de bloes"], ["le pull", "de trui"], ["le short", "de short / korte broek"],
+            ["le nœud papillon", "de vlinderdas"]
+        ]),
+        deck('sante', 'Chez le docteur', [
+            ["avoir la diarrhée", "diarree hebben"], ["vomir", "kotsen / zich overgeven"],
+            ["être malade", "ziek zijn"], ["avoir un coup de soleil", "een zonnesteek hebben"],
+            ["avoir mal au ventre", "buikpijn hebben"], ["tousser", "hoesten"],
+            ["péter", "een scheet laten"], ["être blessé", "geblesseerd zijn"],
+            ["avoir le nez bouché", "een verstopte neus hebben"],
+            ["marcher avec des béquilles", "met krukken lopen"], ["avoir un plâtre", "een gips dragen"],
+            ["avoir de la fièvre", "koorts hebben"], ["avoir le nez qui coule", "een lopende neus hebben"],
+            ["avoir un rhume", "verkouden zijn"], ["avoir mauvaise haleine", "mondgeur hebben"],
+            ["être fatigué", "moe zijn"], ["avoir une éruption cutanée", "uitslag hebben"],
+            ["avoir un lumbago", "een lumbago hebben"], ["je suis constipé", "ik ben verstopt"],
+            ["avoir mal", "pijn hebben"], ["avoir une allergie", "een allergie hebben"],
+            ["être mort de fatigue", "doodmoe zijn"], ["sentir mauvais", "stinken"],
+            ["se moucher", "zijn neus snuiten"], ["qu'est-ce qu'il y a ?", "wat scheelt er?"],
+            ["avoir ses règles", "zijn maandstonden hebben"], ["les symptômes", "de symptomen"],
+            ["la pilule", "de pil"], ["la pilule contraceptive", "de anticonceptiepil"],
+            ["le comprimé", "de tablet"], ["la pilule du lendemain", "de morning-afterpil"],
+            ["le remède", "het geneesmiddel / medicijn"], ["l'antibiotique", "het antibioticum"],
+            ["l'anti-douleur", "de pijnstiller"], ["la crème (soin)", "de crème"],
+            ["la crème (pour la douleur)", "de zalf"], ["la lotion", "de lotion"],
+            ["le suppositoire", "de zetpil"], ["les gouttes pour les oreilles", "de oordruppels"],
+            ["les gouttes pour les yeux", "de oogdruppels"], ["la vitamine", "de vitamine"],
+            ["la crème solaire", "de zonnecrème"], ["l'antidépresseur", "het antidepressivum"],
+            ["la notice", "de bijsluiter"], ["le désinfectant", "het ontsmettingsmiddel"],
+            ["le spray nasal", "de neusspray"], ["être gonflé", "gezwollen zijn"],
+            ["s'évanouir", "flauwvallen"], ["guérir", "genezen"], ["avaler", "slikken"],
+            ["malade", "ziek"], ["en bonne santé", "gezond"], ["cassé", "gebroken"],
+            ["enrhumé", "verkouden"], ["foulé", "verstuikt"], ["nauséeux", "misselijk"],
+            ["pâle", "bleek"], ["en forme", "fit"], ["faible", "flauw / zwak"]
+        ]),
+        deck('couleurs', 'Les couleurs', [
+            ["bleu", "blauw"], ["rouge", "rood"], ["noir", "zwart"], ["orange", "oranje"],
+            ["gris", "grijs"], ["violet / mauve", "paars"], ["jaune", "geel"], ["vert", "groen"],
+            ["brun", "bruin"], ["doré", "goud"], ["rose", "roze"], ["argenté", "zilver"],
+            ["blanc", "wit"], ["clair", "licht"], ["foncé", "donker"], ["multicolore", "kleurrijk"],
+            ["la couleur", "de kleur"], ["mélanger", "mengen"], ["l'arc-en-ciel", "de regenboog"]
+        ]),
+        deck('heure', "L'heure & les moments", [
+            ["le matin", "'s morgens"], ["à midi", "'s middags"], ["l'après-midi", "'s namiddags"],
+            ["le soir", "'s avonds"], ["la nuit", "'s nachts"], ["ce matin", "vanmorgen"],
+            ["ce midi", "vanmiddag"], ["cet après-midi", "vanmiddag"], ["ce soir", "vanavond"],
+            ["cette nuit", "vannacht"]
+        ]),
+        deck('corvees', 'Les corvées', [
+            ["mettre la table", "de tafel dekken"], ["débarrasser la table", "de tafel afruimen"],
+            ["vider le lave-vaisselle", "de vaatwasser leegmaken"],
+            ["remplir le lave-vaisselle", "de vaatwasser vullen"], ["se brosser les dents", "de tanden poetsen"],
+            ["laver la voiture", "de auto wassen"], ["ranger sa chambre", "de kamer opruimen"],
+            ["étudier", "leren / studeren"], ["passer la serpillère", "dweilen"],
+            ["tondre la pelouse", "het gras maaien"], ["passer l'aspirateur", "stofzuigen"],
+            ["faire ses devoirs", "het huiswerk maken"], ["sortir le chien", "de hond uitlaten"],
+            ["faire le lit", "het bed opmaken"], ["avoir envie de", "zin hebben om"],
+            ["être prêt", "klaar zijn"], ["regarder la télé", "naar de tv kijken"],
+            ["se lever", "opstaan"], ["surveiller / garder", "passen op"], ["compléter", "aanvullen"],
+            ["se détendre", "chillen"], ["balayer", "vegen"], ["dépoussiérer", "afstoffen"],
+            ["repasser", "strijken"], ["arroser les plantes", "de planten water geven"]
+        ]),
+        deck('nourriture', 'La nourriture', [
+            ["la baguette", "de baguette"], ["le filet de poulet", "de kipfilet"], ["le pain", "het brood"],
+            ["les noix", "de noten"], ["le toast", "de toast"], ["l'œuf au plat", "het spiegelei"],
+            ["le salami", "de salami"], ["les œufs brouillés", "het roerei"],
+            ["le lait chocolaté", "de chocomelk"], ["le lait", "de melk"],
+            ["le jus d'orange", "het sinaasappelsap"], ["le fromage", "de kaas"], ["le bacon", "de bacon"],
+            ["l'œuf / les œufs", "het ei / de eieren"], ["le jus de pomme", "het appelsap"],
+            ["le croissant", "de croissant"], ["la confiture", "de jam / confituur"],
+            ["le beurre", "de boter"], ["grillé", "gebraden"], ["doré (toasté)", "geroosterd"],
+            ["coupé", "gesneden"], ["entier (non coupé)", "ongesneden"],
+            ["les frites", "de frietjes"], ["les pommes de terre", "de aardappelen"],
+            ["les spaghettis", "de spaghetti"], ["la laitue", "de sla"], ["le cordon bleu", "de cordon bleu"],
+            ["la soupe", "de soep"], ["le sel", "het zout"], ["le steak", "de steak"],
+            ["la viande hachée", "het gehaktvlees"], ["la purée", "de puree"], ["le poivre", "de peper"],
+            ["la salade (mélangée)", "de salade"], ["les pâtes", "de pasta"], ["le riz", "de rijst"],
+            ["les pommes de terre rissolées", "de gebraden aardappelen"], ["le sandwich", "het broodje"],
+            ["la saucisse", "het worstje"], ["la bolognaise", "de bolognaise"],
+            ["le tiramisu", "de tiramisu"], ["la glace", "het ijsje"],
+            ["les ailes de poulet", "de kippenvleugels"], ["les boules (de glace)", "het bolletje"],
+            ["la viande", "het vlees"], ["l'entrée", "het voorgerecht"],
+            ["le plat principal", "het hoofdgerecht"], ["le dessert", "het nagerecht / dessert"],
+            ["le souper", "het avondeten"], ["l'encas, la collation", "het tussendoortje"],
+            ["le goûter (4h)", "het 4-uurtje"], ["la sieste", "het dutje"], ["les crudités", "de rauwkost"],
+            ["j'aimerais", "ik wil graag"], ["je préfère", "ik zou liever"]
+        ]),
+        deck('verbes', 'Verbes courants', [
+            ["être", "zijn"], ["avoir", "hebben"], ["être né", "geboren zijn"], ["parler", "praten / spreken"],
+            ["venir de", "komen uit"], ["habiter", "wonen"], ["devenir", "worden"], ["travailler", "werken"],
+            ["vivre", "leven"], ["étudier", "studeren"], ["aimer", "houden van"], ["apprendre", "leren"],
+            ["rester", "blijven"], ["trouver", "vinden"], ["apporter", "brengen"], ["s'appeler", "heten"],
+            ["devoir", "moeten"], ["garder", "houden"], ["savoir faire", "kunnen"], ["donner", "geven"],
+            ["venir", "komen"], ["recevoir", "krijgen"], ["aller à", "gaan naar"], ["vouloir", "willen"],
+            ["écouter", "luisteren naar"], ["expliquer", "uitleggen"], ["laisser", "laten"], ["voir", "zien"],
+            ["faire (fabriquer)", "maken"], ["dire", "zeggen"], ["savoir", "weten"], ["faire (agir)", "doen"],
+            ["pouvoir (permission)", "mogen"], ["prendre", "nemen"]
+        ]),
+        deck('verbes-separables', 'Verbes à particule séparable', [
+            ["attirer, mettre", "aantrekken"], ["avouer, admettre", "toegeven"], ["laver", "afwassen"],
+            ["écrire", "opschrijven"], ["entrer", "instappen"], ["fermer", "dichtdoen"],
+            ["fuir à vélo", "wegfietsen"], ["proposer, présenter", "voorstellen"],
+            ["participer à", "deelnemen"], ["participer en jouant", "meespelen"], ["ranger", "opruimen"],
+            ["rester à la maison", "thuisblijven"], ["revenir", "terugkomen"], ["se lever", "opstaan"],
+            ["couper (en tranches)", "afsnijden"], ["(se) préparer", "voorbereiden"], ["finir", "afmaken"],
+            ["réfléchir", "nadenken"], ["enlever", "uittrekken"], ["collaborer", "meewerken"],
+            ["vérifier", "nakijken"], ["se présenter", "zich voorstellen"], ["sortir", "uitgaan"]
+        ]),
+        deck('grammaire-mots', 'Adverbes, prépositions & connecteurs', [
+            ["toujours", "altijd"], ["jamais", "nooit"], ["souvent", "vaak / dikwijls"],
+            ["parfois", "soms / af en toe"], ["là-bas", "daar"], ["ici", "hier"], ["maintenant", "nu"],
+            ["très", "heel / zeer"], ["volontiers", "graag"], ["à l'extérieur", "buiten"], ["encore", "nog"],
+            ["aussi", "ook"], ["beaucoup", "veel"], ["peut-être", "misschien"], ["vite", "snel"],
+            ["déjà", "al"], ["chaque", "elk / elke"], ["déjà (une fois)", "ooit"], ["d'abord", "eerst"],
+            ["ensuite", "dan"], ["puis", "daarna"], ["en plus de cela", "bovendien"],
+            ["premièrement", "ten eerste"], ["deuxièmement", "ten tweede"], ["troisièmement", "ten derde"],
+            ["pour commencer", "om te beginnen"], ["pour terminer", "om te eindigen"],
+            ["tout à l'heure", "straks"], ["sur", "op"], ["à partir de", "vanaf"], ["avec", "met"],
+            ["contre", "tegen"], ["jusqu'à", "tot"], ["dans", "in"], ["entre", "tussen"], ["sans", "zonder"],
+            ["vers", "naar"], ["derrière", "achter"], ["à côté de", "naast"], ["sous", "onder"],
+            ["au-dessus de", "boven"], ["devant / pour", "voor"], ["de (provenance)", "van"]
+        ]),
+        deck('adjectifs', 'Adjectifs (visage & corps)', [
+            ["musclé", "gespierd"], ["petit", "klein"], ["long", "lang"], ["court", "kort"],
+            ["grand", "groot"], ["gros", "dik"], ["rond", "rond"], ["pointu", "scherp"], ["poilu", "harig"],
+            ["ovale", "ovaal"], ["carré", "vierkant"], ["fin", "dun / fijn"], ["beau / belle", "mooi"],
+            ["mince", "slank"], ["moche", "lelijk"], ["jeune", "jong"], ["fort", "sterk"], ["vieux", "oud"],
+            ["large", "breed"], ["droit", "recht"], ["sportif", "sportief"], ["bouclé", "gekruld"],
+            ["lisse", "glad"], ["chauve", "kaal"]
+        ])
+    ];
+
+    FlashcardEngine.init({
+        id: 'vocabulaire-neerlandais',
+        title: 'Cartes Flash',
+        subtitle: 'Vocabulaire Néerlandais',
+        icon: '🗂️',
+        backHref: '../index.html',
+        backLabel: '← Vocabulaire néerlandais',
+        frontLabel: 'Français',
+        backLabel2: 'Nederlands',
+        decks: DECKS
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz - Vocabulaire Néerlandais</title>
+    <meta name="description" content="100 questions de traduction et de grammaire néerlandaise, 5 niveaux.">
+    <link rel="stylesheet" href="../../../assets/quiz-engine.css">
+</head>
+<body>
+
+<div id="quiz-app"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="../../../assets/auth.js"></script>
+<script src="../../../assets/quiz-engine.js"></script>
+<script>
+    const quizData = [
+        // ============================================================
+        // NIVEAU 1 : NOVICE — salutations, chiffres, famille
+        // ============================================================
+        { level: 1, question: "Comment dit-on « bonjour » en néerlandais, dans l'usage courant ?", options: ["hallo / dag", "tot ziens", "dank u"], correctAnswer: "hallo / dag" },
+        { level: 1, question: "Comment dit-on « merci » ?", options: ["graag gedaan", "dank u / bedankt", "alsjeblieft"], correctAnswer: "dank u / bedankt" },
+        { level: 1, question: "Que signifie « tot ziens » ?", options: ["Bonjour", "Au revoir", "Bonne nuit"], correctAnswer: "Au revoir" },
+        { level: 1, question: "Comment dit-on « à demain » ?", options: ["tot morgen", "vanmorgen", "goeiemorgen"], correctAnswer: "tot morgen" },
+        { level: 1, question: "Que signifie « hoe oud ben je? » ?", options: ["Comment vas-tu ?", "Quel âge as-tu ?", "D'où viens-tu ?"], correctAnswer: "Quel âge as-tu ?" },
+        { level: 1, question: "Comment dit-on « un » en néerlandais ?", options: ["een", "twee", "tien"], correctAnswer: "een" },
+        { level: 1, question: "Comment dit-on « dix » ?", options: ["negen", "tien", "twintig"], correctAnswer: "tien" },
+        { level: 1, question: "Que signifie « twintig » ?", options: ["Douze", "Vingt", "Deux"], correctAnswer: "Vingt" },
+        { level: 1, question: "Comment dit-on « cent » en néerlandais ?", options: ["honderd", "duizend", "miljoen"], correctAnswer: "honderd" },
+        { level: 1, question: "En néerlandais (usage belge), comment dit-on « septante » (70) ?", options: ["zestig", "zeventig", "tachtig"], correctAnswer: "zeventig" },
+        { level: 1, question: "Comment dit-on « quatre-vingt » (80) en néerlandais ?", options: ["negentig", "tachtig", "veertig"], correctAnswer: "tachtig" },
+        { level: 1, question: "Comment dit-on « la mère » ?", options: ["de vader", "de moeder", "de zus"], correctAnswer: "de moeder" },
+        { level: 1, question: "Comment dit-on « le frère » ?", options: ["de broer", "de zus", "de oom"], correctAnswer: "de broer" },
+        { level: 1, question: "Que signifie « de zus » ?", options: ["Le frère", "La sœur", "La tante"], correctAnswer: "La sœur" },
+        { level: 1, question: "Comment dit-on « les parents » ?", options: ["de kinderen", "de ouders", "de familie"], correctAnswer: "de ouders" },
+        { level: 1, question: "Que signifie « getrouwd zijn » ?", options: ["Être divorcé", "Être marié", "Être fiancé"], correctAnswer: "Être marié" },
+        { level: 1, question: "Comment dit-on « être divorcé » ?", options: ["gescheiden zijn", "getrouwd zijn", "verloofd zijn"], correctAnswer: "gescheiden zijn" },
+        { level: 1, question: "En néerlandais, « de neef » peut désigner le cousin ou bien...", options: ["le neveu", "l'oncle", "le beau-père"], correctAnswer: "le neveu", explanation: "« de neef » couvre à la fois le cousin (masculin) et le neveu — le contexte seul permet de distinguer." },
+        { level: 1, question: "Comment dit-on « célibataire » ?", options: ["single / vrijgezel", "getrouwd", "verliefd"], correctAnswer: "single / vrijgezel" },
+        { level: 1, question: "Comment dit-on « la grand-mère », forme familière ?", options: ["de oma", "de opa", "de tante"], correctAnswer: "de oma" },
+
+        // ============================================================
+        // NIVEAU 2 : INTERMÉDIAIRE — caractère, hobbys, métiers
+        // ============================================================
+        { level: 2, question: "Comment dit-on « timide » ?", options: ["verlegen", "jaloers", "onbeleefd"], correctAnswer: "verlegen" },
+        { level: 2, question: "Que signifie « jaloers » ?", options: ["Honnête", "Jaloux", "Fâché"], correctAnswer: "Jaloux" },
+        { level: 2, question: "Comment dit-on « honnête » ?", options: ["eerlijk", "boeiend", "trouw"], correctAnswer: "eerlijk" },
+        { level: 2, question: "Que signifie « verstrooid » ?", options: ["Tête en l'air", "Nerveux", "Calme"], correctAnswer: "Tête en l'air" },
+        { level: 2, question: "Comment dit-on « stressé » ?", options: ["gestresseerd", "verbaasd", "boos"], correctAnswer: "gestresseerd" },
+        { level: 2, question: "Comment dit-on « se sentir bien dans sa peau » ?", options: ["zich goed in zijn vel voelen", "zichzelf zijn", "blij zijn"], correctAnswer: "zich goed in zijn vel voelen" },
+        { level: 2, question: "Comment dit-on « jouer au foot » ?", options: ["voetbal spelen", "tennis spelen", "basketbal spelen"], correctAnswer: "voetbal spelen" },
+        { level: 2, question: "Que signifie « schaatsen » ?", options: ["Faire du skate", "Faire du patin à glace", "Skier"], correctAnswer: "Faire du patin à glace" },
+        { level: 2, question: "Comment dit-on « faire du vélo » ?", options: ["fietsen", "zwemmen", "wandelen"], correctAnswer: "fietsen" },
+        { level: 2, question: "Que signifie « netflixen » ?", options: ["Aller au cinéma", "Regarder Netflix", "Surfer sur internet"], correctAnswer: "Regarder Netflix" },
+        { level: 2, question: "Comment dit-on « surfer sur internet » ?", options: ["op internet surfen", "chatten", "netflixen"], correctAnswer: "op internet surfen" },
+        { level: 2, question: "Comment dit-on « l'avocat » (métier) ?", options: ["de advocaat", "de dokter", "de docent"], correctAnswer: "de advocaat" },
+        { level: 2, question: "Que signifie « de kapper » ?", options: ["Le boxeur", "Le coiffeur", "Le cuisinier"], correctAnswer: "Le coiffeur" },
+        { level: 2, question: "Comment dit-on « le fermier » ?", options: ["de boer", "de kok", "de bokser"], correctAnswer: "de boer" },
+        { level: 2, question: "Comment dit-on « travailler en tant que » ?", options: ["werken als", "werken voor", "werken met"], correctAnswer: "werken als" },
+        { level: 2, question: "Que signifie « voltijds werken » ?", options: ["Travailler à mi-temps", "Travailler à temps plein", "Être en congé"], correctAnswer: "Travailler à temps plein" },
+        { level: 2, question: "Comment dit-on « le salaire » ?", options: ["het loon", "de huur", "de baas"], correctAnswer: "het loon" },
+        { level: 2, question: "Comment dit-on « épargner » ?", options: ["sparen", "verdienen", "lenen"], correctAnswer: "sparen" },
+        { level: 2, question: "Que signifie « op verlof zijn » ?", options: ["Être en congé", "Être au travail", "Être stagiaire"], correctAnswer: "Être en congé" },
+        { level: 2, question: "Comment dit-on « le stagiaire » ?", options: ["de stagiaire", "de werknemer", "de werkgever"], correctAnswer: "de stagiaire" },
+
+        // ============================================================
+        // NIVEAU 3 : AVANCÉ — corps, vêtements, couleurs, heure, pluriels, geen/niet
+        // ============================================================
+        { level: 3, question: "Comment dit-on « les cheveux » en néerlandais (toujours au singulier) ?", options: ["het haar", "de haren", "de hoofd"], correctAnswer: "het haar" },
+        { level: 3, question: "Quel est le pluriel néerlandais de « het oog » (l'œil) ?", options: ["de ogen", "de oog", "de ogens"], correctAnswer: "de ogen" },
+        { level: 3, question: "Comment dit-on « le genou » ?", options: ["de knie", "de enkel", "de kuit"], correctAnswer: "de knie" },
+        { level: 3, question: "Que signifie « de billen » ?", options: ["Les fesses", "Les épaules", "Les orteils"], correctAnswer: "Les fesses" },
+        { level: 3, question: "Comment dit-on « la cravate » ?", options: ["de das", "de riem", "de sjaal"], correctAnswer: "de das" },
+        { level: 3, question: "Que signifie « de zonnebril » ?", options: ["Le chapeau", "Les lunettes de soleil", "La casquette"], correctAnswer: "Les lunettes de soleil" },
+        { level: 3, question: "Comment dit-on « gris » en néerlandais ?", options: ["grijs", "goud", "paars"], correctAnswer: "grijs" },
+        { level: 3, question: "Que signifie « paars » ?", options: ["Rose", "Violet / mauve", "Brun"], correctAnswer: "Violet / mauve" },
+        { level: 3, question: "Comment dit-on « foncé » ?", options: ["licht", "donker", "kleurrijk"], correctAnswer: "donker" },
+        { level: 3, question: "Selon la règle du pluriel en -en, quel est le pluriel de « schoen » (chaussure) ?", options: ["schoens", "schoenen", "schoen's"], correctAnswer: "schoenen" },
+        { level: 3, question: "Quelle est l'exception notable pour le pluriel de « kind » (enfant) ?", options: ["kinds", "kindjes", "kinderen"], correctAnswer: "kinderen" },
+        { level: 3, question: "Un mot comme « meisje » (fille), terminé en -je, prend quelle terminaison au pluriel ?", options: ["-en", "-s", "-eren"], correctAnswer: "-s", explanation: "Les mots terminés par -e, -je, -er, -el, -en, -ie prennent généralement -s : meisje → meisjes." },
+        { level: 3, question: "Comment dit-on « 8h05 » en néerlandais (« het is vijf ... acht ») ?", options: ["na", "voor", "om"], correctAnswer: "na", explanation: "De 0 à 25 minutes on utilise « over/na » : het is vijf na acht." },
+        { level: 3, question: "Comment dit-on « 4h30 » en néerlandais ?", options: ["Het is vier uur dertig", "Het is halfvijf", "Het is half vier"], correctAnswer: "Het is halfvijf", explanation: "Pour les demi-heures, on prend toujours la moitié de l'heure SUIVANTE : 4h30 → halfvijf." },
+        { level: 3, question: "Faut-il utiliser « geen » ou « niet » devant un nom précédé de « een » ?", options: ["geen", "niet", "les deux sont possibles"], correctAnswer: "geen" },
+        { level: 3, question: "Faut-il utiliser « geen » ou « niet » pour nier un verbe ?", options: ["geen", "niet", "les deux sont possibles"], correctAnswer: "niet" },
+        { level: 3, question: "Comment dit-on « je n'ai pas de livre » ?", options: ["Ik heb niet een boek.", "Ik heb geen boek.", "Ik heb boek niet."], correctAnswer: "Ik heb geen boek." },
+        { level: 3, question: "Comment dit-on « le pull » ?", options: ["de trui", "de jas", "de broek"], correctAnswer: "de trui" },
+        { level: 3, question: "Comment dit-on « avoir des papillons dans le ventre » ?", options: ["vlinders in de buik hebben", "buikpijn hebben", "misselijk zijn"], correctAnswer: "vlinders in de buik hebben" },
+        { level: 3, question: "Comment dit-on « l'arc-en-ciel » ?", options: ["de regenboog", "de kleur", "het patroon"], correctAnswer: "de regenboog" },
+
+        // ============================================================
+        // NIVEAU 4 : EXPERT — santé/médicaments, conjugaison (OTT), modaux
+        // ============================================================
+        { level: 4, question: "Comment dit-on « avoir de la fièvre » ?", options: ["koorts hebben", "verkouden zijn", "hoesten"], correctAnswer: "koorts hebben" },
+        { level: 4, question: "Comment dit-on « tousser » ?", options: ["hoesten", "kotsen", "snuiten"], correctAnswer: "hoesten" },
+        { level: 4, question: "Que signifie « een gips dragen » ?", options: ["Avoir un plâtre", "Marcher avec des béquilles", "Avoir une allergie"], correctAnswer: "Avoir un plâtre" },
+        { level: 4, question: "Comment dit-on « être enrhumé / avoir un rhume » ?", options: ["verkouden zijn", "misselijk zijn", "gezwollen zijn"], correctAnswer: "verkouden zijn" },
+        { level: 4, question: "Que signifie « de pijnstiller » ?", options: ["Le comprimé", "L'anti-douleur", "Le désinfectant"], correctAnswer: "L'anti-douleur" },
+        { level: 4, question: "Que signifie « het antibioticum » ?", options: ["L'antidépresseur", "L'antibiotique", "Le vitamine"], correctAnswer: "L'antibiotique" },
+        { level: 4, question: "Selon la 1ère règle de formation du radical verbal, quel est le radical de « kijken » (regarder) ?", options: ["kijk", "kijke", "kij"], correctAnswer: "kijk" },
+        { level: 4, question: "Selon la 2ème règle (jamais deux mêmes lettres en fin de radical), quel est le radical de « zwemmen » (nager) ?", options: ["zwemm", "zwem", "zwe"], correctAnswer: "zwem" },
+        { level: 4, question: "Selon la 3ème règle (on double la voyelle entre deux consonnes), quel est le radical de « nemen » (prendre) ?", options: ["nem", "neem", "nee"], correctAnswer: "neem" },
+        { level: 4, question: "Selon la 4ème règle (le -v devient -f), quel est le radical de « blijven » (rester) ?", options: ["blijv", "blijf", "blij"], correctAnswer: "blijf" },
+        { level: 4, question: "Selon la 5ème règle (le -z devient -s), quel est le radical de « lezen » (lire) ?", options: ["lez", "leez", "lees"], correctAnswer: "lees" },
+        { level: 4, question: "Au présent (OTT), quelle terminaison prend le radical pour « je » et « u » ?", options: ["radical seul", "radical + t", "l'infinitif complet"], correctAnswer: "radical + t" },
+        { level: 4, question: "Au présent (OTT), quelle forme utilise-t-on pour « we / jullie / zij » ?", options: ["le radical seul", "radical + t", "l'infinitif complet"], correctAnswer: "l'infinitif complet" },
+        { level: 4, question: "Quel verbe modal néerlandais correspond à « devoir » ?", options: ["moeten", "kunnen", "mogen"], correctAnswer: "moeten" },
+        { level: 4, question: "Quel verbe modal correspond à « pouvoir » au sens « être capable de » ?", options: ["willen", "kunnen", "mogen"], correctAnswer: "kunnen" },
+        { level: 4, question: "Quel verbe modal correspond à « pouvoir » au sens d'une permission ?", options: ["mogen", "moeten", "kunnen"], correctAnswer: "mogen" },
+        { level: 4, question: "Comment se construit le conditionnel présent en néerlandais ?", options: ["zouden + infinitif", "zullen + infinitif", "hebben + infinitif"], correctAnswer: "zouden + infinitif" },
+        { level: 4, question: "Comment dit-on « il y a un bus qui arrive » ?", options: ["Er komt een bus aan.", "Er is een bus aan.", "Een bus is er."], correctAnswer: "Er komt een bus aan." },
+        { level: 4, question: "Quel verbe de position utiliser pour « il y a un poster accroché au mur » ?", options: ["staan", "zitten", "hangen"], correctAnswer: "hangen", explanation: "Er hangt een poster aan de muur — hangen s'utilise pour ce qui est accroché/pendu." },
+        { level: 4, question: "Comment dit-on « je suis mort de fatigue » ?", options: ["Ik ben doodmoe.", "Ik ben ziek.", "Ik ben flauw."], correctAnswer: "Ik ben doodmoe." },
+
+        // ============================================================
+        // NIVEAU 5 : MAÎTRE — grammaire fine
+        // ============================================================
+        { level: 5, question: "Comment traduit-on « être en train de » en néerlandais ?", options: ["aan het + infinitif (à la fin)", "te + infinitif", "zouden + infinitif"], correctAnswer: "aan het + infinitif (à la fin)" },
+        { level: 5, question: "Comment traduit-on un verbe suivi de « de/à » (essayer de, promettre de...) ?", options: ["te + infinitif (à la fin)", "aan het + infinitif", "om + infinitif"], correctAnswer: "te + infinitif (à la fin)" },
+        { level: 5, question: "Lesquels de ces verbes n'utilisent PAS « te » devant l'infinitif ?", options: ["helpen, leren, durven", "proberen, hopen, weigeren", "beginnen, besluiten, beloven"], correctAnswer: "helpen, leren, durven" },
+        { level: 5, question: "Comment traduit-on « continuer à/de » ?", options: ["blijven + infinitif (ou verder)", "geen + infinitif", "te + infinitif"], correctAnswer: "blijven + infinitif (ou verder)" },
+        { level: 5, question: "Comment traduit-on « pour » suivi d'un nom (ex : pour ma mère) ?", options: ["voor + nom", "om + nom", "te + nom"], correctAnswer: "voor + nom" },
+        { level: 5, question: "Comment traduit-on « pour » exprimant un but, suivi d'un infinitif ?", options: ["om te + infinitif", "voor te + infinitif", "aan het + infinitif"], correctAnswer: "om te + infinitif" },
+        { level: 5, question: "Dans « om ... te » avec un verbe à particule séparable, où se place la particule ?", options: ["Juste avant le « te »", "Juste après le « om »", "À la toute fin de la phrase"], correctAnswer: "Juste avant le « te »", explanation: "Ex : om over mijn problemen na te denken (nadenken → na te denken)." },
+        { level: 5, question: "Que se passe-t-il si l'on commence une phrase par « Om te... » ?", options: ["Rien de particulier", "Il faut faire une inversion (verbe avant sujet)", "Le verbe passe au passé"], correctAnswer: "Il faut faire une inversion (verbe avant sujet)" },
+        { level: 5, question: "Comment dit-on « trop » devant un adjectif ?", options: ["te + adjectif", "te veel + adjectif", "veel + adjectif"], correctAnswer: "te + adjectif" },
+        { level: 5, question: "Comment dit-on « trop de » devant un nom commun ?", options: ["te veel + nom", "te + nom", "veel te + nom"], correctAnswer: "te veel + nom" },
+        { level: 5, question: "Dans une phrase affirmative simple, où se place la particule séparable ?", options: ["Juste après le verbe", "À la fin de la phrase", "Juste avant le sujet"], correctAnswer: "À la fin de la phrase", explanation: "Sujet + verbe + complément + particule séparable, comme dans « Hij staat om 10 uur op »." },
+        { level: 5, question: "Quelle est la différence entre « nog niet » et « nog geen » ?", options: ["Ce sont des synonymes stricts", "« nog niet » s'utilise avec verbes/adjectifs/adverbes, « nog geen » devant un nom indéterminé", "« nog geen » s'utilise uniquement au passé"], correctAnswer: "« nog niet » s'utilise avec verbes/adjectifs/adverbes, « nog geen » devant un nom indéterminé" },
+        { level: 5, question: "Quelle est la règle entre « niet meer » et « geen meer » ?", options: ["« geen meer » devant un nom, « niet meer » dans tous les autres cas", "Ce sont des synonymes stricts", "« niet meer » ne s'utilise qu'à l'oral"], correctAnswer: "« geen meer » devant un nom, « niet meer » dans tous les autres cas" },
+        { level: 5, question: "Quels démonstratifs s'emploient avec un mot « het » ?", options: ["dit / dat", "die / deze", "deze / dat"], correctAnswer: "dit / dat" },
+        { level: 5, question: "Quels démonstratifs s'emploient avec un mot « de » ?", options: ["die / deze", "dit / dat", "het / de"], correctAnswer: "die / deze" },
+        { level: 5, question: "Quand utilise-t-on « die/deze » plutôt que « dit/dat » ?", options: ["Quand la chose est proche", "Quand la chose est éloignée", "Uniquement au pluriel"], correctAnswer: "Quand la chose est proche" },
+        { level: 5, question: "Comment dit-on « mon/ma/mes », en langage courant (prononcé « m'n ») ?", options: ["mijn", "jouw", "zijn"], correctAnswer: "mijn" },
+        { level: 5, question: "Comment traduit-on « notre/nos » devant un mot accompagné de « de » ?", options: ["onze", "ons", "hun"], correctAnswer: "onze" },
+        { level: 5, question: "Comment traduit-on « notre/nos » devant un mot accompagné de « het » ?", options: ["ons", "onze", "jullie"], correctAnswer: "ons" },
+        { level: 5, question: "Comment dit-on « je suis en train de marcher » ?", options: ["Ik ben aan het lopen.", "Ik loop te.", "Ik ben lopen aan het."], correctAnswer: "Ik ben aan het lopen." }
+    ];
+
+    QuizEngine.init({
+        id: 'vocabulaire-neerlandais',
+        title: 'Quiz',
+        subtitle: 'Vocabulaire Néerlandais',
+        icon: '🇳🇱',
+        accent1: '#EFBF04',
+        accent2: '#641835',
+        backHref: '../index.html',
+        backLabel: '← Vocabulaire néerlandais',
+        levelNames: { 1: 'Novice', 2: 'Intermédiaire', 3: 'Avancé', 4: 'Expert', 5: 'Maître' },
+        questions: quizData
+    });
+</script>
+
+</body>
+</html>

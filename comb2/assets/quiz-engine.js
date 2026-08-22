@@ -50,7 +50,7 @@
         document.documentElement.style.setProperty('--accent-1', cfg.accent1);
         document.documentElement.style.setProperty('--accent-2', cfg.accent2);
 
-        const root = document.getElementById('quiz-app') || document.body;
+        const root = cfg.mount ? (typeof cfg.mount === 'string' ? document.querySelector(cfg.mount) : cfg.mount) : (document.getElementById('quiz-app') || document.body);
 
         if (!global.AuthGate) {
             // Pas de module d'authentification chargé : on démarre en local seul.
