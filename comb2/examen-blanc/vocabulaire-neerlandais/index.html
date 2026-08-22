@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vocabulaire Néerlandais — stucom</title>
-    <meta name="description" content="Cartes flash, quiz de traduction et conseils de méthode pour le vocabulaire néerlandais.">
+    <meta name="description" content="Cartes flash et quiz de traduction pour le vocabulaire néerlandais.">
     <link rel="stylesheet" href="../../assets/quiz-engine.css">
 </head>
 <body>
@@ -34,15 +34,6 @@
             title: 'Quiz de traduction & grammaire',
             description: "100 questions, 5 niveaux : traduction FR ↔ NL, conjugaison, geen/niet, verbes à particule séparable..."
         }
-    ];
-
-    const TIPS = [
-        { h: '🔁 Répète, espace, ne relis pas', p: "Se contenter de relire une liste ne construit presque aucun souvenir durable. Ferme la carte, essaie de retrouver la traduction de mémoire, puis vérifie. C'est l'effort de rappel qui ancre le mot — pas la lecture." },
-        { h: '📆 Petites sessions répétées', p: "10-15 minutes par jour valent mieux qu'une session de 2h une fois par semaine. Le cerveau retient mieux quand l'information est revue à intervalles croissants (1 jour, puis 3, puis 7...) — c'est le principe des cartes flash ici : une carte réussie revient moins souvent, une carte ratée revient tout de suite." },
-        { h: '🔀 Mélange les thèmes', p: "Étudier tout un thème d'affilée donne une fausse impression de maîtrise (tu devines par élimination). Alterne les thèmes ou utilise « Révision intelligente » pour mélanger — c'est plus inconfortable mais bien plus efficace à long terme." },
-        { h: '🗣️ Mets les mots en contexte', p: "Un mot appris isolément se retient mal. Fabrique une phrase courte avec chaque nouveau mot (« Ik heb een sjaal om » plutôt que juste « sjaal = écharpe ») pour créer plusieurs points d'accroche en mémoire." },
-        { h: '↔️ Entraîne-toi dans les deux sens', p: "Reconnaître qu'« hond » veut dire chien est plus facile que de retrouver « hond » en partant de « chien ». Bascule le sens des cartes (bouton FR→NL / NL→FR) pour t'assurer que tu sais vraiment produire le mot, pas seulement le reconnaître." },
-        { h: "🎯 Sois honnête en t'évaluant", p: "Cliquer « Je savais » sur une carte devinée au hasard trompe uniquement le système de révision — donc toi-même. Ne valide que ce que tu as vraiment retrouvé sans hésiter." }
     ];
 
     const root = document.getElementById('hub-app');
@@ -93,15 +84,10 @@
                     </div>
                     <span class="quiz-icon">🇧🇪</span>
                     <h1 class="quiz-title"><span>Vocabulaire</span> Néerlandais</h1>
-                    <h2 class="quiz-subtitle">Cartes flash, quiz & méthode</h2>
+                    <h2 class="quiz-subtitle">Cartes flash & quiz</h2>
                 </header>
 
                 <div class="hub-grid" id="hubGrid"></div>
-
-                <div class="history-section">
-                    <h3>Conseils de méthode</h3>
-                    <div class="tips-grid" id="tipsGrid"></div>
-                </div>
 
                 <footer class="quiz-footer">stucom · examens blancs interactifs</footer>
             </div>
@@ -121,13 +107,6 @@
                     <span class="hub-cta">Commencer →</span>
                 </div>
             </a>
-        `).join('');
-
-        document.getElementById('tipsGrid').innerHTML = TIPS.map(t => `
-            <div class="tip-card">
-                <h4>${t.h}</h4>
-                <p>${t.p}</p>
-            </div>
         `).join('');
     }
 
