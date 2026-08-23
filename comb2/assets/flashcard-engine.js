@@ -108,6 +108,7 @@
             cardBack: root.querySelector('#cardBack'),
             rateRow: root.querySelector('#rateRow'),
             progressText: root.querySelector('#fcProgressText'),
+            mastery: root.querySelector('#fcMastery'),
             progressFill: root.querySelector('#fcProgressFill'),
             deckStats: root.querySelector('#deckStats'),
             logoutBtn: root.querySelector('#logoutBtn'),
@@ -190,26 +191,34 @@
             return a;
         }
 
+        // Trie par « boîte » Leitner croissante (les cartes les moins connues
+        // d'abord), quel que soit le mode où la carte a été apprise — le
+        // classement est mélangé au préalable pour varier l'ordre entre
+        // cartes d'une même boîte, puis trié de façon stable par boîte.
+        function sortByKnowledge(pool) {
+            const shuffled = shuffle(pool);
+            return shuffled.sort((a, b) => {
+                const ba = boxOf(a.deckId, a.idx), bb = boxOf(b.deckId, b.idx);
+                if (ba !== bb) return ba - bb;
+                const la = (cardStats[cardKey(a.deckId, a.idx)] || {}).lastSeen || 0;
+                const lb = (cardStats[cardKey(b.deckId, b.idx)] || {}).lastSeen || 0;
+                return la - lb;
+            });
+        }
+
         function startDeck(deckId) {
             currentDeck = deckId;
             sessionRight = 0; sessionSeen = 0;
             let pool = [];
             if (deckId === '__all') {
                 cfg.decks.forEach(d => d.cards.forEach((c, i) => pool.push({ deckId: d.id, idx: i, card: c })));
-                pool = shuffle(pool);
+                pool = sortByKnowledge(pool);
             } else if (deckId === '__smart') {
                 cfg.decks.forEach(d => d.cards.forEach((c, i) => pool.push({ deckId: d.id, idx: i, card: c })));
-                pool.sort((a, b) => {
-                    const ba = boxOf(a.deckId, a.idx), bb = boxOf(b.deckId, b.idx);
-                    if (ba !== bb) return ba - bb;
-                    const la = (cardStats[cardKey(a.deckId, a.idx)] || {}).lastSeen || 0;
-                    const lb = (cardStats[cardKey(b.deckId, b.idx)] || {}).lastSeen || 0;
-                    return la - lb;
-                });
-                pool = pool.slice(0, Math.min(20, pool.length));
+                pool = sortByKnowledge(pool).slice(0, Math.min(20, pool.length));
             } else {
                 const deck = cfg.decks.find(d => d.id === deckId);
-                pool = shuffle((deck ? deck.cards : []).map((c, i) => ({ deckId, idx: i, card: c })));
+                pool = sortByKnowledge((deck ? deck.cards : []).map((c, i) => ({ deckId, idx: i, card: c })));
             }
             queue = pool;
             qi = 0;
@@ -228,6 +237,7 @@
                 els.progressText.textContent = `Terminé — ${sessionRight}/${sessionSeen} connues`;
                 els.progressFill.style.width = '100%';
                 els.rateRow.style.display = 'none';
+                els.mastery.textContent = '';
                 return;
             }
             const item = queue[qi];
@@ -240,6 +250,14 @@
             const pct = Math.round((qi / queue.length) * 100);
             els.progressFill.style.width = pct + '%';
             els.progressText.textContent = `${qi + 1} / ${queue.length}`;
+            els.mastery.textContent = masteryDots(boxOf(item.deckId, item.idx));
+        }
+
+        // Reflète la boîte Leitner de la carte (1 à 5) sous forme de puces —
+        // visible quel que soit le mode (thème, toutes les cartes, révision
+        // intelligente) puisque la boîte est partagée par carte, pas par mode.
+        function masteryDots(box) {
+            return '●'.repeat(box) + '○'.repeat(5 - box);
         }
 
         els.cardWrap.addEventListener('click', () => {
@@ -308,6 +326,7 @@
 
                 <div class="fc-progress-wrap">
                     <span id="fcProgressText">Choisis un thème pour commencer</span>
+                    <span id="fcMastery" class="fc-mastery"></span>
                     <div class="progress-bar-track"><div class="progress-bar-fill" id="fcProgressFill"></div></div>
                 </div>
 

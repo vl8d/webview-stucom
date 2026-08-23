@@ -740,8 +740,12 @@ footer.quiz-footer {
 .fc-progress-wrap {
     margin: 20px 0 24px;
 }
-.fc-progress-wrap span {
-    display: block;
+.fc-progress-wrap > .progress-bar-track {
+    margin-top: 6px;
+}
+.fc-progress-wrap #fcProgressText,
+.fc-progress-wrap #fcMastery {
+    display: inline-block;
     font-family: var(--main-font);
     font-size: 0.68rem;
     font-weight: 700;
@@ -749,6 +753,11 @@ footer.quiz-footer {
     letter-spacing: 0.1em;
     color: var(--muted-color);
     margin-bottom: 6px;
+}
+.fc-mastery {
+    float: right;
+    color: var(--accent-1);
+    letter-spacing: 0.15em;
 }
 
 .fc-card-wrap {
