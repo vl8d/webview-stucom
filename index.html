@@ -1,1 +1,135 @@
-webview.stucom.tech
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>stucom</title>
+<meta name="description" content="Accès rapide aux outils stucom : mindmap, examens blancs, fiches de révision.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --black: #0a0a0a;
+    --white: #f5f5f0;
+    --grey:  #888;
+    --mid:   #1a1a1a;
+    --line:  #252525;
+  }
+  html, body { height: 100%; }
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--black);
+    color: var(--white);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 4rem 1.25rem 3rem;
+  }
+
+  header { text-align: center; margin-bottom: 3rem; }
+  #app-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    letter-spacing: .14em;
+    color: var(--white);
+  }
+  #app-sub {
+    font-size: .68rem;
+    color: var(--grey);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    margin-top: .4rem;
+  }
+
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.1rem;
+    width: 100%;
+    max-width: 920px;
+  }
+
+  .menu-card {
+    display: block;
+    background: var(--black);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--card-accent, var(--white));
+    border-radius: 3px;
+    padding: 1.4rem 1.3rem;
+    text-decoration: none;
+    color: var(--white);
+    transition: background .12s, border-color .12s, transform .12s;
+  }
+  .menu-card:hover {
+    background: var(--mid);
+    border-color: #444;
+    border-left-color: var(--card-accent, var(--white));
+    transform: translateY(-2px);
+  }
+  .menu-icon { font-size: 1.9rem; display: block; margin-bottom: .8rem; }
+  .menu-card h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: .04em;
+    font-weight: 400;
+    margin-bottom: .45rem;
+  }
+  .menu-card p {
+    font-size: .78rem;
+    line-height: 1.5;
+    color: var(--grey);
+    margin-bottom: 1rem;
+  }
+  .menu-cta {
+    font-size: .6rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--card-accent, var(--white));
+  }
+
+  footer {
+    margin-top: 3rem;
+    font-size: .6rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--grey);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div id="app-logo">stucom</div>
+  <div id="app-sub">Choisis ton outil</div>
+</header>
+
+<nav class="menu-grid">
+  <a class="menu-card" href="/mindmap/" style="--card-accent:#f5f5f0">
+    <span class="menu-icon">🧠</span>
+    <h2>MindMap</h2>
+    <p>Construis et organise tes idées sous forme de cartes mentales, exportables en PDF.</p>
+    <span class="menu-cta">Ouvrir →</span>
+  </a>
+
+  <a class="menu-card" href="/comb2/examen-blanc/" style="--card-accent:#EFBF04">
+    <span class="menu-icon">🎓</span>
+    <h2>Examens Blancs</h2>
+    <p>Entraîne-toi avec des quiz interactifs par cours, en 5 niveaux de difficulté.</p>
+    <span class="menu-cta">Ouvrir →</span>
+  </a>
+
+  <a class="menu-card" href="/comb2/droit/fiches.html" style="--card-accent:#0E6E6E">
+    <span class="menu-icon">⚖️</span>
+    <h2>Droit &amp; Déontologie</h2>
+    <p>Fiches de révision par thème et par cas pour le cours de droit de l'information.</p>
+    <span class="menu-cta">Ouvrir →</span>
+  </a>
+</nav>
+
+<footer>stucom · webview</footer>
+
+</body>
+</html>
