@@ -6,9 +6,36 @@
     <title>Examen Blanc - Philosophie des médias et de la communication</title>
     <meta name="description" content="Entraîne-toi sur 100 questions (5 niveaux) sur la philosophie des médias : identité, technique, Heidegger, Éros/Philia, Kulturindustrie, Black Mirror...">
     <link rel="stylesheet" href="../../assets/quiz-engine.css">
+    <style>
+        #ficheLink {
+            position: fixed;
+            top: 14px;
+            right: 14px;
+            z-index: 40;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--container-bg);
+            color: var(--accent-1);
+            border: 1px solid var(--line-color);
+            border-radius: 20px;
+            padding: 7px 14px;
+            font-family: var(--main-font);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            text-decoration: none;
+            transition: border-color 0.15s, transform 0.15s;
+        }
+        #ficheLink:hover { border-color: var(--accent-1); transform: translateY(-1px); }
+        @media (max-width: 640px) {
+            #ficheLink { top: auto; bottom: 14px; right: 14px; }
+        }
+    </style>
 </head>
 <body>
 
+<a id="ficheLink" href="fiches.html">📖 Fiches</a>
 <div id="quiz-app"></div>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>

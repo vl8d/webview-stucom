@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiches vivantes — Philosophie des médias et de la communication</title>
+<meta name="description" content="Frise chronologique et fiches interconnectées : philosophes, films, cas Internet et concepts du cours de philosophie des médias et de la communication.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   Reprend les tokens de quiz-engine.css : éditorial / terminal,
+   sombre, lie-de-vin + or. DM Sans + Bebas Neue.
+   ============================================================ */
+:root {
+  --bg-color: #0a0a0a;
+  --container-bg: #1a1a1a;
+  --card-bg: #141414;
+  --text-color: #f5f5f0;
+  --muted-color: #a8a29c;
+  --line-color: #333333;
+  --accent-1: #EFBF04;
+  --accent-2: #641835;
+  --title-font: 'Bebas Neue', sans-serif;
+  --main-font: 'DM Sans', sans-serif;
+
+  --c-philo:   #EFBF04;
+  --c-film:    #c084fc;
+  --c-cas:     #f87171;
+  --c-concept: #4ade80;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: var(--main-font);
+  background: var(--bg-color);
+  color: var(--text-color);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; }
+
+/* ---------- Sticky nav ---------- */
+#topnav {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(10,10,10,.92);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--line-color);
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 16px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+#topnav .brand {
+  font-family: var(--title-font);
+  font-size: 1.05rem;
+  letter-spacing: .05em;
+  color: var(--accent-1);
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+#topnav a.navlink {
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted-color);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  transition: color .15s, border-color .15s, background .15s;
+  flex-shrink: 0;
+}
+#topnav a.navlink:hover,
+#topnav a.navlink.active {
+  color: var(--text-color);
+  border-color: var(--line-color);
+  background: var(--container-bg);
+}
+#topnav .spacer { flex: 1 1 auto; }
+#topnav a.backlink {
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted-color);
+  text-decoration: none;
+  flex-shrink: 0;
+  padding: 6px 10px;
+}
+#topnav a.backlink:hover { color: var(--accent-1); }
+
+/* ---------- Hero ---------- */
+.hero {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 56px 20px 30px;
+  text-align: center;
+}
+.hero .kicker {
+  font-size: .68rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted-color);
+  margin-bottom: 10px;
+}
+.hero h1 {
+  font-family: var(--title-font);
+  font-weight: 400;
+  font-size: clamp(2.2rem, 6vw, 3.4rem);
+  letter-spacing: .02em;
+  margin: 0 0 14px;
+}
+.hero h1 span { color: var(--accent-1); }
+.hero p.lede {
+  color: var(--muted-color);
+  max-width: 640px;
+  margin: 0 auto;
+  font-size: .92rem;
+}
+.legend {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  justify-content: center;
+  margin-top: 26px;
+}
+.legend .chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .66rem; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted-color);
+  border: 1px solid var(--line-color);
+  border-radius: 20px;
+  padding: 5px 12px;
+}
+.legend .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+/* ---------- Section shell ---------- */
+section.block {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 60px 20px 10px;
+  scroll-margin-top: 60px;
+}
+.block-head {
+  display: flex; align-items: baseline; gap: 14px;
+  margin-bottom: 30px;
+  border-bottom: 1px solid var(--line-color);
+  padding-bottom: 16px;
+}
+.block-head .num {
+  font-family: var(--title-font);
+  font-size: 1.6rem;
+  color: var(--muted-color);
+  opacity: .5;
+}
+.block-head h2 {
+  font-family: var(--title-font);
+  font-weight: 400;
+  font-size: 1.9rem;
+  letter-spacing: .03em;
+  margin: 0;
+}
+.block-head p {
+  margin: 0 0 0 auto;
+  font-size: .78rem;
+  color: var(--muted-color);
+  max-width: 320px;
+  text-align: right;
+}
+@media (max-width: 640px) {
+  .block-head { flex-wrap: wrap; }
+  .block-head p { text-align: left; margin-left: 0; }
+}
+
+/* ============================================================
+   A. TIMELINE
+   ============================================================ */
+.timeline {
+  position: relative;
+  padding: 10px 0 20px;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 20px; top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, transparent, var(--line-color) 4%, var(--line-color) 96%, transparent);
+}
+@media (min-width: 820px) {
+  .timeline::before { left: 50%; transform: translateX(-1px); }
+}
+.tl-item {
+  position: relative;
+  padding: 0 0 34px 52px;
+}
+@media (min-width: 820px) {
+  .tl-item {
+    width: 50%;
+    padding: 0 40px 34px 0;
+  }
+  .tl-item:nth-child(odd) { left: 0; text-align: right; }
+  .tl-item:nth-child(even) { left: 50%; padding: 0 0 34px 40px; text-align: left; }
+}
+.tl-dot {
+  position: absolute;
+  left: 20px; top: 4px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--bg-color);
+  border: 2px solid var(--accent-1);
+  transform: translateX(-50%);
+  z-index: 2;
+}
+@media (min-width: 820px) {
+  .tl-item:nth-child(odd) .tl-dot { left: auto; right: -7px; transform: none; }
+  .tl-item:nth-child(even) .tl-dot { left: -7px; transform: none; }
+}
+.tl-item.reduction .tl-dot { background: var(--accent-1); box-shadow: 0 0 0 4px rgba(239,191,4,.18); }
+.tl-card {
+  display: inline-block;
+  background: var(--card-bg);
+  border: 1px solid var(--line-color);
+  border-radius: 3px;
+  padding: 14px 16px;
+  max-width: 420px;
+  text-align: left;
+}
+.tl-era {
+  font-size: .64rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--accent-1);
+  margin-bottom: 5px;
+  font-weight: 700;
+}
+.tl-card h3 {
+  font-family: var(--title-font);
+  font-weight: 400;
+  font-size: 1.15rem;
+  letter-spacing: .01em;
+  margin: 0 0 6px;
+}
+.tl-card .tl-notion {
+  font-size: .74rem;
+  color: var(--muted-color);
+}
+.tl-reduction-tag {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: .6rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--bg-color);
+  background: var(--accent-1);
+  border-radius: 20px;
+  padding: 2px 9px;
+}
+.fil-rouge {
+  margin-top: 10px;
+  background: var(--container-bg);
+  border-left: 3px solid var(--accent-1);
+  border-radius: 3px;
+  padding: 16px 18px;
+  font-size: .8rem;
+  color: var(--text-color);
+}
+.fil-rouge b { color: var(--accent-1); }
+
+/* ============================================================
+   Cards grids (philosophes / films / cas / concepts)
+   ============================================================ */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--line-color);
+  border-top: 3px solid var(--card-accent, var(--accent-1));
+  border-radius: 3px;
+  overflow: hidden;
+}
+.card > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  user-select: none;
+}
+.card > summary::-webkit-details-marker { display: none; }
+.card .meta {
+  flex: 1;
+}
+.card .kicker2 {
+  font-size: .6rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--card-accent, var(--muted-color));
+  margin-bottom: 3px;
+}
+.card h3 {
+  font-family: var(--title-font);
+  font-weight: 400;
+  font-size: 1.25rem;
+  letter-spacing: .01em;
+  margin: 0;
+}
+.card .chevron {
+  color: var(--muted-color);
+  font-size: .8rem;
+  transition: transform .18s;
+  flex-shrink: 0;
+}
+.card[open] .chevron { transform: rotate(90deg); }
+.card .content {
+  padding: 0 18px 18px;
+  border-top: 1px solid var(--line-color);
+}
+.card .content ul {
+  margin: 14px 0;
+  padding-left: 1.1em;
+  font-size: .82rem;
+}
+.card .content li { margin-bottom: 8px; }
+.card .content li b { color: var(--text-color); }
+.card .content p.quote {
+  font-style: italic;
+  color: var(--accent-1);
+  border-left: 2px solid var(--accent-1);
+  padding-left: 10px;
+  margin: 12px 0;
+  font-size: .82rem;
+}
+.card .content p.warn {
+  font-size: .76rem;
+  color: #fbbf24;
+  background: rgba(251,191,36,.08);
+  border: 1px solid rgba(251,191,36,.25);
+  border-radius: 3px;
+  padding: 8px 10px;
+}
+
+.tags {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line-color);
+}
+.tags .tag-label {
+  font-size: .6rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted-color);
+  margin-right: 2px;
+  align-self: center;
+}
+.tag {
+  font-size: .68rem;
+  text-decoration: none;
+  color: var(--text-color);
+  background: var(--container-bg);
+  border: 1px solid var(--line-color);
+  border-radius: 20px;
+  padding: 3px 10px;
+  transition: border-color .15s, color .15s, transform .1s;
+  display: inline-block;
+}
+.tag:hover { border-color: var(--accent-1); color: var(--accent-1); transform: translateY(-1px); }
+
+/* mini comparison tables inside concept cards */
+table.compare {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .78rem;
+  margin: 14px 0;
+}
+table.compare th, table.compare td {
+  border: 1px solid var(--line-color);
+  padding: 7px 9px;
+  text-align: left;
+  vertical-align: top;
+}
+table.compare th {
+  background: var(--container-bg);
+  color: var(--accent-1);
+  font-weight: 700;
+  font-size: .66rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+/* ============================================================
+   F. Cross-reference matrix
+   ============================================================ */
+.matrix-wrap { overflow-x: auto; }
+table.matrix {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: .78rem;
+}
+table.matrix th, table.matrix td {
+  border: 1px solid var(--line-color);
+  padding: 10px 12px;
+  vertical-align: top;
+}
+table.matrix thead th {
+  background: var(--container-bg);
+  font-family: var(--title-font);
+  font-weight: 400;
+  font-size: .95rem;
+  letter-spacing: .03em;
+  text-align: left;
+}
+table.matrix tbody th {
+  background: var(--card-bg);
+  color: var(--accent-1);
+  font-weight: 700;
+  white-space: nowrap;
+}
+table.matrix td { color: var(--muted-color); }
+table.matrix a.tag { margin: 2px 3px 2px 0; }
+
+.suggestion-box {
+  margin-top: 20px;
+  background: var(--container-bg);
+  border: 1px solid var(--accent-2);
+  border-left: 3px solid var(--accent-1);
+  border-radius: 3px;
+  padding: 16px 18px;
+  font-size: .82rem;
+}
+.suggestion-box b { color: var(--accent-1); }
+
+footer.page-footer {
+  text-align: center;
+  padding: 50px 20px 60px;
+  color: var(--muted-color);
+  font-size: .68rem;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+/* highlight flash when navigating to a card via a tag */
+.flash { animation: flashglow 1.4s ease-out; }
+@keyframes flashglow {
+  0%   { box-shadow: 0 0 0 3px var(--accent-1); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* filter toolbar */
+.filterbar {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-bottom: 20px;
+}
+.filterbar button {
+  font-family: var(--main-font);
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  background: var(--container-bg);
+  color: var(--muted-color);
+  border: 1px solid var(--line-color);
+  border-radius: 20px;
+  padding: 6px 13px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+.filterbar button:hover { color: var(--text-color); }
+.filterbar button.active { color: var(--bg-color); background: var(--accent-1); border-color: var(--accent-1); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<nav id="topnav">
+  <span class="brand">🪞 FICHES</span>
+  <a class="navlink" href="#timeline">Frise</a>
+  <a class="navlink" href="#philosophes">Philosophes</a>
+  <a class="navlink" href="#films">Films</a>
+  <a class="navlink" href="#cas">Cas Internet</a>
+  <a class="navlink" href="#concepts">Concepts</a>
+  <a class="navlink" href="#synthese">Synthèse</a>
+  <span class="spacer"></span>
+  <a class="backlink" href="index.html">🎓 Passer le quiz</a>
+  <a class="backlink" href="../index.html">← Cours</a>
+</nav>
+
+<div class="hero">
+  <div class="kicker">12C01-A · Fiches de révision</div>
+  <h1>Philosophie des <span>médias</span> &amp; de la communication</h1>
+  <p class="lede">Les mêmes fiches qu'à recopier à la main — mais vivantes : une frise chronologique pour situer chaque rupture, et des fiches reliées entre elles par les flèches « → voir... » du cours. Clique sur un tag pour sauter d'une notion à l'autre.</p>
+  <div class="legend">
+    <span class="chip"><span class="dot" style="background:var(--accent-1)"></span>Frise / réductions</span>
+    <span class="chip"><span class="dot" style="background:var(--c-philo)"></span>Philosophes</span>
+    <span class="chip"><span class="dot" style="background:var(--c-film)"></span>Films</span>
+    <span class="chip"><span class="dot" style="background:var(--c-cas)"></span>Cas Internet</span>
+    <span class="chip"><span class="dot" style="background:var(--c-concept)"></span>Concepts</span>
+  </div>
+</div>
+
+<!-- ============================================================
+     A. FRISE CHRONOLOGIQUE
+     ============================================================ -->
+<section class="block" id="timeline">
+  <div class="block-head">
+    <span class="num">A</span>
+    <h2>Frise chronologique</h2>
+    <p>Le fil rouge : trois (puis quatre) réductions successives du réel.</p>
+  </div>
+
+  <div class="timeline">
+    <div class="tl-item"><div class="tl-dot"></div><div class="tl-card">
+      <div class="tl-era">~2500 av. J.-C. (mythe)</div>
+      <h3>Prométhée vole le feu</h3>
+      <p class="tl-notion">Épiméthée a tout distribué aux animaux — origine mythique de la technique : <a class="tag" href="#platon">« les humains sont ce qu'ils peuvent »</a></p>
+    </div></div>
+
+    <div class="tl-item reduction"><div class="tl-dot"></div><div class="tl-card">
+      <div class="tl-era">~500 av. J.-C.</div>
+      <h3>Naissance de la rationalité occidentale</h3>
+      <p class="tl-notion">Passage <a class="tag" href="#aletheia">alètheia (dévoilement)</a> → adæquatio (correspondance)</p>
+      <span class="tl-reduction-tag">1ᵉ réduction · réel → sujet</span>
+    </div></div>
+
+    <div class="tl-item"><div class="tl-dot"></div><div class="tl-card">
+      <div class="tl-era">~400 av. J.-C.</div>
+      <h3>Platon écrit <em>Le Banquet</em></h3>
+      <p class="tl-notion">Aristophane vs Socrate sur Éros → <a class="tag" href="#eros-philia">Éros / Philia / Agapè</a></p>
+    </div></div>
+
+    <div class="tl-item"><div class="tl-dot"></div><div class="tl-card">
+      <div class="tl-era">Antiquité — <em>La République</em></div>
+      <h3>Allégorie de l'anneau de Gygès</h3>
+      <p class="tl-notion">Vie privée / publique, invisibilité → <a class="tag" href="#gabby-petito">Gabby Petito</a></p>
+    </div></div>
+
+    <div class="tl-item reduction"><div class="tl-dot"></div><div class="tl-card">
+      <div class="tl-era">XVIe – XVIIe s.</div>
+      <h3>Révolution scientifique (Galilée)</h3>
+      <p class="tl-notion">Le réel devient mathématique</p>
+      <span class="tl-reduction-tag">2ᵉ réduction · réel → mathématique</span>
+    </div></div>
+
+    <div class="tl-item"><div class="tl-dot"></div><div class="tl-card">
+      <div class="tl-era">XIXe s.</div>
+      <h3>1ère phase du capitalisme</h3>
+      <p class="tl-notion">Capitalisme <b>de production</b> → <a class="tag" href="#kulturindustrie">Kulturindustrie</a></p>
+    </div></div>
+
+    <div class="tl-item"><div class="tl-dot"></div><div class="tl-card">
+      <div class="tl-era">~1900 – 1950</div>
+      <h3>Essor des médias de masse</h3>
+      <p class="tl-notion">École de Francfort (<a class="tag" href="#adorno">Adorno</a>, Horkheimer) — perte de l'imagination (Kant)</p>
+    </div></div>
+
+    <div class="tl-item reduction"><div class="tl-dot"></div><div class="tl-card">
+      <div class="tl-era">~1940</div>
+      <h3>Naissance de la cybernétique</h3>
+      <p class="tl-notion">Rétroaction, pilote automatique</p>
+      <span class="tl-reduction-tag">3ᵉ réduction · réel → cybernétique</span>
+    </div></div>
+
+    <div class="tl-item"><div class="tl-dot"></div><div class="tl-card">
+      <div class="tl-era">Années 1970</div>
+      <h3>Écrits de Heidegger sur la technique</h3>
+      <p class="tl-notion"><a class="tag" href="#gestell">Gestell</a>, triple réduction → <a class="tag" href="#heidegger">fiche Heidegger</a></p>
+    </div></div>
+
+    <div class="tl-item"><div class="tl-dot"></div><div class="tl-card">
+      <div class="tl-era">2005</div>
+      <h3>Fondation de YouTube</h3>
+      <p class="tl-notion">Terrain du cas <a class="tag" href="#marina-joyce">Marina Joyce</a></p>
+    </div></div>
+
+    <div class="tl-item"><div class="tl-dot"></div><div class="tl-card">
+      <div class="tl-era">2004 – 2010s</div>
+      <h3>Facebook : fondation puis explosion</h3>
+      <p class="tl-notion">Capitalisme <b>de l'attention / des data</b>, <a class="tag" href="#zuckerberg">GAFAM</a></p>
+    </div></div>
+
+    <div class="tl-item"><div class="tl-dot"></div><div class="tl-card">
+      <div class="tl-era">2011 – 2019</div>
+      <h3>Films vus au cours</h3>
+      <p class="tl-notion"><a class="tag" href="#her">Her</a> (2013) · <a class="tag" href="#memento">Memento</a> (2000) · <a class="tag" href="#ahov">A History of Violence</a> (2005) · <a class="tag" href="#volte-face">Volte/Face</a> (1997)</p>
+    </div></div>
+
+    <div class="tl-item"><div class="tl-dot"></div><div class="tl-card">
+      <div class="tl-era">2016</div>
+      <h3>#SaveMarinaJoyce</h3>
+      <p class="tl-notion"><a class="tag" href="#identite">Narcissisme</a>, influence</p>
+    </div></div>
+
+    <div class="tl-item"><div class="tl-dot"></div><div class="tl-card">
+      <div class="tl-era">2021</div>
+      <h3>Mort de Gabby Petito</h3>
+      <p class="tl-notion"><a class="tag" href="#gabby-petito">Cyberharcèlement</a>, auto-mise en scène</p>
+    </div></div>
+
+    <div class="tl-item reduction"><div class="tl-dot"></div><div class="tl-card">
+      <div class="tl-era">Aujourd'hui</div>
+      <h3>IA génératives, disruption numérique</h3>
+      <p class="tl-notion"><a class="tag" href="#stiegler">Stiegler</a> — rétention tertiaire GAFAM</p>
+      <span class="tl-reduction-tag">4ᵉ étape · délégation totale</span>
+    </div></div>
+  </div>
+
+  <div class="fil-rouge">
+    <b>Fil rouge à retenir :</b> trois réductions du réel dans le temps → sujet (Antiquité / rationalité) → mathématique (Galilée) → cybernétique (1940) → aujourd'hui : IA/numérique = 4ᵉ étape (délégation totale).
+  </div>
+</section>
+
+<!-- ============================================================
+     B. PHILOSOPHES
+     ============================================================ -->
+<section class="block" id="philosophes">
+  <div class="block-head">
+    <span class="num">B</span>
+    <h2>Philosophes &amp; penseurs</h2>
+    <p>Clique sur une fiche pour la déplier.</p>
+  </div>
+  <div class="grid">
+
+    <details class="card" id="platon" style="--card-accent:var(--c-philo)">
+      <summary><div class="meta"><div class="kicker2">~428–348 av. J.-C.</div><h3>Platon</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Œuvres clés :</b> <em>Le Banquet</em> (dialogue sur Éros), <em>La République</em> (anneau de Gygès), mythe de Prométhée/Épiméthée</li>
+          <li><b>Idée forte :</b> l'amour comme manque (Éros) mis en scène par Aristophane (l'homme primordial coupé en deux par Zeus) puis démonté par Socrate</li>
+          <li><b>4 caractéristiques de l'amour selon Aristophane :</b> exclusivité, définitivité, fin du manque, fin de la solitude</li>
+          <li><b>Socrate déconstruit les 4 :</b> l'amour n'est ni exclusif, ni définitif, ni comblant, ni une fin de la solitude</li>
+          <li><b>Anneau de Gygès :</b> rendrait invisible → interroge la vie privée/publique, la conscience morale sans témoin</li>
+        </ul>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#eros-philia">Éros / Philia / Agapè</a>
+          <a class="tag" href="#gabby-petito">Gabby Petito</a>
+          <a class="tag" href="#identite">Identité &amp; reconnaissance</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="heidegger" style="--card-accent:var(--c-philo)">
+      <summary><div class="meta"><div class="kicker2">1889–1976</div><h3>Heidegger</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Thème central :</b> l'essence de la technique n'est pas neutre (critique de la conception <b>instrumentaliste</b>)</li>
+          <li><b>Triple réduction :</b> Réel → sujet / Réel → mathématique / Réel → cybernétique</li>
+          <li><b>4 raisons pour lesquelles la technique n'est pas neutre :</b> lois de Gabor/Murphy ; suicide intégral collectif (bombe atomique) ; société de reproduction → de production (ADN) ; cybernétique</li>
+          <li><b>Sur la mort :</b> stratagèmes d'évitement — le « on », la préoccupation, le divertissement, la curiosité, le bavardage</li>
+          <li><b>Gestell :</b> la technique rend tout disponible/utilisable, comme un étalage</li>
+        </ul>
+        <p class="quote">« Tout fonctionne, cela est bien inquiétant. »</p>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#triple-reduction">Triple réduction</a>
+          <a class="tag" href="#gestell">Gestell</a>
+          <a class="tag" href="#mort-finitude">Mort &amp; finitude</a>
+          <a class="tag" href="#stiegler">Stiegler</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="spinoza" style="--card-accent:var(--c-philo)">
+      <summary><div class="meta"><div class="kicker2">1632–1677</div><h3>Spinoza</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Image clé :</b> la pierre qui roule — elle croit vouloir rouler, mais c'est la gravité (cause extérieure) qui la fait rouler</li>
+          <li><b>Autre image :</b> la flèche tirée par l'archer — si elle se réveillait en vol, elle croirait vouloir se planter dans la cible</li>
+          <li><b>Thèse :</b> on est conscient de ses envies, mais pas de leurs causes → illusion de liberté</li>
+        </ul>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#libre-arbitre">Libre arbitre</a>
+          <a class="tag" href="#sartre">Sartre</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="sartre" style="--card-accent:var(--c-philo)">
+      <summary><div class="meta"><div class="kicker2">1905–1980</div><h3>Sartre</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Thèse (avec Spinoza) :</b> la liberté n'est pas dans le fait d'avoir une envie, mais dans le fait de pouvoir la réaliser ou non (passage à l'acte)</li>
+          <li><b>Être libre</b> = pouvoir réaliser des envies non choisies, sans empêchement extérieur</li>
+          <li><b>Exemple Stendhal :</b> la femme amoureuse d'un homme marié est « libre » qu'elle parle ou se taise — ce sont des causes intérieures qui décident</li>
+        </ul>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#libre-arbitre">Libre arbitre</a>
+          <a class="tag" href="#spinoza">Spinoza</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="adorno" style="--card-accent:var(--c-philo)">
+      <summary><div class="meta"><div class="kicker2">École de Francfort</div><h3>Adorno &amp; Horkheimer</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Concept clé :</b> la <b>Kulturindustrie</b> — la culture produite en masse comme un produit standardisé</li>
+          <li><b>Thèse :</b> depuis les médias de masse (déb. XXe s.), on a perdu notre capacité d'<b>imagination</b> (référence à Kant)</li>
+          <li><b>Mécanisme :</b> plus le message est standardisé → plus il touche de monde → moins on doit faire d'effort pour le comprendre → perte de la capacité à imaginer autre chose</li>
+          <li><b>Effet :</b> une forme de censure invisible, un « déjà-vu » permanent</li>
+        </ul>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#stiegler">Stiegler</a>
+          <a class="tag" href="#kulturindustrie">Kulturindustrie</a>
+          <a class="tag" href="#black-mirror-na">Black Mirror</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="stiegler" style="--card-accent:var(--c-philo)">
+      <summary><div class="meta"><div class="kicker2">1952–2020</div><h3>Stiegler</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Concept clé :</b> la <b>triple rétention</b> (primaire, secondaire, tertiaire) et la <b>disruption</b></li>
+          <li><b>Rétention primaire</b> = présent élargi (ex. début de phrase qu'on garde en tête jusqu'à la fin)</li>
+          <li><b>Rétention secondaire</b> = nos souvenirs/expériences depuis la naissance = grille de lecture du présent</li>
+          <li><b>Rétention tertiaire</b> = supports de mémoire externes (vinyle, carnet, photo... aujourd'hui : GAFAM)</li>
+          <li><b>Thèse GAFAM :</b> les GAFAM veulent devenir LA rétention tertiaire unique de toutes nos rétentions secondaires → uniformisation des goûts et perceptions</li>
+          <li><b>Disruption</b> = transformation brutale et rapide d'un système social/politique/économique (ex : le numérique, l'IA)</li>
+        </ul>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#kulturindustrie">Kulturindustrie</a>
+          <a class="tag" href="#zuckerberg">Zuckerberg / Facebook</a>
+          <a class="tag" href="#heidegger">Heidegger</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="nietzsche" style="--card-accent:var(--c-philo)">
+      <summary><div class="meta"><div class="kicker2">Présence diffuse</div><h3>Nietzsche</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li>Cité comme référence générale sur la critique de la morale et du libre arbitre dans la tradition philosophique convoquée par le cours</li>
+        </ul>
+        <p class="warn">⚠️ Peu de développement spécifique retrouvé dans les 3 sources de notes — à vérifier/compléter si le prof y revient en Q&amp;A ou support oral.</p>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#libre-arbitre">Libre arbitre</a>
+          <a class="tag" href="#spinoza">Spinoza</a>
+          <a class="tag" href="#sartre">Sartre</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="autres-refs" style="--card-accent:var(--c-philo)">
+      <summary><div class="meta"><div class="kicker2">Références ponctuelles</div><h3>Autres voix citées</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Olivier Hamant :</b> vivant robuste vs vivant optimisé — critique de la performance comme idéologie</li>
+          <li><b>Freud :</b> « Personne ne croit à sa propre mort, chacun est persuadé de son immortalité »</li>
+          <li><b>Bourdieu :</b> « Vos goûts sont les dégoûts des goûts des autres » (cité à propos de Marina Joyce)</li>
+          <li><b>Dennis Gabor :</b> loi de Gabor — « ce qui peut être fait techniquement le sera nécessairement »</li>
+          <li><b>Éric Sadin :</b> « On s'est évidés » — la machine s'est remplie de ce que l'humain a délégué</li>
+          <li><b>Libet</b> (neurobiologie) : expérience des électrodes — 80% des sujets appuient après le choc, pas avant → argument scientifique contre le libre arbitre</li>
+          <li><b>Pacôme Thiellement :</b> exégète des cas Internet (Marina Joyce, Gabby Petito, Zuckerberg) — l'influence comme « l'action de la volonté de quelqu'un sur la volonté de quelqu'un d'autre »</li>
+        </ul>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#marina-joyce">Marina Joyce</a>
+          <a class="tag" href="#gabby-petito">Gabby Petito</a>
+          <a class="tag" href="#zuckerberg">Zuckerberg</a>
+          <a class="tag" href="#libre-arbitre">Libre arbitre</a>
+        </div>
+      </div>
+    </details>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     C. FILMS
+     ============================================================ -->
+<section class="block" id="films">
+  <div class="block-head">
+    <span class="num">C</span>
+    <h2>Films</h2>
+    <p>Personnages, twist, et ce que chaque film illustre.</p>
+  </div>
+  <div class="grid">
+
+    <details class="card" id="her" style="--card-accent:var(--c-film)">
+      <summary><div class="meta"><div class="kicker2">2013</div><h3>Her</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Theodore Twombly :</b> homme solitaire et dépressif, écrivain de lettres intimes pour autrui, en instance de divorce avec Catherine</li>
+          <li><b>Samantha :</b> OS doté d'IA évolutive ; devient de plus en plus riche, communique avec des milliers d'utilisateurs simultanément, aime plusieurs entités à la fois, finit par quitter le monde humain</li>
+          <li><b>Amy :</b> amie de Theodore, vit elle aussi une relation avec une IA</li>
+          <li><b>Fin :</b> Samantha part vers un état immatériel ; Theodore écrit enfin une lettre sincère à Catherine ; scène finale avec Amy, lever de soleil</li>
+          <li><b>Concept illustré — miroir d'éros :</b> l'autre n'a pas besoin d'exister réellement pour qu'on tombe amoureux</li>
+          <li><b>Idole :</b> Theodore aime une image qui ressemble à un représenté sans l'être</li>
+        </ul>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#eros-philia">Éros / Philia / Agapè</a>
+          <a class="tag" href="#idole-icone">Idole / Icône</a>
+          <a class="tag" href="#kulturindustrie">Kulturindustrie</a>
+          <a class="tag" href="#triple-reduction">Triple réduction (IA)</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="memento" style="--card-accent:var(--c-film)">
+      <summary><div class="meta"><div class="kicker2">2000</div><h3>Memento</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Leonard Shelby :</b> après l'agression où sa femme est tuée, développe une amnésie antérograde (oublie tout au bout de quelques minutes)</li>
+          <li><b>Mémoire externe :</b> Polaroïds, notes écrites, tatouages sur le corps (« faits fiables »)</li>
+          <li><b>Teddy :</b> policier manipulateur qui exploite l'amnésie de Leonard en lui donnant de fausses cibles</li>
+          <li><b>Histoire de Sammy Jankis :</b> en réalité l'histoire de Leonard lui-même (sa femme meurt d'une overdose d'insuline causée par lui, pas par l'agresseur)</li>
+          <li><b>Twist final :</b> Leonard a déjà tué le véritable agresseur ; il choisit consciemment de se mentir et de détruire les preuves pour continuer sa quête</li>
+        </ul>
+        <p class="quote">« Ce n'est pas parce que j'oublie que mes actes n'ont pas de sens. »</p>
+        <p class="quote">« Je dois croire en un monde extérieur... même si je ne m'en souviens pas. »</p>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#identite">Identité &amp; reconnaissance</a>
+          <a class="tag" href="#libre-arbitre">Libre arbitre</a>
+          <a class="tag" href="#stiegler">Rétention tertiaire (tatouages)</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="ahov" style="--card-accent:var(--c-film)">
+      <summary><div class="meta"><div class="kicker2">2005</div><h3>A History of Violence</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Tom Stall / Joey :</b> patron paisible d'un restaurant à Millbrook (Indiana), abat deux tueurs avec une dextérité surprenante</li>
+          <li><b>Fogarty :</b> mafieux défiguré qui reconnaît en Tom son ancien adversaire « Joey » de Philadelphie</li>
+          <li><b>Révélation :</b> Tom était autrefois « Joey », un homme violent à la tête d'un gang avec son frère</li>
+          <li><b>Fin :</b> Tom élimine Fogarty et son frère, se lave du sang dans un lac, puis retourne auprès de sa famille — qui l'accepte en silence</li>
+          <li><b>Concept illustré :</b> l'identité repose sur le <b>milieu</b> — Tom n'est « Tom » que parce que Millbrook ne connaît pas « Joey »</li>
+        </ul>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#eros-philia">Éros / Philia</a>
+          <a class="tag" href="#identite">Identité &amp; reconnaissance</a>
+          <a class="tag" href="#volte-face">Volte-Face</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="volte-face" style="--card-accent:var(--c-film)">
+      <summary><div class="meta"><div class="kicker2">1997</div><h3>Volte-Face / Face-Off</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Castor Troy</b> (terroriste dangereux, tombe dans le coma) et <b>Sean Archer</b> (agent de la CIA)</li>
+          <li><b>Intrigue :</b> Archer prend chirurgicalement le visage de Troy pour infiltrer son frère et localiser une bombe ; Troy se réveille et prend à son tour le visage d'Archer</li>
+          <li><b>Concept illustré :</b> le visage ne prouve rien en soi — l'identité dépend de la reconnaissance par les autres, pas d'un support physique fiable</li>
+        </ul>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#identite">Identité &amp; reconnaissance</a>
+          <a class="tag" href="#memento">Memento</a>
+        </div>
+      </div>
+    </details>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     D. CAS INTERNET / SÉRIES
+     ============================================================ -->
+<section class="block" id="cas">
+  <div class="block-head">
+    <span class="num">D</span>
+    <h2>Cas Internet &amp; séries</h2>
+    <p>L'équivalent « fiche film » pour les épisodes et affaires vues en cours.</p>
+  </div>
+  <div class="grid">
+
+    <details class="card" id="black-mirror-na" style="--card-accent:var(--c-cas)">
+      <summary><div class="meta"><div class="kicker2">Black Mirror · S1E1</div><h3>The National Anthem</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Intrigue :</b> une princesse est kidnappée ; la rançon exige que le Premier ministre ait un rapport sexuel avec un cochon en direct à la télévision</li>
+          <li><b>Déroulement :</b> doute sur le fait qu'il « le fera vraiment » → diffusion → la princesse est en fait libérée 30 min avant, mais personne ne regarde ailleurs</li>
+          <li><b>Concept illustré — objectivation = réduction :</b> l'image du Premier ministre change dans l'imaginaire collectif avant même qu'il n'agisse</li>
+        </ul>
+        <p class="quote">« C'est trop tard, c'est déjà dans leur tête, ils te voient le faire. »</p>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#identite">Identité &amp; reconnaissance</a>
+          <a class="tag" href="#idole-icone">Idole / Icône</a>
+          <a class="tag" href="#kulturindustrie">Kulturindustrie</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="black-mirror-sud" style="--card-accent:var(--c-cas)">
+      <summary><div class="meta"><div class="kicker2">Black Mirror · S3E3</div><h3>Shut Up and Dance</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Kenny :</b> adolescent piraté après avoir été filmé en train de se masturber ; un hacker le fait chanter et le force (avec un homme plus âgé) à commettre des crimes</li>
+          <li><b>Twist :</b> les deux victimes du chantage sont en fait des prédateurs sexuels</li>
+          <li><b>Concept illustré :</b> décalage entre l'image (potentielle/virtuelle) et la réalité — « nous ne sommes qu'une image »</li>
+        </ul>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#identite">Identité &amp; reconnaissance</a>
+          <a class="tag" href="#idole-icone">Idole / Icône</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="marina-joyce" style="--card-accent:var(--c-cas)">
+      <summary><div class="meta"><div class="kicker2">2016</div><h3>Marina Joyce</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Résumé :</b> influenceuse YouTube beauté/lifestyle dès 15 ans (30 000–50 000 $/vidéo) ; en 2016, signes étranges dans ses vidéos → mouvement <b>#SaveMarinaJoyce</b></li>
+          <li>Nie tout danger, révèle ensuite une dépression, relation quasi religieuse à YouTube (« YouTube est son Dieu »)</li>
+          <li><b>Narcissisme</b> (mythe de Narcisse) : plus on est fragile, plus on cherche la reconnaissance des autres pour compenser le manque d'amour de soi</li>
+          <li>L'intérêt naît de ce qu'on <b>imagine</b> pouvoir lui arriver, pas de ce qui se passe réellement</li>
+        </ul>
+        <p class="quote">« Vos goûts sont les dégoûts des goûts des autres. » — Bourdieu</p>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#identite">Identité &amp; reconnaissance</a>
+          <a class="tag" href="#idole-icone">Idole / Icône</a>
+          <a class="tag" href="#gabby-petito">Gabby Petito</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="gabby-petito" style="--card-accent:var(--c-cas)">
+      <summary><div class="meta"><div class="kicker2">2021</div><h3>Gabby Petito</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Résumé :</b> influenceuse lifestyle dès 15 ans ; road trip en van avec son copain Bryan, très documenté puis publications plus rares ; dispute constatée par la police ; Bryan rentre seul ; corps de Gabby retrouvé en septembre ; Bryan retrouvé mort (suicide)</li>
+          <li><b>Auto-cyberharcèlement :</b> elle s'oblige elle-même à correspondre à une image parfaite qu'elle croit attendue</li>
+          <li><b>Dissimulation</b> (cacher une réalité qui existe) vs <b>simulation</b> (faire croire à une réalité qui n'existe pas)</li>
+          <li><b>Anneau de Gygès</b> (Platon) : même seul, on agit en fonction du regard des autres</li>
+          <li>Contradiction : cherche la liberté (vanlife) mais appartient à une communauté à codes ; nutritionniste mais travaille en fast-food</li>
+        </ul>
+        <p class="quote">« C'est Instagram qui a tué Gabby Petito, et qui continue de bénéficier de sa mort. »</p>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#identite">Identité &amp; reconnaissance</a>
+          <a class="tag" href="#marina-joyce">Marina Joyce</a>
+          <a class="tag" href="#platon">Platon (anneau de Gygès)</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="zuckerberg" style="--card-accent:var(--c-cas)">
+      <summary><div class="meta"><div class="kicker2">Facebook</div><h3>Mark Zuckerberg</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Portrait :</b> passionné d'informatique, très soucieux de sa vie privée, fan du jeu Risk (dont le but est de trahir ses alliés), devenu le plus jeune milliardaire de l'histoire</li>
+          <li><b>Modèle économique :</b> « Si c'est gratuit, c'est que le produit, c'est vous » — le vrai produit vendu = un changement de notre vision du monde (prévisibilité)</li>
+          <li><b>4 détournements des pulsions anthropologiques :</b> pulsion de vie (likes), pulsion de mort (algorithmes polarisants), pulsion sexuelle (sexualisation des contenus), pulsion de pouvoir/savoir (sentiment de contrôle)</li>
+          <li><b>Effet documenté :</b> hausse du taux de suicide chez les préados/ados</li>
+        </ul>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#stiegler">Stiegler (rétention tertiaire GAFAM)</a>
+          <a class="tag" href="#kulturindustrie">Kulturindustrie</a>
+        </div>
+      </div>
+    </details>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     E. CONCEPTS
+     ============================================================ -->
+<section class="block" id="concepts">
+  <div class="block-head">
+    <span class="num">E</span>
+    <h2>Concepts</h2>
+    <p>Les notions transversales, celles qui reviennent partout.</p>
+  </div>
+  <div class="grid">
+
+    <details class="card" id="triple-reduction" style="--card-accent:var(--c-concept)">
+      <summary><div class="meta"><div class="kicker2">Heidegger</div><h3>La triple réduction</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Définition :</b> Réel → sujet (Antiquité/rationalité, adæquatio) ; Réel → mathématique (Galilée) ; Réel → cybernétique (1940, modèle de rétroaction)</li>
+          <li><b>Cybernétique</b> = du grec <em>kubernêtikê</em> (gouvernail) : système qui se gouverne seul, reproduit le processus de sensibilité/décision/action humain</li>
+        </ul>
+        <p class="warn">⚠️ Piège d'examen classique : bien retenir l'ordre exact et la formulation « Réel → sujet, Réel → mathématique, Réel → cybernétique ».</p>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#heidegger">Heidegger</a>
+          <a class="tag" href="#gestell">Gestell</a>
+          <a class="tag" href="#timeline">Frise chronologique</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="gestell" style="--card-accent:var(--c-concept)">
+      <summary><div class="meta"><div class="kicker2">Heidegger</div><h3>Gestell (l'arraisonnement)</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Définition :</b> la technique rend tout disponible, comme dans un supermarché en libre-service — tout être/chose est ramené au prisme de son <b>utilité</b></li>
+          <li><b>Opposition clé :</b> moyens contre valeurs</li>
+          <li><b>Conséquence :</b> nous devenons nous-mêmes des « outils » dans le système technique — interchangeables, évalués (CV, notes d'examen)</li>
+        </ul>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#triple-reduction">Triple réduction</a>
+          <a class="tag" href="#kulturindustrie">Kulturindustrie</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="kulturindustrie" style="--card-accent:var(--c-concept)">
+      <summary><div class="meta"><div class="kicker2">Adorno &amp; Horkheimer</div><h3>Kulturindustrie</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Définition :</b> production industrielle et standardisée de la culture, née avec les médias de masse</li>
+          <li><b>Mécanisme :</b> standardisation → facilité de compréhension → perte de la capacité d'imagination</li>
+          <li><b>3 phases du capitalisme :</b> 1) production (XIXe s.) 2) consommation 3) attention/données (GAFAM, ère numérique)</li>
+          <li><b>Œuvres « test » :</b> Black Mirror = très kulturindustrie ; Memento et A History of Violence = peu ; Her = ambigu</li>
+        </ul>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#stiegler">Stiegler</a>
+          <a class="tag" href="#adorno">Adorno &amp; Horkheimer</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="stiegler-retention" style="--card-accent:var(--c-concept)">
+      <summary><div class="meta"><div class="kicker2">Stiegler</div><h3>La triple rétention</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Rétention primaire</b> = présent élargi (ex. début de phrase tenu jusqu'à la fin)</li>
+          <li><b>Rétention secondaire</b> = souvenirs/expériences propres = grille de lecture du présent</li>
+          <li><b>Rétention tertiaire</b> = supports de mémoire externes (vinyle, carnet, photo, aujourd'hui GAFAM/Spotify)</li>
+          <li><b>Thèse actuelle :</b> les GAFAM veulent devenir LA rétention tertiaire unique → uniformisation des goûts, des envies, de la perception</li>
+        </ul>
+        <p class="warn">⚠️ Piège d'examen : bien distinguer primaire (présent élargi) vs secondaire (passé/mémoire) — confusion fréquente.</p>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#stiegler">Stiegler</a>
+          <a class="tag" href="#zuckerberg">Zuckerberg</a>
+          <a class="tag" href="#heidegger">Heidegger</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="eros-philia" style="--card-accent:var(--c-concept)">
+      <summary><div class="meta"><div class="kicker2">Platon</div><h3>Éros / Philia / Agapè</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <table class="compare">
+          <tr><th></th><th>Éros</th><th>Philia</th><th>Agapè</th></tr>
+          <tr><td>Origine</td><td>grec (passion)</td><td>grec (amitié)</td><td>hébreu (« Dieu est amour »)</td></tr>
+          <tr><td>Nature</td><td>manque, désir, appétit-manque</td><td>force, puissance, appétit-profit</td><td>amour inconditionnel</td></tr>
+          <tr><td>« Je t'aime » signifie</td><td>« je te veux, tu me manques »</td><td>« je suis heureux que tu existes »</td><td>—</td></tr>
+          <tr><td>Fin de la relation</td><td>quand on voit les « défauts » (fin de l'imagination)</td><td>ennui → recherche d'un retour à éros</td><td>—</td></tr>
+        </table>
+        <ul>
+          <li><b>Origine :</b> Platon, <em>Le Banquet</em> — Aristophane (l'homme primordial coupé en deux) vs Socrate (déconstruit l'amour exclusif/définitif/comblant/anti-solitude)</li>
+          <li><b>Remords vs regret :</b> remords = s'en vouloir d'avoir fait/dit qqch ; regret = s'en vouloir de ne pas l'avoir fait/dit</li>
+        </ul>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#platon">Platon</a>
+          <a class="tag" href="#her">Her</a>
+          <a class="tag" href="#ahov">A History of Violence</a>
+          <a class="tag" href="#identite">Identité &amp; reconnaissance</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="identite" style="--card-accent:var(--c-concept)">
+      <summary><div class="meta"><div class="kicker2">Concept transversal</div><h3>Identité &amp; reconnaissance</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Thèse centrale :</b> on ne se définit jamais positivement, toujours <b>négativement</b>, par rapport aux autres (ex : être belge = ne pas être italien)</li>
+          <li><b>Image du ballon :</b> notre identité est comme l'air dans un ballon — elle n'existe que grâce à une paroi extérieure (les autres)</li>
+          <li><b>Carte d'identité :</b> ne prouve rien intrinsèquement — sert seulement à ceux qui ne nous connaissent pas</li>
+          <li><b>Objectivation = réduction :</b> être vu/jugé par les autres nous réduit à une image simplifiée</li>
+        </ul>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#volte-face">Volte-Face</a>
+          <a class="tag" href="#memento">Memento</a>
+          <a class="tag" href="#platon">Anneau de Gygès (Platon)</a>
+          <a class="tag" href="#black-mirror-na">Black Mirror (National Anthem)</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="idole-icone" style="--card-accent:var(--c-concept)">
+      <summary><div class="meta"><div class="kicker2">Concept</div><h3>Idole / Icône</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <table class="compare">
+          <tr><th></th><th>Idole</th><th>Icône</th></tr>
+          <tr><td>Nature</td><td>image/spectre qui ressemble au représenté sans l'être</td><td>image réelle, le représentant EST le représenté</td></tr>
+          <tr><td>Exemple</td><td>un sosie de Michael Jackson</td><td>Michael Jackson lui-même</td></tr>
+          <tr><td>Fonction</td><td>se substitue à ce qu'elle représente</td><td>rend présent, sert de guide</td></tr>
+        </table>
+        <ul><li><b>Exemple du cours :</b> Batman masqué = anonymat, tout le monde peut être Batman</li></ul>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#her">Her</a>
+          <a class="tag" href="#marina-joyce">Marina Joyce</a>
+          <a class="tag" href="#gabby-petito">Gabby Petito</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="libre-arbitre" style="--card-accent:var(--c-concept)">
+      <summary><div class="meta"><div class="kicker2">Concept</div><h3>Le libre arbitre</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Thèse générale du cours :</b> le libre arbitre (pouvoir de vouloir/choisir/décider) <b>n'existe pas</b></li>
+          <li><b>Spinoza :</b> image de la pierre qui roule / la flèche — conscience de l'envie ≠ maîtrise de sa cause</li>
+          <li><b>Sartre/Spinoza :</b> la liberté est dans le passage à l'acte, pas dans le choix de l'envie elle-même</li>
+          <li><b>Expérience de Libet :</b> 80% des sujets appuient sur un bouton <em>après</em> un choc électrique, pas avant → l'envie est déjà causée</li>
+          <li><b>Conséquences sociétales</b> si le libre arbitre n'existait pas : effondrement du droit pénal, de la morale, du mérite scolaire</li>
+          <li><b>Distinction envie / volonté :</b> envie = pulsion incontrôlée ; volonté = effort qui pèse</li>
+        </ul>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#spinoza">Spinoza</a>
+          <a class="tag" href="#sartre">Sartre</a>
+          <a class="tag" href="#memento">Memento</a>
+          <a class="tag" href="#mort-finitude">Mort &amp; finitude</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="mort-finitude" style="--card-accent:var(--c-concept)">
+      <summary><div class="meta"><div class="kicker2">Concept</div><h3>La mort et la finitude</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Caractéristiques de la mort :</b> omniprésente, nécessaire, égalitaire, individuelle, universelle, imminente</li>
+          <li><b>Impensable</b> (on ne peut pas l'imaginer directement) et <b>impensée</b> (on n'y pense presque jamais)</li>
+          <li><b>3 grandes tentatives de la vaincre :</b> religion (vie après la mort), science (médecine, mais aussi suicide/avortement/euthanasie), culture (transmission)</li>
+          <li><b>5 stratagèmes d'évitement (Heidegger) :</b> le « on » (déresponsabilisation), la préoccupation (anticiper l'avenir), le divertissement (Pascal), la curiosité (tourné vers l'extérieur), le bavardage (menant à la crise/<em>krisis</em>)</li>
+        </ul>
+        <p class="quote">Freud : « Personne ne croit vraiment à sa propre mort. »</p>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#heidegger">Heidegger</a>
+          <a class="tag" href="#libre-arbitre">Libre arbitre</a>
+          <a class="tag" href="#eros-philia">Éros</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="aletheia" style="--card-accent:var(--c-concept)">
+      <summary><div class="meta"><div class="kicker2">Concept</div><h3>Alètheia / Adæquatio</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Alètheia :</b> le vrai comme dévoilement — ce qui sort de l'oubli, se révèle à qui sait écouter (Homère, premiers penseurs) — vérité comme expérience, presque poétique</li>
+          <li><b>Adæquatio :</b> le vrai comme correspondance/adéquation — une phrase est vraie si elle correspond à ce qui est (Platon, Aristote) → 1ère réduction de la vérité</li>
+        </ul>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#triple-reduction">Triple réduction</a>
+          <a class="tag" href="#heidegger">Heidegger</a>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="transcendantal" style="--card-accent:var(--c-concept)">
+      <summary><div class="meta"><div class="kicker2">Concept</div><h3>Transcendantal faible / fort</h3></div><span class="chevron">▶</span></summary>
+      <div class="content">
+        <ul>
+          <li><b>Faible :</b> la technique est un outil qui prolonge une capacité déjà existante (ex : microscope prolonge la vue)</li>
+          <li><b>Fort :</b> la technique crée une réalité qui n'existait pas avant elle (ex : réalité augmentée)</li>
+        </ul>
+        <div class="tags">
+          <span class="tag-label">Lié à :</span>
+          <a class="tag" href="#gestell">Gestell</a>
+          <a class="tag" href="#triple-reduction">Triple réduction</a>
+        </div>
+      </div>
+    </details>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     F. SYNTHÈSE / LIENS CROISÉS
+     ============================================================ -->
+<section class="block" id="synthese">
+  <div class="block-head">
+    <span class="num">F</span>
+    <h2>Tableau des liens croisés</h2>
+    <p>À utiliser comme carte mentale pour les jeux de révision.</p>
+  </div>
+
+  <div class="matrix-wrap">
+    <table class="matrix">
+      <thead>
+        <tr><th>Concept</th><th>Films</th><th>Cas Internet</th><th>Philosophes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Triple réduction / Gestell</th>
+          <td><a class="tag" href="#her">Her</a> (IA)</td>
+          <td><a class="tag" href="#zuckerberg">Zuckerberg</a> (data)</td>
+          <td><a class="tag" href="#heidegger">Heidegger</a></td>
+        </tr>
+        <tr>
+          <th>Kulturindustrie</th>
+          <td><a class="tag" href="#black-mirror-na">Black Mirror</a> (fort) · <a class="tag" href="#her">Her</a> (moyen) · <a class="tag" href="#memento">Memento</a>/<a class="tag" href="#ahov">AHOV</a> (faible)</td>
+          <td><a class="tag" href="#zuckerberg">Zuckerberg</a> · <a class="tag" href="#marina-joyce">Marina Joyce</a></td>
+          <td><a class="tag" href="#adorno">Adorno</a>, Horkheimer, <a class="tag" href="#stiegler">Stiegler</a></td>
+        </tr>
+        <tr>
+          <th>Rétention tertiaire</th>
+          <td><a class="tag" href="#memento">Memento</a> (tatouages = mémoire externe)</td>
+          <td><a class="tag" href="#zuckerberg">Zuckerberg</a> (GAFAM)</td>
+          <td><a class="tag" href="#stiegler">Stiegler</a></td>
+        </tr>
+        <tr>
+          <th>Identité &amp; reconnaissance</th>
+          <td><a class="tag" href="#volte-face">Volte-Face</a>, <a class="tag" href="#memento">Memento</a>, <a class="tag" href="#ahov">A History of Violence</a></td>
+          <td><a class="tag" href="#marina-joyce">Marina Joyce</a>, <a class="tag" href="#gabby-petito">Gabby Petito</a></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <th>Idole / icône</th>
+          <td><a class="tag" href="#her">Her</a> (Samantha)</td>
+          <td><a class="tag" href="#marina-joyce">Marina Joyce</a>, <a class="tag" href="#gabby-petito">Gabby Petito</a></td>
+          <td><a class="tag" href="#platon">Platon</a> (image)</td>
+        </tr>
+        <tr>
+          <th>Éros / Philia / Agapè</th>
+          <td><a class="tag" href="#her">Her</a>, <a class="tag" href="#ahov">A History of Violence</a></td>
+          <td>—</td>
+          <td><a class="tag" href="#platon">Platon</a></td>
+        </tr>
+        <tr>
+          <th>Libre arbitre</th>
+          <td><a class="tag" href="#memento">Memento</a> (responsabilité/mémoire)</td>
+          <td>—</td>
+          <td><a class="tag" href="#spinoza">Spinoza</a>, <a class="tag" href="#sartre">Sartre</a></td>
+        </tr>
+        <tr>
+          <th>Mort &amp; finitude</th>
+          <td>—</td>
+          <td><a class="tag" href="#gabby-petito">Gabby Petito</a> (mort réelle)</td>
+          <td><a class="tag" href="#heidegger">Heidegger</a>, Freud</td>
+        </tr>
+        <tr>
+          <th>Anneau de Gygès / vie privée</th>
+          <td><a class="tag" href="#black-mirror-na">Black Mirror</a> (National Anthem)</td>
+          <td><a class="tag" href="#gabby-petito">Gabby Petito</a></td>
+          <td><a class="tag" href="#platon">Platon</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="suggestion-box">
+    <b>Suggestion de jeu :</b> fais des paires « concept ↔ exemple » à l'envers (donner l'exemple, deviner le concept + le philosophe associé) — c'est exactement le piège du QCM (confondre deux notions proches). Une fois les fiches relues, teste-toi directement sur <a class="tag" href="index.html">l'examen blanc</a>.
+  </div>
+</section>
+
+<footer class="page-footer">stucom · philosophie des médias et de la communication · fiches vivantes</footer>
+
+<script>
+(function () {
+  // Highlight the active nav link based on scroll position.
+  const sections = Array.from(document.querySelectorAll('section.block'));
+  const navLinks = Array.from(document.querySelectorAll('#topnav a.navlink'));
+  const byId = id => navLinks.find(a => a.getAttribute('href') === '#' + id);
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const link = byId(entry.target.id);
+      if (!link) return;
+      if (entry.isIntersecting) {
+        navLinks.forEach(a => a.classList.remove('active'));
+        link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
+
+  sections.forEach(s => observer.observe(s));
+
+  // When jumping to a card via a tag, open it and flash it.
+  function focusTarget(id) {
+    if (!id) return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.tagName === 'DETAILS') el.open = true;
+    el.classList.remove('flash');
+    void el.offsetWidth;
+    el.classList.add('flash');
+  }
+
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('a[href^="#"]');
+    if (!link) return;
+    const id = link.getAttribute('href').slice(1);
+    requestAnimationFrame(() => focusTarget(id));
+  });
+
+  if (location.hash) focusTarget(location.hash.slice(1));
+})();
+</script>
+
+</body>
+</html>
