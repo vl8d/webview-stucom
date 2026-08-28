@@ -209,6 +209,86 @@
     text-transform: uppercase;
     color: var(--grey);
   }
+
+  .loading-screen, .auth-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 4rem 1rem;
+  }
+  .auth-screen h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: .06em;
+    margin: 1rem 0 1.6rem;
+  }
+  .auth-spinner {
+    width: 28px; height: 28px;
+    border: 3px solid var(--line);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .provider-btn {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    font-family: 'DM Mono', monospace;
+    font-size: .8rem;
+    padding: .75rem 1.4rem;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--black);
+    color: var(--white);
+    cursor: pointer;
+    transition: border-color .1s, background .1s;
+  }
+  .provider-btn:hover { border-color: var(--accent); background: var(--mid); }
+  .provider-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .provider-btn svg { width: 16px; height: 16px; background: #fff; border-radius: 2px; padding: 2px; flex-shrink: 0; }
+  .auth-error {
+    color: #ff6b6b;
+    font-size: .72rem;
+    margin-top: .9rem;
+    min-height: 1.2em;
+  }
+  .auth-legal {
+    color: var(--grey);
+    font-size: .65rem;
+    margin-top: 1.6rem;
+    max-width: 340px;
+  }
+  .sync-note {
+    color: var(--grey);
+    font-size: .65rem;
+    margin-top: .6rem;
+    max-width: 320px;
+  }
+  .user-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .6rem;
+    margin-top: .9rem;
+    font-size: .7rem;
+    color: var(--grey);
+  }
+  .user-bar img {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+  }
+  .user-bar button {
+    background: none;
+    border: none;
+    color: var(--grey);
+    font-size: .68rem;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .user-bar button:hover { color: var(--white); }
+  [hidden] { display: none !important; }
 </style>
 </head>
 <body>
@@ -221,39 +301,64 @@
     <div id="app-sub">Clique pour compter tes pièces et billets</div>
   </header>
 
-  <h3 class="section-title">Billets</h3>
-  <div class="denom-grid" id="billets-grid"></div>
-
-  <h3 class="section-title">Pièces</h3>
-  <div class="denom-grid" id="pieces-grid"></div>
-
-  <div class="total-bar">
-    <div>
-      <div class="total-label">Total actuel</div>
-      <div class="total-value" id="total-value">0,00 €</div>
-    </div>
-    <div class="actions">
-      <button class="btn" id="reset-btn">Réinitialiser</button>
-      <button class="btn primary" id="save-btn" disabled>Enregistrer</button>
-    </div>
+  <div class="loading-screen" id="loading-screen">
+    <div class="auth-spinner"></div>
   </div>
 
-  <h3 class="section-title">Historique</h3>
-  <div class="actions" style="margin-bottom:.8rem;">
-    <button class="btn" id="clear-history-btn">Effacer l'historique</button>
+  <div class="auth-screen" id="auth-screen" hidden>
+    <span style="font-size:2.4rem;">💰</span>
+    <h1>Connecte-toi pour continuer</h1>
+    <button type="button" id="google-login-btn" class="provider-btn">
+      <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
+      Continuer avec Google
+    </button>
+    <div class="auth-error" id="auth-error"></div>
+    <p class="sync-note">Ton historique est synchronisé sur ton compte Google et disponible sur tous tes appareils.</p>
   </div>
-  <div class="history-list" id="history-list"></div>
+
+  <div id="app-content" hidden>
+    <div class="user-bar" id="user-bar"></div>
+
+    <h3 class="section-title">Billets</h3>
+    <div class="denom-grid" id="billets-grid"></div>
+
+    <h3 class="section-title">Pièces</h3>
+    <div class="denom-grid" id="pieces-grid"></div>
+
+    <div class="total-bar">
+      <div>
+        <div class="total-label">Total actuel</div>
+        <div class="total-value" id="total-value">0,00 €</div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="reset-btn">Réinitialiser</button>
+        <button class="btn primary" id="save-btn" disabled>Enregistrer</button>
+      </div>
+    </div>
+
+    <h3 class="section-title">Historique</h3>
+    <div class="actions" style="margin-bottom:.8rem;">
+      <button class="btn" id="clear-history-btn">Effacer l'historique</button>
+    </div>
+    <div class="history-list" id="history-list"></div>
+  </div>
 
   <footer>stucom · money-clicker</footer>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="/comb2/assets/auth.js"></script>
 <script>
   const BILLETS = [100, 50, 20, 10, 5];
   const PIECES = [2, 1, 0.5, 0.2, 0.1, 0.05];
-  const STORAGE_KEY = 'stucom-compte-monnaie-history';
 
   let counts = {};
   [...BILLETS, ...PIECES].forEach(v => counts[v] = 0);
+
+  let currentUser = null;
+  let storageKey = 'stucom-compte-monnaie-history';
 
   function fmt(n) {
     return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
@@ -305,21 +410,24 @@
     render();
   });
 
-  function loadHistory() {
+  function entriesCollection() {
+    return AuthGate.getDb().collection('moneyClicker').doc(currentUser.uid).collection('entries');
+  }
+
+  function readLocalHistory() {
     try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      return JSON.parse(localStorage.getItem(storageKey)) || [];
     } catch {
       return [];
     }
   }
 
-  function saveHistory(history) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+  function writeLocalHistory(history) {
+    localStorage.setItem(storageKey, JSON.stringify(history));
   }
 
-  function renderHistory() {
+  function renderHistory(history) {
     const list = document.getElementById('history-list');
-    const history = loadHistory();
     list.innerHTML = '';
     if (history.length === 0) {
       list.innerHTML = '<div class="history-empty">Aucun comptage enregistré pour l\'instant.</div>';
@@ -341,12 +449,36 @@
         <button class="history-del" data-id="${entry.id}">Supprimer</button>
       `;
       item.querySelector('.history-del').addEventListener('click', () => {
-        const h = loadHistory().filter(e => e.id !== entry.id);
-        saveHistory(h);
-        renderHistory();
+        const h = readLocalHistory().filter(e => e.id !== entry.id);
+        writeLocalHistory(h);
+        renderHistory(h);
+        if (entry.fsId) {
+          entriesCollection().doc(entry.fsId).delete()
+            .catch(err => console.warn('Suppression Firestore échouée :', err));
+        }
       });
       list.appendChild(item);
     });
+  }
+
+  function loadHistory() {
+    const local = readLocalHistory();
+    renderHistory(local);
+
+    entriesCollection().orderBy('ts', 'desc').limit(50).get()
+      .then(snap => {
+        const serverHistory = [];
+        snap.forEach(doc => {
+          const d = doc.data();
+          serverHistory.push({ id: d.id, fsId: doc.id, total: d.total, counts: d.counts, date: d.date });
+        });
+        serverHistory.reverse();
+        if (serverHistory.length || local.length === 0) {
+          writeLocalHistory(serverHistory);
+          renderHistory(serverHistory);
+        }
+      })
+      .catch(err => console.warn('Lecture Firestore échouée (historique local conservé) :', err));
   }
 
   document.getElementById('save-btn').addEventListener('click', () => {
@@ -359,23 +491,88 @@
       counts: { ...counts },
       date: now.toLocaleDateString('fr-FR') + ' ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
     };
-    const history = loadHistory();
+    const history = readLocalHistory();
     history.push(entry);
-    saveHistory(history);
+    writeLocalHistory(history);
     [...BILLETS, ...PIECES].forEach(v => counts[v] = 0);
     render();
-    renderHistory();
+    renderHistory(history);
+
+    entriesCollection().add({
+      id: entry.id,
+      total: entry.total,
+      counts: entry.counts,
+      date: entry.date,
+      ts: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(docRef => {
+      entry.fsId = docRef.id;
+      writeLocalHistory(history);
+    }).catch(err => console.warn('Sync Firestore échouée (comptage gardé en local) :', err));
   });
 
   document.getElementById('clear-history-btn').addEventListener('click', () => {
-    if (confirm('Effacer tout l\'historique des comptages ?')) {
-      saveHistory([]);
-      renderHistory();
-    }
+    if (!confirm('Effacer tout l\'historique des comptages ?')) return;
+    writeLocalHistory([]);
+    renderHistory([]);
+    entriesCollection().get()
+      .then(snap => {
+        const batch = AuthGate.getDb().batch();
+        snap.forEach(doc => batch.delete(doc.ref));
+        return batch.commit();
+      })
+      .catch(err => console.warn('Suppression Firestore échouée :', err));
+  });
+
+  function authErrorMessage(e) {
+    const msgs = {
+      'auth/popup-closed-by-user': "Fenêtre de connexion fermée avant la fin.",
+      'auth/popup-blocked': "Le navigateur a bloqué la fenêtre de connexion — autorise les popups pour ce site.",
+      'auth/unauthorized-domain': "Ce domaine n'est pas encore autorisé pour la connexion Google (à configurer côté Firebase)."
+    };
+    return msgs[e.code] || (e.message || 'Connexion impossible, réessaie.');
+  }
+
+  const loadingScreen = document.getElementById('loading-screen');
+  const authScreen = document.getElementById('auth-screen');
+  const appContent = document.getElementById('app-content');
+  const authError = document.getElementById('auth-error');
+  const googleLoginBtn = document.getElementById('google-login-btn');
+
+  googleLoginBtn.addEventListener('click', () => {
+    googleLoginBtn.disabled = true;
+    authError.textContent = '';
+    AuthGate.signInGoogle().catch(e => {
+      authError.textContent = authErrorMessage(e);
+      googleLoginBtn.disabled = false;
+    });
   });
 
   render();
-  renderHistory();
+
+  AuthGate.onReady(user => {
+    loadingScreen.hidden = true;
+    if (!user) {
+      authScreen.hidden = false;
+      appContent.hidden = true;
+      currentUser = null;
+      return;
+    }
+    authScreen.hidden = true;
+    appContent.hidden = false;
+    currentUser = user;
+    storageKey = 'stucom-compte-monnaie-history_' + user.uid;
+
+    document.getElementById('user-bar').innerHTML = `
+      ${user.photoURL ? `<img src="${user.photoURL}" alt="">` : ''}
+      <span>${user.displayName || user.email || ''}</span>
+      <button type="button" id="logout-btn">Se déconnecter</button>
+    `;
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      AuthGate.signOut().catch(() => {});
+    });
+
+    loadHistory();
+  });
 </script>
 
 </body>
