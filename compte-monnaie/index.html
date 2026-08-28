@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compte Monnaie · stucom</title>
+<meta name="description" content="Compte tes pièces et billets d'un clic, avec total et historique.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --black: #0a0a0a;
+    --white: #f5f5f0;
+    --grey:  #888;
+    --mid:   #1a1a1a;
+    --line:  #252525;
+    --accent: #EFBF04;
+  }
+  html, body { height: 100%; }
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--black);
+    color: var(--white);
+    min-height: 100vh;
+    padding: 1.5rem 1.25rem 3rem;
+  }
+
+  .wrap { max-width: 760px; margin: 0 auto; }
+
+  .backlink {
+    display: inline-block;
+    color: var(--grey);
+    text-decoration: none;
+    font-size: .75rem;
+    letter-spacing: .05em;
+    margin-bottom: 1.5rem;
+  }
+  .backlink:hover { color: var(--white); }
+
+  header { text-align: center; margin-bottom: 2rem; }
+  #app-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.6rem;
+    letter-spacing: .1em;
+    color: var(--white);
+  }
+  #app-sub {
+    font-size: .68rem;
+    color: var(--grey);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    margin-top: .3rem;
+  }
+
+  h3.section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: .08em;
+    color: var(--grey);
+    margin: 1.6rem 0 .8rem;
+  }
+
+  .denom-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: .7rem;
+  }
+
+  .denom-card {
+    position: relative;
+    background: var(--black);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: .9rem .7rem .7rem;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    transition: background .1s, border-color .1s, transform .08s;
+  }
+  .denom-card:hover { background: var(--mid); border-color: #444; }
+  .denom-card:active { transform: scale(.96); }
+  .denom-card.has-count { border-color: var(--accent); }
+
+  .denom-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: .03em;
+  }
+  .denom-count {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--accent);
+    margin-top: .3rem;
+    min-height: 1.3em;
+  }
+  .denom-subtotal {
+    font-size: .62rem;
+    color: var(--grey);
+    margin-top: .2rem;
+  }
+  .denom-minus {
+    position: absolute;
+    top: -8px; right: -8px;
+    width: 22px; height: 22px;
+    line-height: 20px;
+    border-radius: 50%;
+    background: var(--mid);
+    border: 1px solid var(--line);
+    color: var(--grey);
+    font-size: .85rem;
+    opacity: 0;
+    transition: opacity .1s;
+  }
+  .denom-card.has-count .denom-minus { opacity: 1; }
+  .denom-minus:hover { background: #2a2a2a; color: var(--white); }
+
+  .total-bar {
+    margin-top: 2rem;
+    padding: 1.3rem 1.2rem;
+    background: var(--mid);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .8rem;
+  }
+  .total-label {
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--grey);
+  }
+  .total-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.2rem;
+    color: var(--white);
+  }
+
+  .actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+  .btn {
+    font-family: 'DM Mono', monospace;
+    font-size: .75rem;
+    letter-spacing: .04em;
+    padding: .65rem 1rem;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--black);
+    color: var(--white);
+    cursor: pointer;
+    transition: background .1s, border-color .1s;
+  }
+  .btn:hover { background: #2a2a2a; border-color: #444; }
+  .btn.primary { background: var(--accent); color: var(--black); border-color: var(--accent); font-weight: 500; }
+  .btn.primary:hover { background: #ffd633; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  .history-list { display: flex; flex-direction: column; gap: .6rem; }
+  .history-empty { color: var(--grey); font-size: .8rem; padding: 1rem 0; }
+
+  .history-item {
+    background: var(--black);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: .8rem 1rem;
+  }
+  .history-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: .8rem;
+    flex-wrap: wrap;
+  }
+  .history-total {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    color: var(--accent);
+  }
+  .history-date {
+    font-size: .68rem;
+    color: var(--grey);
+    letter-spacing: .03em;
+  }
+  .history-breakdown {
+    margin-top: .5rem;
+    font-size: .68rem;
+    color: var(--grey);
+    line-height: 1.6;
+  }
+  .history-del {
+    background: none;
+    border: none;
+    color: var(--grey);
+    font-size: .68rem;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-top: .5rem;
+  }
+  .history-del:hover { color: var(--white); }
+
+  footer {
+    text-align: center;
+    margin-top: 3rem;
+    font-size: .6rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--grey);
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <a class="backlink" href="/">← stucom</a>
+
+  <header>
+    <div id="app-logo">Compte Monnaie</div>
+    <div id="app-sub">Clique pour compter tes pièces et billets</div>
+  </header>
+
+  <h3 class="section-title">Billets</h3>
+  <div class="denom-grid" id="billets-grid"></div>
+
+  <h3 class="section-title">Pièces</h3>
+  <div class="denom-grid" id="pieces-grid"></div>
+
+  <div class="total-bar">
+    <div>
+      <div class="total-label">Total actuel</div>
+      <div class="total-value" id="total-value">0,00 €</div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="reset-btn">Réinitialiser</button>
+      <button class="btn primary" id="save-btn" disabled>Enregistrer</button>
+    </div>
+  </div>
+
+  <h3 class="section-title">Historique</h3>
+  <div class="actions" style="margin-bottom:.8rem;">
+    <button class="btn" id="clear-history-btn">Effacer l'historique</button>
+  </div>
+  <div class="history-list" id="history-list"></div>
+
+  <footer>stucom · compte-monnaie</footer>
+</div>
+
+<script>
+  const BILLETS = [100, 50, 20, 10, 5];
+  const PIECES = [2, 1, 0.5, 0.2, 0.1, 0.05];
+  const STORAGE_KEY = 'stucom-compte-monnaie-history';
+
+  let counts = {};
+  [...BILLETS, ...PIECES].forEach(v => counts[v] = 0);
+
+  function fmt(n) {
+    return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  }
+
+  function buildGrid(container, values) {
+    values.forEach(v => {
+      const card = document.createElement('div');
+      card.className = 'denom-card';
+      card.dataset.value = v;
+      card.innerHTML = `
+        <button class="denom-minus" data-value="${v}">−</button>
+        <div class="denom-value">${fmt(v)}</div>
+        <div class="denom-count" data-count="${v}">0</div>
+        <div class="denom-subtotal" data-subtotal="${v}">0,00 €</div>
+      `;
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.denom-minus')) return;
+        counts[v]++;
+        render();
+      });
+      card.querySelector('.denom-minus').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (counts[v] > 0) counts[v]--;
+        render();
+      });
+      container.appendChild(card);
+    });
+  }
+
+  buildGrid(document.getElementById('billets-grid'), BILLETS);
+  buildGrid(document.getElementById('pieces-grid'), PIECES);
+
+  function render() {
+    let total = 0;
+    [...BILLETS, ...PIECES].forEach(v => {
+      const c = counts[v];
+      total += c * v;
+      document.querySelector(`[data-count="${v}"]`).textContent = c;
+      document.querySelector(`[data-subtotal="${v}"]`).textContent = fmt(c * v);
+      document.querySelector(`.denom-card[data-value="${v}"]`).classList.toggle('has-count', c > 0);
+    });
+    document.getElementById('total-value').textContent = fmt(total);
+    document.getElementById('save-btn').disabled = total === 0;
+  }
+
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    [...BILLETS, ...PIECES].forEach(v => counts[v] = 0);
+    render();
+  });
+
+  function loadHistory() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveHistory(history) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('history-list');
+    const history = loadHistory();
+    list.innerHTML = '';
+    if (history.length === 0) {
+      list.innerHTML = '<div class="history-empty">Aucun comptage enregistré pour l\'instant.</div>';
+      return;
+    }
+    history.slice().reverse().forEach(entry => {
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      const breakdown = [...BILLETS, ...PIECES]
+        .filter(v => entry.counts[v] > 0)
+        .map(v => `${fmt(v)} × ${entry.counts[v]}`)
+        .join(' · ');
+      item.innerHTML = `
+        <div class="history-top">
+          <span class="history-total">${fmt(entry.total)}</span>
+          <span class="history-date">${entry.date}</span>
+        </div>
+        <div class="history-breakdown">${breakdown || 'Aucune coupure'}</div>
+        <button class="history-del" data-id="${entry.id}">Supprimer</button>
+      `;
+      item.querySelector('.history-del').addEventListener('click', () => {
+        const h = loadHistory().filter(e => e.id !== entry.id);
+        saveHistory(h);
+        renderHistory();
+      });
+      list.appendChild(item);
+    });
+  }
+
+  document.getElementById('save-btn').addEventListener('click', () => {
+    const total = [...BILLETS, ...PIECES].reduce((sum, v) => sum + counts[v] * v, 0);
+    if (total === 0) return;
+    const now = new Date();
+    const entry = {
+      id: Date.now(),
+      total,
+      counts: { ...counts },
+      date: now.toLocaleDateString('fr-FR') + ' ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    };
+    const history = loadHistory();
+    history.push(entry);
+    saveHistory(history);
+    [...BILLETS, ...PIECES].forEach(v => counts[v] = 0);
+    render();
+    renderHistory();
+  });
+
+  document.getElementById('clear-history-btn').addEventListener('click', () => {
+    if (confirm('Effacer tout l\'historique des comptages ?')) {
+      saveHistory([]);
+      renderHistory();
+    }
+  });
+
+  render();
+  renderHistory();
+</script>
+
+</body>
+</html>
