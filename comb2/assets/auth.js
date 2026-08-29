@@ -49,6 +49,16 @@
         return auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
     }
 
+    // Popup can be blocked silently (mobile browsers, in-app webviews like
+    // WhatsApp/Instagram, strict popup blockers) with no error to catch —
+    // the button click then does nothing at all. Redirect is a full page
+    // navigation, so it can't be blocked the same way and always surfaces
+    // either success or a real error on return.
+    function signInGoogleRedirect() {
+        ensureInit();
+        return auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+    }
+
     function signInMicrosoft() {
         ensureInit();
         return auth.signInWithPopup(new firebase.auth.OAuthProvider('microsoft.com'));
@@ -74,5 +84,5 @@
         return db.collection('examBlanc').doc(uid).collection('courses').doc(courseId).collection('scores');
     }
 
-    global.AuthGate = { onReady, signInGoogle, signInMicrosoft, signOut, getDb, getAuth, scoresCollection };
+    global.AuthGate = { onReady, signInGoogle, signInGoogleRedirect, signInMicrosoft, signOut, getDb, getAuth, scoresCollection };
 })(window);
