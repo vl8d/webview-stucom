@@ -1,0 +1,33 @@
+# Le domaine stucom.tech est servi par Netlify (l'apex pointe sur le load
+# balancer Netlify, www sur resonant-lebkuchen-012bc6.netlify.app), alors que
+# staticwebapp.config.json n'est lu que par Azure Static Web Apps. Sans ce
+# fichier, les règles de routage du site ne s'appliquaient donc pas du tout sur
+# l'hôte qui sert réellement le trafic.
+
+[build]
+  publish = "."
+  command = ""
+
+# Équivalent Netlify de "trailingSlash": "always" : /comb2/examen-blanc doit
+# résoudre vers /comb2/examen-blanc/index.html sans slash final manuel.
+[[redirects]]
+  from = "/comb2/examen-blanc"
+  to = "/comb2/examen-blanc/"
+  status = 301
+
+[[redirects]]
+  from = "/mindmap"
+  to = "/mindmap/"
+  status = 301
+
+[[redirects]]
+  from = "/money-clicker"
+  to = "/money-clicker/"
+  status = 301
+
+# Page 404 du site, avec un vrai statut 404 (et non un 200 sur du HTML
+# d'erreur, qui casse silencieusement les <script src> manquants).
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
