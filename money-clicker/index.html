@@ -337,9 +337,12 @@
     </div>
 
     <h3 class="section-title">Historique</h3>
-    <div class="actions" style="margin-bottom:.8rem;">
+    <div class="actions" style="margin-bottom:.5rem;">
+      <button class="btn" id="download-excel-btn">📥 Télécharger Excel</button>
+      <button class="btn" id="drive-export-btn">☁️ Enregistrer sur Drive</button>
       <button class="btn" id="clear-history-btn">Effacer l'historique</button>
     </div>
+    <div class="sync-note" id="export-status" style="margin:0 0 .8rem;"></div>
     <div class="history-list" id="history-list"></div>
   </div>
 
@@ -350,6 +353,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <script src="/comb2/assets/auth.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
   const BILLETS = [100, 50, 20, 10, 5];
   const PIECES = [2, 1, 0.5, 0.2, 0.1, 0.05];
@@ -359,6 +363,7 @@
 
   let currentUser = null;
   let storageKey = 'stucom-compte-monnaie-history';
+  let currentHistory = [];
 
   function fmt(n) {
     return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
@@ -427,6 +432,7 @@
   }
 
   function renderHistory(history) {
+    currentHistory = history;
     const list = document.getElementById('history-list');
     list.innerHTML = '';
     if (history.length === 0) {
@@ -521,6 +527,88 @@
         return batch.commit();
       })
       .catch(err => console.warn('Suppression Firestore échouée :', err));
+  });
+
+  function buildWorkbookData() {
+    const denoms = [...BILLETS, ...PIECES];
+    const header = ['Date', 'Total (€)', ...denoms.map(v => fmt(v))];
+    const rows = currentHistory.map(entry => [
+      entry.date,
+      entry.total,
+      ...denoms.map(v => entry.counts[v] || 0)
+    ]);
+    const totals = [
+      'TOTAL',
+      currentHistory.reduce((s, e) => s + e.total, 0),
+      ...denoms.map(v => currentHistory.reduce((s, e) => s + (e.counts[v] || 0), 0))
+    ];
+    return [header, ...rows, totals];
+  }
+
+  function buildWorkbook() {
+    const ws = XLSX.utils.aoa_to_sheet(buildWorkbookData());
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Historique');
+    return wb;
+  }
+
+  const exportStatus = document.getElementById('export-status');
+  const downloadExcelBtn = document.getElementById('download-excel-btn');
+  const driveExportBtn = document.getElementById('drive-export-btn');
+
+  downloadExcelBtn.addEventListener('click', () => {
+    if (currentHistory.length === 0) {
+      exportStatus.textContent = 'Aucun comptage à exporter pour le moment.';
+      return;
+    }
+    exportStatus.textContent = '';
+    XLSX.writeFile(buildWorkbook(), 'compte-monnaie-historique.xlsx');
+  });
+
+  function requestDriveAccessToken() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.addScope('https://www.googleapis.com/auth/drive.file');
+    return AuthGate.getAuth().signInWithPopup(provider)
+      .then(result => result.credential.accessToken);
+  }
+
+  function uploadToDrive(accessToken, blob, filename) {
+    const metadata = { name: filename, mimeType: blob.type };
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+    form.append('file', blob);
+    return fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + accessToken },
+      body: form
+    }).then(r => {
+      if (!r.ok) throw new Error('Réponse Drive : ' + r.status);
+      return r.json();
+    });
+  }
+
+  driveExportBtn.addEventListener('click', () => {
+    if (currentHistory.length === 0) {
+      exportStatus.textContent = 'Aucun comptage à exporter pour le moment.';
+      return;
+    }
+    driveExportBtn.disabled = true;
+    exportStatus.textContent = 'Connexion à Google Drive...';
+    requestDriveAccessToken()
+      .then(token => {
+        exportStatus.textContent = 'Envoi vers Google Drive...';
+        const wbout = XLSX.write(buildWorkbook(), { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        return uploadToDrive(token, blob, 'compte-monnaie-historique.xlsx');
+      })
+      .then(() => {
+        exportStatus.textContent = 'Enregistré sur Google Drive ✓';
+      })
+      .catch(err => {
+        console.warn('Export Drive échoué :', err);
+        exportStatus.textContent = "Échec de l'enregistrement sur Drive — réessaie.";
+      })
+      .finally(() => { driveExportBtn.disabled = false; });
   });
 
   function authErrorMessage(e) {

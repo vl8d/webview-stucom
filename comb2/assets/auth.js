@@ -64,10 +64,15 @@
         return db;
     }
 
+    function getAuth() {
+        ensureInit();
+        return auth;
+    }
+
     function scoresCollection(uid, courseId) {
         ensureInit();
         return db.collection('examBlanc').doc(uid).collection('courses').doc(courseId).collection('scores');
     }
 
-    global.AuthGate = { onReady, signInGoogle, signInMicrosoft, signOut, getDb, scoresCollection };
+    global.AuthGate = { onReady, signInGoogle, signInMicrosoft, signOut, getDb, getAuth, scoresCollection };
 })(window);
