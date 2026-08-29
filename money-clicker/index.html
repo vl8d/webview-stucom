@@ -627,11 +627,15 @@
 
   googleLoginBtn.addEventListener('click', () => {
     googleLoginBtn.disabled = true;
-    authError.textContent = '';
-    AuthGate.signInGoogle().catch(e => {
+    authError.textContent = 'Redirection vers Google...';
+    AuthGate.signInGoogleRedirect().catch(e => {
       authError.textContent = authErrorMessage(e);
       googleLoginBtn.disabled = false;
     });
+  });
+
+  AuthGate.getAuth().getRedirectResult().catch(e => {
+    authError.textContent = authErrorMessage(e);
   });
 
   render();
