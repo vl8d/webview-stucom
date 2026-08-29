@@ -467,22 +467,34 @@
     });
   }
 
+  // Fusionne serveur + local sur la clé `id`. Auparavant la réponse serveur
+  // (limitée aux 50 derniers) remplaçait purement l'historique local : tout
+  // comptage plus ancien, ou enregistré hors ligne et pas encore synchronisé,
+  // était définitivement perdu au premier chargement de page.
+  function mergeHistories(local, server) {
+    const byId = new Map();
+    local.forEach(e => byId.set(String(e.id), e));
+    server.forEach(e => {
+      const existing = byId.get(String(e.id));
+      byId.set(String(e.id), existing ? Object.assign({}, existing, e) : e);
+    });
+    return [...byId.values()].sort((a, b) => Number(a.id) - Number(b.id));
+  }
+
   function loadHistory() {
     const local = readLocalHistory();
     renderHistory(local);
 
-    entriesCollection().orderBy('ts', 'desc').limit(50).get()
+    entriesCollection().orderBy('ts', 'desc').limit(200).get()
       .then(snap => {
         const serverHistory = [];
         snap.forEach(doc => {
           const d = doc.data();
           serverHistory.push({ id: d.id, fsId: doc.id, total: d.total, counts: d.counts, date: d.date });
         });
-        serverHistory.reverse();
-        if (serverHistory.length || local.length === 0) {
-          writeLocalHistory(serverHistory);
-          renderHistory(serverHistory);
-        }
+        const merged = mergeHistories(local, serverHistory);
+        writeLocalHistory(merged);
+        renderHistory(merged);
       })
       .catch(err => console.warn('Lecture Firestore échouée (historique local conservé) :', err));
   }
@@ -522,9 +534,21 @@
     renderHistory([]);
     entriesCollection().get()
       .then(snap => {
-        const batch = AuthGate.getDb().batch();
-        snap.forEach(doc => batch.delete(doc.ref));
-        return batch.commit();
+        // Un batch Firestore accepte au maximum 500 opérations : au-delà le
+        // commit échouait en bloc et rien n'était supprimé côté serveur.
+        const refs = [];
+        snap.forEach(doc => refs.push(doc.ref));
+        const db = AuthGate.getDb();
+        let chain = Promise.resolve();
+        for (let i = 0; i < refs.length; i += 400) {
+          const chunk = refs.slice(i, i + 400);
+          chain = chain.then(() => {
+            const batch = db.batch();
+            chunk.forEach(ref => batch.delete(ref));
+            return batch.commit();
+          });
+        }
+        return chain;
       })
       .catch(err => console.warn('Suppression Firestore échouée :', err));
   });
@@ -567,8 +591,18 @@
   function requestDriveAccessToken() {
     const provider = new firebase.auth.GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/drive.file');
+    // Sans prompt=consent, Google peut renvoyer un résultat sans nouveau
+    // credential (donc sans accessToken) ; login_hint évite en plus de
+    // basculer silencieusement sur un autre compte Google que celui connecté.
+    const params = { prompt: 'consent' };
+    if (currentUser && currentUser.email) params.login_hint = currentUser.email;
+    provider.setCustomParameters(params);
     return AuthGate.getAuth().signInWithPopup(provider)
-      .then(result => result.credential.accessToken);
+      .then(result => {
+        const token = result && result.credential && result.credential.accessToken;
+        if (!token) throw new Error("Google n'a pas renvoyé d'autorisation Drive.");
+        return token;
+      });
   }
 
   function uploadToDrive(accessToken, blob, filename) {
@@ -614,9 +648,16 @@
     const msgs = {
       'auth/popup-closed-by-user': "Fenêtre de connexion fermée avant la fin.",
       'auth/popup-blocked': "Le navigateur a bloqué la fenêtre de connexion — autorise les popups pour ce site.",
-      'auth/unauthorized-domain': "Ce domaine n'est pas encore autorisé pour la connexion Google (à configurer côté Firebase)."
+      'auth/unauthorized-domain': "Ce domaine n'est pas encore autorisé pour la connexion Google (à configurer côté Firebase).",
+      'auth/network-request-failed': "Le service de connexion Google est injoignable (réseau, ou service momentanément indisponible). Réessaie dans un instant.",
+      'auth/internal-error': "Le service de connexion Google a renvoyé une erreur interne. Réessaie dans un instant.",
+      'auth/too-many-requests': "Trop de tentatives de connexion — patiente une minute avant de réessayer.",
+      'auth/web-storage-unsupported': "Ton navigateur bloque le stockage nécessaire à la connexion (mode privé ou blocage des cookies tiers)."
     };
-    return msgs[e.code] || (e.message || 'Connexion impossible, réessaie.');
+    const base = msgs[e.code] || (e.message || 'Connexion impossible, réessaie.');
+    // Toujours exposer le code brut : sans lui, une panne côté service était
+    // indiscernable d'une simple erreur utilisateur.
+    return e.code ? base + ' [' + e.code + ']' : base;
   }
 
   const loadingScreen = document.getElementById('loading-screen');

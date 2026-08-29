@@ -2,7 +2,18 @@
   "trailingSlash": "always",
   "navigationFallback": {
     "rewrite": "/404.html",
-    "exclude": ["/images/*", "/css/*"]
+    "exclude": [
+      "/images/*",
+      "/css/*",
+      "/*.{js,css,json,map}",
+      "/*.{png,jpg,jpeg,gif,svg,ico,webp}",
+      "/*.{woff,woff2,ttf,eot}",
+      "/*.{xlsx,pdf,txt,xml}"
+    ]
+  },
+  "responseOverrides": {
+    "404": {
+      "rewrite": "/404.html"
+    }
   }
 }
-
