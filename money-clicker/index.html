@@ -529,20 +529,19 @@
       .catch(err => console.warn('Suppression Firestore échouée :', err));
   });
 
+  function splitDateTime(dateStr) {
+    const idx = dateStr.indexOf(' ');
+    return idx === -1 ? [dateStr, ''] : [dateStr.slice(0, idx), dateStr.slice(idx + 1)];
+  }
+
   function buildWorkbookData() {
     const denoms = [...BILLETS, ...PIECES];
-    const header = ['Date', 'Total (€)', ...denoms.map(v => fmt(v))];
-    const rows = currentHistory.map(entry => [
-      entry.date,
-      entry.total,
-      ...denoms.map(v => entry.counts[v] || 0)
-    ]);
-    const totals = [
-      'TOTAL',
-      currentHistory.reduce((s, e) => s + e.total, 0),
-      ...denoms.map(v => currentHistory.reduce((s, e) => s + (e.counts[v] || 0), 0))
-    ];
-    return [header, ...rows, totals];
+    const header = ['Date', 'Heure', 'Total (€)', ...denoms.map(v => fmt(v))];
+    const rows = currentHistory.map(entry => {
+      const [date, heure] = splitDateTime(entry.date);
+      return [date, heure, entry.total, ...denoms.map(v => entry.counts[v] || 0)];
+    });
+    return [header, ...rows];
   }
 
   function buildWorkbook() {
