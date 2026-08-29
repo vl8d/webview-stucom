@@ -200,17 +200,27 @@
   }
   .caisse-toggle input { cursor: pointer; accent-color: var(--accent); }
 
-  .caisse-badge {
-    display: inline-block;
-    font-size: .58rem;
-    letter-spacing: .08em;
-    text-transform: uppercase;
+  .caisse-pick {
+    font-family: 'DM Mono', monospace;
+    font-size: .6rem;
+    letter-spacing: .04em;
     color: var(--grey);
+    background: var(--black);
     border: 1px solid var(--line);
     border-radius: 3px;
-    padding: .15rem .4rem;
-    margin-left: .5rem;
+    padding: .2rem .3rem;
+    margin-left: .6rem;
+    max-width: 11rem;
     vertical-align: middle;
+    cursor: pointer;
+  }
+  .caisse-pick:hover { color: var(--white); border-color: #444; }
+
+  .history-status {
+    font-size: .68rem;
+    color: var(--accent);
+    margin-bottom: .6rem;
+    min-height: 1.2em;
   }
 
   .history-list { display: flex; flex-direction: column; gap: .6rem; }
@@ -326,19 +336,31 @@
     align-items: center;
     justify-content: center;
     gap: .6rem;
-    margin-top: .9rem;
+    /* Le header pose déjà 2rem sous le titre : sans cette remontée, la barre
+       flottait loin du nom du site et collait à la barre de caisse, comme si
+       elle lui appartenait. */
+    margin-top: -1.1rem;
+    margin-bottom: 1.9rem;
     font-size: .7rem;
+    line-height: 1;
     color: var(--grey);
   }
   .user-bar img {
+    display: block;
     width: 22px; height: 22px;
+    flex-shrink: 0;
     border-radius: 50%;
+    object-fit: cover;
   }
+  .user-bar span { line-height: 1; }
   .user-bar button {
+    padding: 0;
     background: none;
     border: none;
     color: var(--grey);
+    font-family: 'DM Mono', monospace;
     font-size: .68rem;
+    line-height: 1;
     text-decoration: underline;
     cursor: pointer;
   }
@@ -409,6 +431,7 @@
       <button class="btn" id="clear-history-btn">Effacer l'historique</button>
     </div>
     <div class="sync-note" id="export-status" style="margin:0 0 .8rem;"></div>
+    <div class="history-status" id="history-status"></div>
     <div class="history-list" id="history-list"></div>
   </div>
 
@@ -623,17 +646,24 @@
         .filter(v => entry.counts[v] > 0)
         .map(v => `${fmt(v)} × ${entry.counts[v]}`)
         .join(' · ');
-      const badge = showingAllCaisses()
-        ? `<span class="caisse-badge">${escapeHtml(caisseName(caisseIdOf(entry)))}</span>`
-        : '';
+      // Le sélecteur est présent sur chaque comptage, y compris les anciens :
+      // c'est le seul moyen de rattacher à une caisse un comptage enregistré
+      // avant l'existence des caisses.
+      const options = caisses.map(c => (
+        `<option value="${escapeHtml(c.id)}"${c.id === caisseIdOf(entry) ? ' selected' : ''}>${escapeHtml(c.name)}</option>`
+      )).join('');
       item.innerHTML = `
         <div class="history-top">
-          <span class="history-total">${fmt(entry.total)}${badge}</span>
+          <span class="history-total">${fmt(entry.total)}<select class="caisse-pick" title="Caisse de ce comptage">${options}</select></span>
           <span class="history-date">${entry.date}</span>
         </div>
         <div class="history-breakdown">${breakdown || 'Aucune coupure'}</div>
         <button class="history-del" data-id="${entry.id}">Supprimer</button>
       `;
+      item.querySelector('.caisse-pick').addEventListener('click', e => e.stopPropagation());
+      item.querySelector('.caisse-pick').addEventListener('change', (e) => {
+        moveEntry(entry, e.target.value);
+      });
       item.querySelector('.history-del').addEventListener('click', () => {
         const h = readLocalHistory().filter(e => e.id !== entry.id);
         writeLocalHistory(h);
@@ -647,6 +677,36 @@
     });
   }
 
+  let historyStatusTimer = null;
+  function setHistoryStatus(msg) {
+    const el = document.getElementById('history-status');
+    if (!el) return;
+    el.textContent = msg;
+    clearTimeout(historyStatusTimer);
+    historyStatusTimer = setTimeout(() => { el.textContent = ''; }, 4000);
+  }
+
+  function moveEntry(entry, caisseId) {
+    if (caisseIdOf(entry) === caisseId) return;
+    const moved = currentHistory.map(e => (
+      String(e.id) === String(entry.id) ? Object.assign({}, e, { caisseId, caissePending: true }) : e
+    ));
+    writeLocalHistory(moved);
+    renderHistory(moved);
+    setHistoryStatus('Comptage déplacé vers « ' + caisseName(caisseId) + ' ».');
+
+    if (!entry.fsId) return;
+    entriesCollection().doc(entry.fsId).update({ caisseId })
+      .then(() => {
+        // Confirmé côté serveur : le marqueur peut tomber.
+        const synced = readLocalHistory().map(e => (
+          String(e.id) === String(entry.id) ? Object.assign({}, e, { caissePending: false }) : e
+        ));
+        writeLocalHistory(synced);
+      })
+      .catch(err => console.warn('Déplacement Firestore échoué (gardé en local) :', err));
+  }
+
   // Fusionne serveur + local sur la clé `id`. Auparavant la réponse serveur
   // (limitée aux 50 derniers) remplaçait purement l'historique local : tout
   // comptage plus ancien, ou enregistré hors ligne et pas encore synchronisé,
@@ -656,7 +716,15 @@
     local.forEach(e => byId.set(String(e.id), e));
     server.forEach(e => {
       const existing = byId.get(String(e.id));
-      byId.set(String(e.id), existing ? Object.assign({}, existing, e) : e);
+      if (!existing) { byId.set(String(e.id), e); return; }
+      const merged = Object.assign({}, existing, e);
+      // Un déplacement de caisse pas encore confirmé par le serveur ne doit
+      // pas être écrasé par la valeur d'avant le déplacement.
+      if (existing.caissePending) {
+        merged.caisseId = existing.caisseId;
+        merged.caissePending = true;
+      }
+      byId.set(String(e.id), merged);
     });
     return [...byId.values()].sort((a, b) => Number(a.id) - Number(b.id));
   }
