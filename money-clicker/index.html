@@ -634,36 +634,61 @@
     });
   });
 
-  AuthGate.getAuth().getRedirectResult().catch(e => {
-    authError.textContent = authErrorMessage(e);
-  });
+  function showFatalAuthError(msg) {
+    loadingScreen.hidden = true;
+    authScreen.hidden = false;
+    appContent.hidden = true;
+    authError.textContent = msg;
+  }
+
+  const UNREACHABLE_MSG = "Le service de connexion Google n'a pas pu se charger (réseau, ou bloqueur de contenu). Vérifie ta connexion et recharge la page.";
+  let authResolved = false;
+  const authTimeout = setTimeout(() => {
+    if (!authResolved) showFatalAuthError(UNREACHABLE_MSG);
+  }, 8000);
+
+  try {
+    AuthGate.getAuth().getRedirectResult().catch(e => {
+      authError.textContent = authErrorMessage(e);
+    });
+  } catch (e) {
+    console.warn('Firebase indisponible :', e);
+    showFatalAuthError(UNREACHABLE_MSG);
+  }
 
   render();
 
-  AuthGate.onReady(user => {
-    loadingScreen.hidden = true;
-    if (!user) {
-      authScreen.hidden = false;
-      appContent.hidden = true;
-      currentUser = null;
-      return;
-    }
-    authScreen.hidden = true;
-    appContent.hidden = false;
-    currentUser = user;
-    storageKey = 'stucom-compte-monnaie-history_' + user.uid;
+  try {
+    AuthGate.onReady(user => {
+      authResolved = true;
+      clearTimeout(authTimeout);
+      loadingScreen.hidden = true;
+      if (!user) {
+        authScreen.hidden = false;
+        appContent.hidden = true;
+        currentUser = null;
+        return;
+      }
+      authScreen.hidden = true;
+      appContent.hidden = false;
+      currentUser = user;
+      storageKey = 'stucom-compte-monnaie-history_' + user.uid;
 
-    document.getElementById('user-bar').innerHTML = `
-      ${user.photoURL ? `<img src="${user.photoURL}" alt="">` : ''}
-      <span>${user.displayName || user.email || ''}</span>
-      <button type="button" id="logout-btn">Se déconnecter</button>
-    `;
-    document.getElementById('logout-btn').addEventListener('click', () => {
-      AuthGate.signOut().catch(() => {});
+      document.getElementById('user-bar').innerHTML = `
+        ${user.photoURL ? `<img src="${user.photoURL}" alt="">` : ''}
+        <span>${user.displayName || user.email || ''}</span>
+        <button type="button" id="logout-btn">Se déconnecter</button>
+      `;
+      document.getElementById('logout-btn').addEventListener('click', () => {
+        AuthGate.signOut().catch(() => {});
+      });
+
+      loadHistory();
     });
-
-    loadHistory();
-  });
+  } catch (e) {
+    console.warn('Firebase indisponible :', e);
+    showFatalAuthError(UNREACHABLE_MSG);
+  }
 </script>
 
 </body>
